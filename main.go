@@ -2,83 +2,87 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
-	"time"
 
 	raven "github.com/getsentry/raven-go"
-	cache "github.com/patrickmn/go-cache"
+	lru "github.com/hashicorp/golang-lru"
 	hbot "github.com/whyrusleeping/hellabot"
 	charmap "golang.org/x/text/encoding/charmap"
 	log "gopkg.in/inconshreveable/log15.v2"
 )
 
 var (
+	nameToCardCache *lru.ARCCache
+
 	// (for SSL) var serv = flag.String("server", "irc.freenode.net:6697", "hostname and port for irc server to connect to")
 	serv = flag.String("server", "irc.freenode.net:6667", "hostname and port for irc server to connect to")
 	nick = flag.String("nick", "Fryatog", "nickname for the bot")
-
-	// Cache card results for a day.
-	c = cache.New(24*time.Hour, 10*time.Minute)
 
 	// Rules & Glossary dictionary.
 	rules = make(map[string][]string)
 
 	// Used in multiple functions.
-	ruleRegexp = regexp.MustCompile(`(?:c?r(?:ule)?)?(?: )?((?:\d)+\.(?:\w{1,4}))`)
+	ruleRegexp = regexp.MustCompile(`((?:\d)+\.(?:\w{1,4}))`)
 )
+
+// Is there a stable URL that always points to a text version of the most up to date CR ?
+// Fuck it I'll do it myself
+const crURL = "https://chat.mtgpairings.info/cr-stable/"
+const crFile = "CR.txt"
 
 // CardGetter defines a function that retrieves a card's text.
 // Defining this type allows us to override it in testing, and not hit scryfall.com a million times.
-type CardGetter func(cardname string) (string, error)
+type CardGetter func(cardname string) (Card, error)
 
 // TODO:
 // Rules/CR
 // Flavor/Flavour
-// Rulings
-// Change cache
+// Help
+// Operator commands to update CR
+// Register bot nick
+// Fuzzy matching on rules/defines
+// LATER TODO:
 // Advanced search
-// Momir ?
-// Support [[card]] ?
+// Momir
+// Support [[card]]
+// Coin/D6
+// Random
 
-func fetchOrImportRules() error {
-	// Is there a stable URL that always points to a text version of the most up to date CR ?
-	// Fuck it I'll do it myself
-	// TODO: Need to know when the CR updates.  Probably name it after the date.
-	const (
-		crURL  = "https://chat.mtgpairings.info/cr-stable/"
-		crFile = "CR.txt"
-	)
-	if _, err := os.Stat("CR.txt"); err != nil {
-		// Fetch it
-		out, err := os.Create(crFile)
-		if err != nil {
-			return err
-		}
-
-		resp, err := http.Get(crURL)
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-
-		_, err = io.Copy(out, resp.Body)
-		if err != nil {
-			return err
-		}
-		out.Close()
+func fetchRulesFile() error {
+	// Fetch it
+	out, err := os.Create(crFile)
+	if err != nil {
+		return err
 	}
 
-	// Now CR file pretty much guaranteed to exist.
-	// Let's parse it.
-	// TODO: Examples
+	resp, err := http.Get(crURL)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return err
+	}
+	out.Close()
+	return nil
+}
+
+func importRules() error {
+
+	if _, err := os.Stat(crFile); err != nil {
+		fetchRulesFile()
+	}
+
+	// Parse it.
 	f, err := os.Open(crFile)
 	defer f.Close()
 	if err != nil {
@@ -95,6 +99,11 @@ func fetchOrImportRules() error {
 		rulesMode      = true
 		ruleParseRegex = regexp.MustCompile(`^(?P<ruleno>\d+\.\w{1,4})\.? (?P<ruletext>.*)`)
 	)
+
+	// Clear rules map
+	rules = make(map[string][]string)
+
+	// Begin rules parsing
 	for scanner.Scan() {
 		line := scanner.Text()
 		if line == "" {
@@ -156,11 +165,13 @@ func fetchOrImportRules() error {
 // and does some pre-processing to sort out real commands from just normal chat
 // Any real commands are handed to the handleCommand function
 func tokeniseAndDispatchInput(input string, cardGetFunction CardGetter) []string {
-	botCommandRegex := regexp.MustCompile(`[!&]([^!&]+)`)
-	singleQuotedWord := regexp.MustCompile(`^(?:\"|\')\w+(?:\"|\')$`)
-	nonTextRegex := regexp.MustCompile(`^[^\w]+$`)
-	wordEndingInBang := regexp.MustCompile(`\S+!(?: |\n)`)
-	wordStartingWithBang := regexp.MustCompile(`\s+!(?: *)\S+`)
+	var (
+		botCommandRegex      = regexp.MustCompile(`[!&]([^!&]+)`)
+		singleQuotedWord     = regexp.MustCompile(`^(?:\"|\')\w+(?:\"|\')$`)
+		nonTextRegex         = regexp.MustCompile(`^[^\w]+$`)
+		wordEndingInBang     = regexp.MustCompile(`\S+!(?: |\n)`)
+		wordStartingWithBang = regexp.MustCompile(`\s+!(?: *)\S+`)
+	)
 
 	commandList := botCommandRegex.FindAllString(input, -1)
 	// log.Debug("Beginning T.I", "CommandList", commandList)
@@ -184,7 +195,7 @@ func tokeniseAndDispatchInput(input string, cardGetFunction CardGetter) []string
 		}
 		message = strings.TrimSpace(message)
 		// Strip the command prefix
-		if strings.HasPrefix(message, "!") {
+		if strings.HasPrefix(message, "!") || strings.HasPrefix(message, "&") {
 			message = message[1:]
 		}
 		if singleQuotedWord.MatchString(message) {
@@ -221,58 +232,95 @@ func handleCommand(message string, c chan string, cardGetFunction CardGetter) {
 	cardTokens := strings.Fields(message)
 	log.Debug("Done tokenising", "Tokens", cardTokens)
 
-	// gathererRuling_regex := regexp.MustCompile(`^(?:(?P<start_number>\d+) ?(?P<name>.+)|(?P<name2>.*?) ?(?P<end_number>\d+).*?|(?P<name3>.+))`)
 	rulingOrFlavourRegex := regexp.MustCompile(`(?i)^((?:flavo(?:u{0,1})r(?: |s ))|(?:ruling(?: |s )))`)
 
-	if ruleRegexp.MatchString(message) || strings.HasPrefix(message, "def ") || strings.HasPrefix(message, "define ") ||
-		strings.HasPrefix(message, "ex ") {
+	if ruleRegexp.MatchString(message) ||
+		strings.HasPrefix(message, "r ") ||
+		strings.HasPrefix(message, "cr ") ||
+		strings.HasPrefix(message, "rule ") ||
+		strings.HasPrefix(message, "def ") ||
+		strings.HasPrefix(message, "define ") {
 		log.Debug("Rules query", "Input", message)
 		c <- handleRulesQuery(message)
 		return
 	}
 	if rulingOrFlavourRegex.MatchString(message) {
 		log.Debug("Ruling or flavour query")
-		c <- "Ruling or Flavour query"
+		c <- handleRulingOrFlavourQuery(cardTokens[0], message, cardGetFunction)
 		return
 	}
 	log.Debug("I think it's a card")
-	for _, rc := range reduceCardSentence(cardTokens) {
-		card, err := cardGetFunction(rc)
-		log.Debug("Card Func gave us", "Card", card, "Err", err)
-		if err == nil {
-			log.Debug("Found card!", "Token", rc, "Text", card)
-			c <- card
-			return
-		}
+	if card, err := findCard(cardTokens, cardGetFunction); err == nil {
+		c <- card.formatCard()
+		return
 	}
 	// If we got here, no cards found.
 	c <- ""
 	return
 }
 
+func handleRulingOrFlavourQuery(command string, input string, cardGetFunction CardGetter) string {
+	var (
+		cardName            string
+		rulingNumber        int
+		gathererRulingRegex = regexp.MustCompile(`^(?:(?P<start_number>\d+) ?(?P<name>.+)|(?P<name2>.*?) ?(?P<end_number>\d+).*?|(?P<name3>.+))`)
+	)
+	if gathererRulingRegex.MatchString(strings.SplitN(input, " ", 2)[1]) {
+		fass := gathererRulingRegex.FindAllStringSubmatch(strings.SplitN(input, " ", 2)[1], -1)
+		// One of these is guaranteed to contain the name
+		cardName = fass[0][2] + fass[0][3] + fass[0][5]
+		if len(cardName) == 0 {
+			log.Debug("In HROFQ", "Couldn't find card name", input)
+			return ""
+		}
+		if strings.HasPrefix(input, "ruling") {
+			rulingNumber, err := strconv.Atoi(fass[0][1] + fass[0][4])
+			if err != nil {
+				return "Unable to parse ruling number"
+			}
+			rulingNumber--
+		}
+		log.Debug("In HROFQ", "Valid command detected", "Command", command, "Card Name", cardName, "Ruling No.", rulingNumber)
+		c, err := findCard(strings.Split(cardName, " "), cardGetFunction)
+		if err != nil {
+			return "Unable to find card"
+		}
+		return c.getRulings(rulingNumber)
+	}
+	return "RULING/FLAVOUR"
+}
+
 func handleRulesQuery(input string) string {
 	log.Debug("In HRQ", "Input", input)
-	if strings.HasPrefix(input, "def ") || strings.HasPrefix(input, "define ") {
-		log.Debug("In HRQ", "Define matched on", strings.SplitN(input, " ", 2))
-		return strings.Join(rules[strings.SplitN(input, " ", 2)[1]], "\n")
+	// Match example first, for !ex101.a and !example 101.1a so the rule regexp doesn't eat it as a normal rule
+	if (strings.HasPrefix(input, "ex") || strings.HasPrefix(input, "example ")) && ruleRegexp.MatchString(input) {
+		log.Debug("In HRQ", "Example matched on", ruleRegexp.FindAllStringSubmatch(input, -1)[0][1])
+		return strings.Join(rules["ex"+ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]], "\n")
 	}
-	if strings.HasPrefix(input, "ex ") || strings.HasPrefix(input, "example ") {
-		log.Debug("In HRQ", "Example matched on", strings.SplitN(input, " ", 2))
-		return strings.Join(rules["ex"+strings.SplitN(input, " ", 2)[1]], "\n")
-	}
+	// Then try normal rules
 	if ruleRegexp.MatchString(input) {
 		log.Debug("In HRQ", "Rules matched on", ruleRegexp.FindAllStringSubmatch(input, -1)[0][1])
 		return strings.Join(rules[ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]], "\n")
 	}
+	// Finally try Glossary entries, people might do "!rule Deathtouch" rather than the proper "!define Deathtouch"
+	if strings.HasPrefix(input, "def ") || strings.HasPrefix(input, "define ") || strings.HasPrefix(input, "rule ") || strings.HasPrefix(input, "r ") || strings.HasPrefix(input, "cr ") {
+		log.Debug("In HRQ", "Define matched on", strings.SplitN(input, " ", 2))
+		return strings.Join(rules[strings.SplitN(input, " ", 2)[1]], "\n")
+	}
 	// Didn't match ??
-	return "RULEZ ???"
+	return ""
 }
 
-func normaliseCardName(input string) string {
-	nonAlphaRegex := regexp.MustCompile(`\W+`)
-	ret := nonAlphaRegex.ReplaceAllString(strings.ToLower(input), "")
-	log.Debug("Normalising", "Input", input, "Output", ret)
-	return ret
+func findCard(cardTokens []string, cardGetFunction CardGetter) (Card, error) {
+	for _, rc := range reduceCardSentence(cardTokens) {
+		card, err := cardGetFunction(rc)
+		log.Debug("Card Func gave us", "CardID", card.ID, "Card", card, "Err", err)
+		if err == nil {
+			log.Debug("Found card!", "Token", rc, "CardID", card.ID, "Object", card)
+			return card, nil
+		}
+	}
+	return Card{}, fmt.Errorf("Card not found")
 }
 
 func reduceCardSentence(tokens []string) []string {
@@ -288,46 +336,20 @@ func reduceCardSentence(tokens []string) []string {
 	return ret
 }
 
-func getScryfallCard(input string) (string, error) {
-	// Normalise input to match how we store in the cache:
-	// lowercase, no punctuation.
-	ncn := normaliseCardName(input)
-	if cacheCard, found := c.Get(ncn); found {
-		log.Debug("Card was cached")
-		return cacheCard.(string), nil
-	}
-	url := fmt.Sprintf("https://api.scryfall.com/cards/named?fuzzy=%s", url.QueryEscape(input))
-	log.Debug("Attempting to fetch", "URL", url)
-	resp, err := http.Get(url)
-	if err != nil {
-		raven.CaptureError(err, nil)
-		log.Warn("The HTTP request failed", "Error", err)
-		return "", fmt.Errorf("Something went wrong fetching the card")
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode == 200 {
-		var card Card
-		if err := json.NewDecoder(resp.Body).Decode(&card); err != nil {
-			raven.CaptureError(err, nil)
-			return "", fmt.Errorf("Something went wrong parsing the card")
-		}
-		cardText := formatCard(&card)
-		// Store what they typed, and also the real card name.
-		c.Set(ncn, cardText, cache.DefaultExpiration)
-		c.Set(normaliseCardName(card.Name), cardText, cache.DefaultExpiration)
-		return cardText, nil
-	}
-	log.Info("Scryfall returned a non-200", "Status Code", resp.StatusCode)
-	// Store nil result anyway.
-	c.Set(ncn, "", cache.DefaultExpiration)
-	return "", fmt.Errorf("No card found")
-}
-
 func main() {
 	flag.Parse()
 	raven.SetDSN("___DSN___")
 
-	if err := fetchOrImportRules(); err != nil {
+	// Bail out of everything if we can't have the rules.
+	if err := importRules(); err != nil {
+		raven.CaptureErrorAndWait(err, nil)
+		panic(err)
+	}
+
+	// Initialise cache
+	var err error
+	nameToCardCache, err = lru.NewARC(2048)
+	if err != nil {
 		raven.CaptureErrorAndWait(err, nil)
 		panic(err)
 	}

@@ -8,11 +8,11 @@ import (
 	"time"
 )
 
-func fakeGetCard(cardname string) (string, error) {
+func fakeGetCard(cardname string) (Card, error) {
 	r := rand.Intn(1000)
 	fmt.Printf("Trying to get card %v -- Sleeping %v ms\n", cardname, r)
 	time.Sleep(time.Duration(r) * time.Millisecond)
-	return "CARD", nil
+	return Card{Name: "CARD", Set: "TestSet", Rarity: "TestRare", ID: cardname}, nil
 }
 
 func TestNormaliseCardName(t *testing.T) {
@@ -32,23 +32,30 @@ func TestNormaliseCardName(t *testing.T) {
 }
 
 func TestTokens(t *testing.T) {
-	err := fetchOrImportRules()
+	// Clear and import rules
+	rules = make(map[string][]string)
+	err := importRules()
+
 	if err != nil {
 		t.Errorf("Didn't expect an error -- got %v", err)
 	}
 	var emptyStringSlice []string
+	var testCardExpected = "CARD |  |  · TESTSET-T · "
 	tables := []struct {
 		input  string
 		output []string
 	}{
 		{"Hello! ", []string{}},
+		{"!  ", emptyStringSlice},
+		{"Test!", emptyStringSlice},
+		{"'Test!'", emptyStringSlice},
 		{"<Bird12> Just making sure, thank you!!!!", emptyStringSlice},
 		{"<Cyclops7> Thank you!! I have one more question kind of in the same realm-- if I want to bring some tokens with me to the same event, am I allowed to keep them in the deckbox with my deck and sideboard, or do I have to keep them someplace else?", []string{}},
 		{"<+mtgrelay> [Fear12] Hi!! Quick question: Does Sundial of the Infinite bypass/combo with Psychic Vortex?", []string{}},
-		{"<+mtgrelay> [Fear12] Hi!! Quick question: Does !Sundial of the Infinite bypass/combo with !Psychic Vortex?", []string{"CARD", "CARD"}},
-		{"<MW> !!fract ident &treas nabb", []string{"CARD", "CARD"}},
+		{"<+mtgrelay> [Fear12] Hi!! Quick question: Does !Sundial of the Infinite bypass/combo with !Psychic Vortex?", []string{testCardExpected, testCardExpected}},
+		{"<MW> !!fract ident &treas nabb", []string{testCardExpected, testCardExpected}},
 		{"!cr 100.1a", []string{"A two-player game is a game that begins with only two players."}},
-		{"!100.1a !!hi", []string{"A two-player game is a game that begins with only two players.", "CARD"}},
+		{"!100.1a !!hi", []string{"A two-player game is a game that begins with only two players.", testCardExpected}},
 	}
 	for _, table := range tables {
 		got := tokeniseAndDispatchInput(table.input, fakeGetCard)
@@ -59,7 +66,10 @@ func TestTokens(t *testing.T) {
 }
 
 func TestRules(t *testing.T) {
-	err := fetchOrImportRules()
+	// Clear and import rules
+	rules = make(map[string][]string)
+	err := importRules()
+
 	if err != nil {
 		t.Errorf("Didn't expect an error -- got %v", err)
 	}
@@ -80,7 +90,9 @@ func TestRules(t *testing.T) {
 }
 
 func TestGetRule(t *testing.T) {
-	err := fetchOrImportRules()
+	// Clear and import rules
+	rules = make(map[string][]string)
+	err := importRules()
 	if err != nil {
 		t.Errorf("Didn't expect an error -- got %v", err)
 	}
@@ -94,7 +106,9 @@ func TestGetRule(t *testing.T) {
 		{"rule 100.1a", "A two-player game is a game that begins with only two players."},
 		{"def Absorb", `A keyword ability that prevents damage. See rule 702.63, "Absorb."`},
 		{"define Absorb", `A keyword ability that prevents damage. See rule 702.63, "Absorb."`},
+		{"rule Absorb", `A keyword ability that prevents damage. See rule 702.63, "Absorb."`},
 		{"ex 101.2", `Example: If one effect reads "You may play an additional land this turn" and another reads "You can’t play lands this turn," the effect that precludes you from playing lands wins.`},
+		{"ex101.2", `Example: If one effect reads "You may play an additional land this turn" and another reads "You can’t play lands this turn," the effect that precludes you from playing lands wins.`},
 		{"example 101.2", `Example: If one effect reads "You may play an additional land this turn" and another reads "You can’t play lands this turn," the effect that precludes you from playing lands wins.`},
 		{"ex 999.99", ""},
 		{"example 999.99", ""},
