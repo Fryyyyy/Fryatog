@@ -4,14 +4,22 @@ import (
 	"fmt"
 	"math/rand"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
+
+	hbot "github.com/whyrusleeping/hellabot"
 )
 
 func fakeGetCard(cardname string) (Card, error) {
 	r := rand.Intn(1000)
 	fmt.Printf("Trying to get card %v -- Sleeping %v ms\n", cardname, r)
 	time.Sleep(time.Duration(r) * time.Millisecond)
+	for _, c := range FakeCards {
+		if cardname == c.Name {
+			return c, nil
+		}
+	}
 	return Card{Name: "CARD", Set: "TestSet", Rarity: "TestRare", ID: cardname}, nil
 }
 
@@ -34,7 +42,7 @@ func TestNormaliseCardName(t *testing.T) {
 func TestTokens(t *testing.T) {
 	// Clear and import rules
 	rules = make(map[string][]string)
-	err := importRules()
+	err := importRules(false)
 
 	if err != nil {
 		t.Errorf("Didn't expect an error -- got %v", err)
@@ -58,7 +66,7 @@ func TestTokens(t *testing.T) {
 		{"!100.1a !!hi", []string{"A two-player game is a game that begins with only two players.", testCardExpected}},
 	}
 	for _, table := range tables {
-		got := tokeniseAndDispatchInput(table.input, fakeGetCard)
+		got := tokeniseAndDispatchInput(&hbot.Message{Content: table.input}, fakeGetCard)
 		if !reflect.DeepEqual(got, table.output) {
 			t.Errorf("Incorrect output for [%v] -- got %s -- want %s", table.input, got, table.output)
 		}
@@ -68,7 +76,7 @@ func TestTokens(t *testing.T) {
 func TestRules(t *testing.T) {
 	// Clear and import rules
 	rules = make(map[string][]string)
-	err := importRules()
+	err := importRules(false)
 
 	if err != nil {
 		t.Errorf("Didn't expect an error -- got %v", err)
@@ -92,7 +100,7 @@ func TestRules(t *testing.T) {
 func TestGetRule(t *testing.T) {
 	// Clear and import rules
 	rules = make(map[string][]string)
-	err := importRules()
+	err := importRules(false)
 	if err != nil {
 		t.Errorf("Didn't expect an error -- got %v", err)
 	}
@@ -124,5 +132,31 @@ func TestGetRule(t *testing.T) {
 		if got != table.output {
 			t.Errorf("Incorrect output -- got %s - want %s", got, table.output)
 		}
+	}
+}
+
+func TestRulingsAndFlavour(t *testing.T) {
+	tables := []struct {
+		command string
+		message string
+		output  string
+	}{
+		{"ruling", "ruling TestCardWithOneWOTCRuling 1", "1900-01-01: Print Me"},
+		{"ruling", "ruling TestCardWithOneWOTCRuling", "1900-01-01: Print Me"},
+		{"ruling", "ruling TestCardWithOneNonWOTCRuling 1", "Ruling not found"},
+		{"ruling", "ruling TestCardWithOneNonWOTCRuling", "Ruling not found"},
+	}
+	for _, table := range tables {
+		got := handleRulingOrFlavourQuery(table.command, table.message, fakeGetCard)
+		if got != table.output {
+			t.Errorf("Incorrect output -- got %s - want %s", got, table.output)
+		}
+	}
+}
+
+func TestHelp(t *testing.T) {
+	got := printHelp()
+	if !strings.Contains(got, "!cardname") {
+		t.Errorf("Incorrect output -- got %s - want %s", got, "!cardname")
 	}
 }

@@ -215,6 +215,9 @@ func getScryfallCard(input string) (Card, error) {
 	ncn := normaliseCardName(input)
 	if cacheCard, found := nameToCardCache.Get(ncn); found {
 		log.Debug("Card was cached")
+		if cacheCard == nil {
+			return Card{}, fmt.Errorf("Card not found")
+		}
 		return cacheCard.(Card), nil
 	}
 	url := fmt.Sprintf("https://api.scryfall.com/cards/named?fuzzy=%s", url.QueryEscape(input))
@@ -299,6 +302,9 @@ func (card Card) getRulings(rulingNumber int) string {
 	}
 	if rulingNumber > 0 || len(ret) == 0 {
 		return "Ruling not found"
+	}
+	if len(ret) > 3 {
+		return "Too many rulings, please request a specific one"
 	}
 	return strings.Join(ret, "\n")
 }

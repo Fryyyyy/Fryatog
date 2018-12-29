@@ -6,6 +6,15 @@ import (
 	"testing"
 )
 
+var (
+	TestCardWithNoRulings        = Card{Name: "TestCardWithNoRulings"}
+	TestCardWithEmptyRulings     = Card{Name: "TestCardWithNoRulings", Rulings: []CardRuling{}}
+	TestCardWithOneNonWOTCRuling = Card{Name: "TestCardWithOneNonWOTCRuling", Rulings: []CardRuling{{Source: "Fry", Comment: "No Print!"}}}
+	TestCardWithOneWOTCRuling    = Card{Name: "TestCardWithOneWOTCRuling", Rulings: []CardRuling{{Source: "wotc", Comment: "Print Me", PublishedAt: "1900-01-01"}}}
+	TestCardWithTwoWOTCRulings   = Card{Name: "TestCardWithTwoWOTCRulings", Rulings: []CardRuling{{Source: "wotc", Comment: "Print Me", PublishedAt: "1900-02-02"}, {Source: "wotc", Comment: "Print Me Too!", PublishedAt: "1900-03-03"}}}
+	FakeCards                    = []Card{TestCardWithNoRulings, TestCardWithEmptyRulings, TestCardWithOneNonWOTCRuling, TestCardWithOneWOTCRuling, TestCardWithTwoWOTCRulings}
+)
+
 func TestPrintCard(t *testing.T) {
 	tables := []struct {
 		file   string
@@ -34,13 +43,6 @@ func TestPrintCard(t *testing.T) {
 }
 
 func TestGetRulings(t *testing.T) {
-	var (
-		TestCardWithNoRulings        = Card{Name: "TestCardWithNoRulings"}
-		TestCardWithEmptyRulings     = Card{Name: "TestCardWithNoRulings", Rulings: []CardRuling{}}
-		TestCardWithOneNonWOTCRuling = Card{Name: "TestCardWithOneNonWOTCRuling", Rulings: []CardRuling{{Source: "Fry", Comment: "No Print!"}}}
-		TestCardWithOneWOTCRuling    = Card{Name: "TestCardWithOneWOTCRuling", Rulings: []CardRuling{{Source: "wotc", Comment: "Print Me", PublishedAt: "1900-01-01"}}}
-		TestCardWithTwoWOTCRulings   = Card{Name: "TestCardWithTwoWOTCRulings", Rulings: []CardRuling{{Source: "wotc", Comment: "Print Me", PublishedAt: "1900-02-02"}, {Source: "wotc", Comment: "Print Me Too!", PublishedAt: "1900-03-03"}}}
-	)
 	tables := []struct {
 		input        Card
 		rulingNumber int
