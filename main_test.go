@@ -126,6 +126,9 @@ func TestGetRule(t *testing.T) {
 		{"rule 999.99", ""},
 		{"def CLOWNS", ""},
 		{"define CLOWNS", ""},
+		{"define adsorb", `A keyword ability that prevents damage. See rule 702.63, "Absorb."`},
+		{"define deaftouch", `A keyword ability that causes damage dealt by an object to be especially effective. See rule 702.2, "Deathtouch."`},
+		{"define die", `A creature or planeswalker "dies" if it is put into a graveyard from the battlefield. See rule 700.4.`},
 	}
 	for _, table := range tables {
 		got := handleRulesQuery(table.input)

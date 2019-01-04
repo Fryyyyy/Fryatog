@@ -3,14 +3,20 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"strings"
 
 	raven "github.com/getsentry/raven-go"
+	closestmatch "github.com/schollz/closestmatch"
 	log "gopkg.in/inconshreveable/log15.v2"
 )
+
+const namesFile = "names.json"
+const namesURL = "https://api.scryfall.com/catalog/card-names"
 
 // CardRuling contains an individual ruling on a card
 type CardRuling struct {
@@ -205,21 +211,36 @@ func (card Card) formatCard() string {
 func normaliseCardName(input string) string {
 	nonAlphaRegex := regexp.MustCompile(`\W+`)
 	ret := nonAlphaRegex.ReplaceAllString(strings.ToLower(input), "")
-	log.Debug("Normalising", "Input", input, "Output", ret)
+	// log.Debug("Normalising", "Input", input, "Output", ret)
 	return ret
 }
 
-func getScryfallCard(input string) (Card, error) {
-	// Normalise input to match how we store in the cache:
-	// lowercase, no punctuation.
-	ncn := normaliseCardName(input)
-	if cacheCard, found := nameToCardCache.Get(ncn); found {
-		log.Debug("Card was cached")
-		if cacheCard == nil {
-			return Card{}, fmt.Errorf("Card not found")
+func lookupUniqueNamePrefix(input string) string {
+	log.Debug("in lookupUniqueNamePrefix", "Input", input, "NCN", normaliseCardName(input), "Length of CN", len(cardNames))
+	var err error
+	if len(cardNames) == 0 {
+		log.Debug("In lookupUniqueNamePrefix -- Importing")
+		cardNames, err = importCardNames(false)
+		if err != nil {
+			log.Warn("Error importing card names", "Error", err)
+			return ""
 		}
-		return cacheCard.(Card), nil
 	}
+	c := cardNames[:0]
+	for _, x := range cardNames {
+		if strings.HasPrefix(normaliseCardName(x), normaliseCardName(input)) {
+			log.Debug("In lookupUniqueNamePrefix", "Gottem", x)
+			c = append(c, x)
+		}
+	}
+	log.Debug("In lookupUniqueNamePrefix", "C", c)
+	if len(c) == 1 {
+		return c[0]
+	}
+	return ""
+}
+
+func fetchScryfallCardByFuzzyName(input string) (Card, error) {
 	url := fmt.Sprintf("https://api.scryfall.com/cards/named?fuzzy=%s", url.QueryEscape(input))
 	log.Debug("Attempting to fetch", "URL", url)
 	resp, err := http.Get(url)
@@ -229,21 +250,50 @@ func getScryfallCard(input string) (Card, error) {
 		return Card{}, fmt.Errorf("Something went wrong fetching the card")
 	}
 	defer resp.Body.Close()
+	var card Card
 	if resp.StatusCode == 200 {
-		var card Card
 		if err := json.NewDecoder(resp.Body).Decode(&card); err != nil {
 			raven.CaptureError(err, nil)
-			return Card{}, fmt.Errorf("Something went wrong parsing the card")
+			return card, fmt.Errorf("Something went wrong parsing the card")
 		}
-		// Store what they typed, and also the real card name.
+		return card, nil
+	}
+	log.Info("Scryfall returned a non-200", "Status Code", resp.StatusCode)
+	return card, fmt.Errorf("Card not found by Scryfall")
+}
+
+func getScryfallCard(input string) (Card, error) {
+	var card Card
+	// Normalise input to match how we store in the cache:
+	// lowercase, no punctuation.
+	ncn := normaliseCardName(input)
+	if cacheCard, found := nameToCardCache.Get(ncn); found {
+		log.Debug("Card was cached")
+		if cacheCard == nil {
+			return card, fmt.Errorf("Card not found")
+		}
+		return cacheCard.(Card), nil
+	}
+	// Try fuzzily matching the name
+	card, err := fetchScryfallCardByFuzzyName(input)
+	if err == nil {
 		nameToCardCache.Add(ncn, card)
 		nameToCardCache.Add(normaliseCardName(card.Name), card)
 		return card, nil
 	}
-	log.Info("Scryfall returned a non-200", "Status Code", resp.StatusCode)
-	// Store nil result anyway.
+	// No luck - try unique prefix
+	cardName := lookupUniqueNamePrefix(input)
+	if cardName != "" {
+		card, err = fetchScryfallCardByFuzzyName(cardName)
+		if err == nil {
+			nameToCardCache.Add(ncn, card)
+			nameToCardCache.Add(normaliseCardName(card.Name), card)
+			return card, nil
+		}
+	}
+	// Store what they typed
 	nameToCardCache.Add(ncn, nil)
-	return Card{}, fmt.Errorf("No card found")
+	return card, fmt.Errorf("No card found")
 }
 
 // CardCatalog stores the result of the catalog/card-names API call
@@ -254,26 +304,69 @@ type CardCatalog struct {
 	Data        []string `json:"data"`
 }
 
-func retrieveAllCardNames() ([]string, error) {
-	url := fmt.Sprintf("https://api.scryfall.com/catalog/card-names")
-	log.Debug("Attempting to fetch", "URL", url)
-	resp, err := http.Get(url)
+func fetchCardNames() error {
+	// Fetch it
+	out, err := os.Create(namesFile)
+	if err != nil {
+		return err
+	}
+	log.Debug("Attempting to fetch", "URL", namesURL)
+	resp, err := http.Get(namesURL)
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("The HTTP request failed", "Error", err)
-		return []string{}, fmt.Errorf("Something went wrong fetching the cardname catalog")
+		return fmt.Errorf("Something went wrong fetching the cardname catalog")
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
-		var catalog CardCatalog
-		if err := json.NewDecoder(resp.Body).Decode(&catalog); err != nil {
-			raven.CaptureError(err, nil)
-			return []string{}, fmt.Errorf("Something went wrong parsing the cardname catalog")
+		_, err = io.Copy(out, resp.Body)
+		if err != nil {
+			log.Warn("Error writing to cardNames file", "Error", err)
+			return err
 		}
-		return catalog.Data, nil
+		out.Close()
+		return nil
 	}
-	log.Info("Scryfall returned a non-200", "Status Code", resp.StatusCode)
-	return []string{}, fmt.Errorf("Error hitting Scryfall")
+	log.Warn("Scryfall returned a non-200", "Status Code", resp.StatusCode)
+	return fmt.Errorf("Scryfall returned a non-200")
+}
+
+func importCardNames(forceFetch bool) ([]string, error) {
+	log.Debug("In importCardNames")
+	if forceFetch {
+		if err := fetchCardNames(); err != nil {
+			log.Warn("Error fetching card names", "Error", err)
+			return []string{}, err
+		}
+	}
+	if _, err := os.Stat(namesFile); err != nil {
+		if err := fetchCardNames(); err != nil {
+			log.Warn("Error fetching card names", "Error", err)
+			return []string{}, err
+		}
+	}
+	// Parse it.
+	f, err := os.Open(namesFile)
+	defer f.Close()
+	if err != nil {
+		log.Warn("Error opening cardNames file", "Error", err)
+		return []string{}, err
+	}
+	var catalog CardCatalog
+	if err := json.NewDecoder(f).Decode(&catalog); err != nil {
+		// raven.CaptureError(err, nil)
+		log.Warn("Error parsing cardnames file", "Error", err)
+		return []string{}, fmt.Errorf("Something went wrong parsing the cardname catalog")
+	}
+	cardCM, err = closestmatch.Load(cardNamesGob)
+	if err != nil {
+		log.Debug("Cards CM -- Creating from Scratch")
+		cardCM = closestmatch.New(cardNames, []int{2, 3})
+		err = cardCM.Save(cardNamesGob)
+		log.Warn("Cards CM", "Error", err)
+	}
+	log.Debug("Cards CM", "Accuracy", cardCM.AccuracyMutatingWords())
+	return catalog.Data, nil
 }
 
 func (card Card) getRulings(rulingNumber int) string {

@@ -14,6 +14,7 @@ import (
 
 	raven "github.com/getsentry/raven-go"
 	lru "github.com/hashicorp/golang-lru"
+	closestmatch "github.com/schollz/closestmatch"
 	hbot "github.com/whyrusleeping/hellabot"
 	charmap "golang.org/x/text/encoding/charmap"
 	log "gopkg.in/inconshreveable/log15.v2"
@@ -31,7 +32,11 @@ var (
 	botChannels = []string{"#frybottest"}
 
 	// Rules & Glossary dictionary.
-	rules = make(map[string][]string)
+	rules   = make(map[string][]string)
+	rulesCM *closestmatch.ClosestMatch
+	// Card names catalog
+	cardNames []string
+	cardCM    *closestmatch.ClosestMatch
 
 	// Store people who we know of as Ops
 	chanops = make(map[string]struct{})
@@ -44,6 +49,8 @@ var (
 // Fuck it I'll do it myself
 const crURL = "https://chat.mtgpairings.info/cr-stable/"
 const crFile = "CR.txt"
+const rulesGob = "rules.gob"
+const cardNamesGob = "cardnames.gob"
 
 // CardGetter defines a function that retrieves a card's text.
 // Defining this type allows us to override it in testing, and not hit scryfall.com a million times.
@@ -55,6 +62,7 @@ type CardGetter func(cardname string) (Card, error)
 // Scryfall fuzzy matching on single legendary names :(
 // Say "card not found" in private message
 // LATER TODO:
+// Use chan to signal when WHO list is finished rather than strict timeout
 // Dedupe over time? Don't bring up card from the last X seconds
 // Advanced search
 // Momir
@@ -72,20 +80,22 @@ func printHelp() string {
 }
 
 func isSenderAnOp(m *hbot.Message) bool {
-	log.Debug("In ISAO", "Chanops", chanops)
+	log.Debug("In isSenderAnOp", "Chanops", chanops)
+	var justGotWho bool
 	// Do we now about any ops?
 	if len(chanops) == 0 {
-		sendWho()
+		getWho()
+		justGotWho = true
 		time.Sleep(1 * time.Second)
 	}
-	log.Debug("In ISAO Mark II", "Chanops", chanops)
+	log.Debug("In isSenderAnOp Mark II", "Chanops", chanops)
 	// Is the user an OP in the channel that the message was sent from
 	// If it was a private message, are they an op in any of the channels we're in?
-	if _, ok := chanops[m.From]; !ok {
+	if _, ok := chanops[m.From]; !justGotWho && !ok {
 		// Maybe our list is out of date
-		sendWho()
+		getWho()
 		time.Sleep(1 * time.Second)
-		log.Debug("In ISAO Mark III", "Chanops", chanops)
+		log.Debug("In isSenderAnOp Mark III", "Chanops", chanops)
 	}
 	_, ok := chanops[m.From]
 	return ok
@@ -106,11 +116,13 @@ func handleWhoMessage(input []string) {
 			chanops[input[5]] = struct{}{}
 		}
 	}
-	log.Debug("Handling Who Message", "Chanops Final Result", chanops)
+	log.Debug("Handling Who Message", "Chanops Result", chanops)
 }
 
-func sendWho() {
+func getWho() {
 	log.Debug("Horton hears")
+	// Clear existing chanops
+	chanops = make(map[string]struct{})
 	for _, c := range botChannels {
 		bot.Send(fmt.Sprintf("WHO %s", c))
 	}
@@ -138,12 +150,19 @@ func fetchRulesFile() error {
 }
 
 func importRules(forceFetch bool) error {
+	log.Debug("In importRules", "Force?", forceFetch)
 	if forceFetch {
-		fetchRulesFile()
+		if err := fetchRulesFile(); err != nil {
+			log.Warn("Error fetching rules file", "Error", err)
+			return err
+		}
 	}
 
 	if _, err := os.Stat(crFile); err != nil {
-		fetchRulesFile()
+		if err := fetchRulesFile(); err != nil {
+			log.Warn("Error fetching rules file", "Error", err)
+			return err
+		}
 	}
 
 	// Parse it.
@@ -170,7 +189,7 @@ func importRules(forceFetch bool) error {
 	// Begin rules parsing
 	for scanner.Scan() {
 		line := scanner.Text()
-		if line == "" {
+		if rulesMode && line == "" {
 			continue
 		}
 		// Clean up line
@@ -189,6 +208,7 @@ func importRules(forceFetch bool) error {
 				metCredits = true
 			} else {
 				// Done!
+				makeRulesCM(forceFetch)
 				return nil
 			}
 		} else if rulesMode {
@@ -210,9 +230,10 @@ func importRules(forceFetch bool) error {
 				// log.Debug("In scanner", "Rules mode: Ignored line", line)
 			}
 		} else {
-			if lastGlossary != "" {
-				rules[lastGlossary] = append(rules[lastGlossary], line)
+			if line == "" {
 				lastGlossary = ""
+			} else if lastGlossary != "" {
+				rules[lastGlossary] = append(rules[lastGlossary], line)
 			} else {
 				lastGlossary = line
 			}
@@ -221,8 +242,28 @@ func importRules(forceFetch bool) error {
 	if err := scanner.Err(); err != nil {
 		fmt.Fprintln(os.Stderr, "reading standard input:", err)
 	}
-
 	return nil
+}
+
+func makeRulesCM(forceFetch bool) {
+	var err error
+	if !forceFetch {
+		rulesCM, err = closestmatch.Load(rulesGob)
+		if err != nil {
+			makeRulesCM(true)
+			return
+		}
+	}
+	rulesKeys := make([]string, len(rules))
+	for k := range rules {
+		rulesKeys = append(rulesKeys, k)
+	}
+	rulesCM = closestmatch.New(rulesKeys, []int{2, 3, 4})
+	log.Debug("Rules CM", "Accuracy", rulesCM.AccuracyMutatingWords())
+	err = rulesCM.Save(rulesGob)
+	if err != nil {
+		log.Warn("Rules CM", "Error", err)
+	}
 }
 
 // tokeniseAndDispatchInput splits the given user-supplied string into a number of commands
@@ -249,17 +290,37 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []str
 	}
 
 	// Special case the Operator Commands
-	if input == "!updaterules" {
-		if isSenderAnOp(m) {
-			if err := importRules(true); err != nil {
-				return []string{"Problem!"}
-			}
-			return []string{"Done!"}
-		}
-		return []string{"Need operator privileges"}
-	}
 	if input == "!quitquitquit" && isSenderAnOp(m) {
 		panic("Operator caused us to quit")
+	}
+
+	if input == "!updaterules" && isSenderAnOp(m) {
+		if err := importRules(true); err != nil {
+			log.Warn("Error importing Rules", "Error", err)
+			return []string{"Problem!"}
+		}
+		return []string{"Done!"}
+	}
+	if input == "!updatecardnames" && isSenderAnOp(m) {
+		var err error
+		cardNames, err = importCardNames(true)
+		if err != nil {
+			log.Warn("Error importing card names", "Error", err)
+			return []string{"Problem!"}
+		}
+		return []string{"Done!"}
+	}
+	if input == "!startup" && isSenderAnOp(m) {
+		var ret []string
+		var err error
+		if err = importRules(false); err != nil {
+			ret = append(ret, "Problem fetching rules")
+		}
+		cardNames, err = importCardNames(false)
+		if err != nil {
+			ret = append(ret, "Problem fetching card names")
+		}
+		return ret
 	}
 
 	for _, message := range commandList {
@@ -308,7 +369,7 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []str
 // handleCommand takes in a message, splits it into words
 // and attempts to dispatch it to the correct handler.
 func handleCommand(message string, c chan string, cardGetFunction CardGetter) {
-	log.Debug("In HC", "Message", message)
+	log.Debug("In handleCommand", "Message", message)
 	cardTokens := strings.Fields(message)
 	log.Debug("Done tokenising", "Tokens", cardTokens)
 
@@ -319,11 +380,6 @@ func handleCommand(message string, c chan string, cardGetFunction CardGetter) {
 	case message == "help":
 		log.Debug("Asked for help", "Input", message)
 		c <- printHelp()
-		return
-
-	case message == "sendwho":
-		log.Debug("Asked for who")
-		sendWho()
 		return
 
 	case ruleRegexp.MatchString(message),
@@ -365,7 +421,7 @@ func handleRulingOrFlavourQuery(command string, input string, cardGetFunction Ca
 		// One of these is guaranteed to contain the name
 		cardName = fass[0][2] + fass[0][3] + fass[0][5]
 		if len(cardName) == 0 {
-			log.Debug("In HROFQ", "Couldn't find card name", input)
+			log.Debug("In handleRulingOrFlavourQuery", "Couldn't find card name", input)
 			return ""
 		}
 		if strings.HasPrefix(input, "ruling") {
@@ -379,7 +435,7 @@ func handleRulingOrFlavourQuery(command string, input string, cardGetFunction Ca
 				}
 			}
 		}
-		log.Debug("In HROFQ - Valid command detected", "Command", command, "Card Name", cardName, "Ruling No.", rulingNumber)
+		log.Debug("In handleRulingOrFlavourQuery - Valid command detected", "Command", command, "Card Name", cardName, "Ruling No.", rulingNumber)
 		c, err := findCard(strings.Split(cardName, " "), cardGetFunction)
 		if err != nil {
 			return "Unable to find card"
@@ -390,21 +446,28 @@ func handleRulingOrFlavourQuery(command string, input string, cardGetFunction Ca
 }
 
 func handleRulesQuery(input string) string {
-	log.Debug("In HRQ", "Input", input)
+	log.Debug("In handleRulesQuery", "Input", input)
 	// Match example first, for !ex101.a and !example 101.1a so the rule regexp doesn't eat it as a normal rule
 	if (strings.HasPrefix(input, "ex") || strings.HasPrefix(input, "example ")) && ruleRegexp.MatchString(input) {
-		log.Debug("In HRQ", "Example matched on", ruleRegexp.FindAllStringSubmatch(input, -1)[0][1])
+		log.Debug("In handleRulesQuery", "Example matched on", ruleRegexp.FindAllStringSubmatch(input, -1)[0][1])
 		return strings.Join(rules["ex"+ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]], "\n")
 	}
 	// Then try normal rules
 	if ruleRegexp.MatchString(input) {
-		log.Debug("In HRQ", "Rules matched on", ruleRegexp.FindAllStringSubmatch(input, -1)[0][1])
+		log.Debug("In handleRulesQuery", "Rules matched on", ruleRegexp.FindAllStringSubmatch(input, -1)[0][1])
 		return strings.Join(rules[ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]], "\n")
 	}
 	// Finally try Glossary entries, people might do "!rule Deathtouch" rather than the proper "!define Deathtouch"
 	if strings.HasPrefix(input, "def ") || strings.HasPrefix(input, "define ") || strings.HasPrefix(input, "rule ") || strings.HasPrefix(input, "r ") || strings.HasPrefix(input, "cr ") {
-		log.Debug("In HRQ", "Define matched on", strings.SplitN(input, " ", 2))
-		return strings.Join(rules[strings.SplitN(input, " ", 2)[1]], "\n")
+		log.Debug("In handleRulesQuery", "Define matched on", strings.SplitN(input, " ", 2))
+		query := strings.SplitN(input, " ", 2)[1]
+		if v, ok := rules[query]; ok {
+			log.Debug("Exact match")
+			return strings.Join(v, "\n")
+		}
+		bestGuess := rulesCM.Closest(query)
+		log.Debug("InExact match", "Guess", bestGuess)
+		return strings.Join(rules[bestGuess], "\n")
 	}
 	// Didn't match ??
 	return ""
@@ -439,14 +502,19 @@ func main() {
 	flag.Parse()
 	raven.SetDSN("___DSN___")
 
+	var err error
 	// Bail out of everything if we can't have the rules.
-	if err := importRules(false); err != nil {
+	if err = importRules(false); err != nil {
 		raven.CaptureErrorAndWait(err, nil)
 		panic(err)
 	}
 
+	cardNames, err = importCardNames(false)
+	if err != nil {
+		log.Warn("Error fetching card names", "Err", err)
+	}
+
 	// Initialise cache
-	var err error
 	nameToCardCache, err = lru.NewARC(2048)
 	if err != nil {
 		raven.CaptureErrorAndWait(err, nil)
