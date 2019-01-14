@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -14,22 +15,35 @@ import (
 
 	raven "github.com/getsentry/raven-go"
 	lru "github.com/hashicorp/golang-lru"
+	cache "github.com/patrickmn/go-cache"
 	closestmatch "github.com/schollz/closestmatch"
 	hbot "github.com/whyrusleeping/hellabot"
 	charmap "golang.org/x/text/encoding/charmap"
 	log "gopkg.in/inconshreveable/log15.v2"
 )
 
+// Configuration lists the configurable parameters, stored in config.json
+type configuration struct {
+	DSN          string   `json:"DSN"`
+	Password     string   `json:"Password"`
+	DevMode      bool     `json:"DevMode"`
+	ProdChannels []string `json:"ProdChannels"`
+	DevChannels  []string `json:"DevChannels"`
+	ProdNick     string   `json:"ProdNick"`
+	DevNick      string   `json:"DevNick"`
+}
+
 var (
-	bot             *hbot.Bot
+	bot  *hbot.Bot
+	conf configuration
+
+	// Caches
 	nameToCardCache *lru.ARCCache
+	recentsCache    = cache.New(30*time.Second, 1*time.Second)
 
 	// IRC Variables
-	nickString = "Fryatog"
-	// (for SSL) var serv = flag.String("server", "irc.freenode.net:6697", "hostname and port for irc server to connect to")
-	serv        = flag.String("server", "irc.freenode.net:6667", "hostname and port for irc server to connect to")
-	nick        = flag.String("nick", nickString, "nickname for the bot")
-	botChannels = []string{"#frybottest"}
+	whichChans []string
+	whichNick  string
 
 	// Rules & Glossary dictionary.
 	rules   = make(map[string][]string)
@@ -51,22 +65,32 @@ const crURL = "https://chat.mtgpairings.info/cr-stable/"
 const crFile = "CR.txt"
 const rulesGob = "rules.gob"
 const cardNamesGob = "cardnames.gob"
+const configFile = "config.json"
 
 // CardGetter defines a function that retrieves a card's text.
 // Defining this type allows us to override it in testing, and not hit scryfall.com a million times.
 type CardGetter func(cardname string) (Card, error)
 
+func readConfig() configuration {
+	file, _ := os.Open(configFile)
+	defer file.Close()
+	decoder := json.NewDecoder(file)
+	conf := configuration{}
+	err := decoder.Decode(&conf)
+	if err != nil {
+		panic(err)
+	}
+	return conf
+}
+
 // TODO:
-// Register bot nick
-// Fuzzy matching on rules/defines
-// Scryfall fuzzy matching on single legendary names :(
+// '[603.10a.] Example: Two' with highlighting of rule name and example
+// TODO: 4 cards similar to "deadeye bond" found: (1) Deadeye Brawler (2) Deadeye Navigator (3) Deadeye Plunderers (4) Deadeye Tormentor
 // Say "card not found" in private message
 // LATER TODO:
 // Use chan to signal when WHO list is finished rather than strict timeout
-// Dedupe over time? Don't bring up card from the last X seconds
 // Advanced search
 // Momir
-// Support [[card]]
 // Coin/D6
 // Random
 
@@ -112,7 +136,7 @@ func handleWhoMessage(input []string) {
 	// 6 Modes
 	if len(input) == 7 {
 		// Are they an op in one of our Base channels?
-		if strings.Contains(input[6], "@") && stringSliceContains(botChannels, input[1]) {
+		if strings.Contains(input[6], "@") && stringSliceContains(conf.ProdChannels, input[1]) {
 			chanops[input[5]] = struct{}{}
 		}
 	}
@@ -123,7 +147,7 @@ func getWho() {
 	log.Debug("Horton hears")
 	// Clear existing chanops
 	chanops = make(map[string]struct{})
-	for _, c := range botChannels {
+	for _, c := range whichChans {
 		bot.Send(fmt.Sprintf("WHO %s", c))
 	}
 }
@@ -250,6 +274,7 @@ func makeRulesCM(forceFetch bool) {
 	if !forceFetch {
 		rulesCM, err = closestmatch.Load(rulesGob)
 		if err != nil {
+			log.Warn("Making Rules CM", "Error loading", err)
 			makeRulesCM(true)
 			return
 		}
@@ -258,7 +283,7 @@ func makeRulesCM(forceFetch bool) {
 	for k := range rules {
 		rulesKeys = append(rulesKeys, k)
 	}
-	rulesCM = closestmatch.New(rulesKeys, []int{2, 3, 4})
+	rulesCM = closestmatch.New(rulesKeys, []int{2, 3, 4, 5, 6, 7})
 	log.Debug("Rules CM", "Accuracy", rulesCM.AccuracyMutatingWords())
 	err = rulesCM.Save(rulesGob)
 	if err != nil {
@@ -271,7 +296,7 @@ func makeRulesCM(forceFetch bool) {
 // Any real commands are handed to the handleCommand function
 func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []string {
 	var (
-		botCommandRegex      = regexp.MustCompile(`[!&]([^!&]+)`)
+		botCommandRegex      = regexp.MustCompile(`[!&]([^!&]+)|\[\[(.*?)\]\]`)
 		singleQuotedWord     = regexp.MustCompile(`^(?:\"|\')\w+(?:\"|\')$`)
 		nonTextRegex         = regexp.MustCompile(`^[^\w]+$`)
 		wordEndingInBang     = regexp.MustCompile(`\S+!(?: |\n)`)
@@ -279,15 +304,11 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []str
 		input                = m.Content
 	)
 
+	// if strings.Contains(input, "[[")
 	commandList := botCommandRegex.FindAllString(input, -1)
 	// log.Debug("Beginning T.I", "CommandList", commandList)
 	c := make(chan string)
 	var commands int
-
-	if wordEndingInBang.MatchString(input) && !wordStartingWithBang.MatchString(input) {
-		log.Info("WEIB Skip")
-		return []string{}
-	}
 
 	// Special case the Operator Commands
 	if input == "!quitquitquit" && isSenderAnOp(m) {
@@ -333,10 +354,17 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []str
 			log.Info("Double Iffy Skip", "Message", message)
 			continue
 		}
+		if wordEndingInBang.MatchString(input) && !wordStartingWithBang.MatchString(input) {
+			log.Info("WEIB Skip")
+			continue
+		}
 		message = strings.TrimSpace(message)
 		// Strip the command prefix
 		if strings.HasPrefix(message, "!") || strings.HasPrefix(message, "&") {
 			message = message[1:]
+		}
+		if strings.HasPrefix(message, "[[") && strings.HasSuffix(message, "]]") {
+			message = message[2 : len(message)-2]
 		}
 		if singleQuotedWord.MatchString(message) {
 			log.Debug("Single quoted word detected, stripping")
@@ -500,7 +528,8 @@ func reduceCardSentence(tokens []string) []string {
 
 func main() {
 	flag.Parse()
-	raven.SetDSN("___DSN___")
+	conf := readConfig()
+	raven.SetDSN(conf.DSN)
 
 	var err error
 	// Bail out of everything if we can't have the rules.
@@ -524,16 +553,42 @@ func main() {
 	hijackSession := func(bot *hbot.Bot) {
 		bot.HijackSession = true
 	}
-	channels := func(bot *hbot.Bot) {
-		bot.Channels = botChannels
+	noHijackSession := func(bot *hbot.Bot) {
+		bot.HijackSession = false
 	}
-	sslOptions := func(bot *hbot.Bot) {
+	devChannels := func(bot *hbot.Bot) {
+		bot.Channels = conf.DevChannels
+	}
+	prodChannels := func(bot *hbot.Bot) {
+		bot.Channels = conf.ProdChannels
+	}
+	noSSLOptions := func(bot *hbot.Bot) {
 		bot.SSL = false
+	}
+	yesSSLOptions := func(bot *hbot.Bot) {
+		bot.SSL = true
+	}
+	saslOptions := func(bot *hbot.Bot) {
+		bot.SASL = true
+		bot.Password = conf.Password
 	}
 	timeOut := func(bot *hbot.Bot) {
 		bot.ThrottleDelay = 300 * time.Millisecond
 	}
-	bot, err = hbot.NewBot(*serv, *nick, hijackSession, channels, sslOptions, timeOut)
+	if conf.DevMode {
+		log.Debug("DEBUG MODE")
+		whichChans = conf.DevChannels
+		whichNick = conf.DevNick
+		nonSSLServ := flag.String("server", "irc.freenode.net:6667", "hostname and port for irc server to connect to")
+		nick := flag.String("nick", conf.DevNick, "nickname for the bot")
+		bot, err = hbot.NewBot(*nonSSLServ, *nick, hijackSession, devChannels, noSSLOptions, timeOut)
+	} else {
+		whichChans = conf.ProdChannels
+		whichNick = conf.ProdNick
+		sslServ := flag.String("server", "irc.freenode.net:6697", "hostname and port for irc server to connect to")
+		nick := flag.String("nick", conf.ProdNick, "nickname for the bot")
+		bot, err = hbot.NewBot(*sslServ, *nick, noHijackSession, prodChannels, yesSSLOptions, saslOptions, timeOut)
+	}
 	if err != nil {
 		raven.CaptureErrorAndWait(err, nil)
 		panic(err)
@@ -552,22 +607,31 @@ func main() {
 // It could contain multiple comamnds, so for a message,
 // we need to figure out how to handle it and if it does contain commands, handle them
 // The message should probably start with a "!" or at least individual commands within it should.
+// Also supports [[Cardname]]
 // Most of this code stolen from Frytherer [https://github.com/Fryyyyy/Frytherer]
 var MainTrigger = hbot.Trigger{
 	Condition: func(bot *hbot.Bot, m *hbot.Message) bool {
-		return m.Command == "PRIVMSG" && strings.Contains(m.Content, "!")
+		return m.Command == "PRIVMSG" && (strings.Contains(m.Content, "!") || strings.Contains(m.Content, "[["))
 	},
 	Action: func(irc *hbot.Bot, m *hbot.Message) bool {
 		log.Debug("Dispatching message", "From", m.From, "To", m.To, "Content", m.Content)
-		if m.From == nickString {
+		if m.From == whichNick {
 			log.Debug("Ignoring message from myself", "Input", m.Content)
 		}
 		toPrint := tokeniseAndDispatchInput(m, getScryfallCard)
 		for _, s := range sliceUniqMap(toPrint) {
 			if s != "" {
+				// Check if we've already sent it recently
+				if _, found := recentsCache.Get(s); found {
+					irc.Reply(m, fmt.Sprintf("Duplicate response withheld. (%s ...)", s[:23]))
+					continue
+				}
+				recentsCache.Set(s, true, cache.DefaultExpiration)
 				for _, ss := range strings.Split(s, "\n") {
 					{
-						irc.Reply(m, wordWrap(ss, 390))
+						for _, sss := range strings.Split(wordWrap(ss, 390), "\n") {
+							irc.Reply(m, sss)
+						}
 					}
 				}
 			}

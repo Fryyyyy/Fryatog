@@ -177,20 +177,10 @@ func (card Card) formatLegalities() string {
 	return strings.Join(ret, ",")
 }
 
-// CREATURE
-// Plaguecrafter {2B} |Creature -- Human Shaman| 3/2 When Plaguecrafter enters the battlefield, each player sacrifices a creature or  planeswalker. Each player who can't discards a card. · GRN-U · Vin,Leg,Mod,Std
-// SPELL
-// Momentous Fall {2GG} |Instant| As an additional cost to cast this spell, sacrifice a creature. / You draw cards equal to the sacrificed creature's power, then you gain life equal to its toughness. · ROE-R · Vin,Leg,Mod
-// ENCHANTMENT
-//  Abduction {2UU} |Enchantment -- Aura| Enchant creature / When Abduction enters the battlefield, untap enchanted creature. / You control enchanted creature. / When enchanted creature dies, return that card to the
-//  battlefield under its owner's control. · 6E-U,WL-U · Vin,Leg
-// PLANESWALKER
-//  Jace, Cunning Castaway {1UU} |Legendary Planeswalker -- Jace| 3 loyalty. +1: Whenever one or more creatures you control deal combat damage to a player this turn, draw a card, then discard a card. / -2: Create a 2/2 blue
-// Illusion creature token with "When this creature becomes the target of a spell, sacrifice it." / -5: Create two tokens that are copies of Jace, Cunning Castaway, except they're ...
-// 07:07 <@Datatog> ... not legendary. · XLN-M · Vin,Leg,Mod,Std
 func (card Card) formatCard() string {
 	var s []string
-	s = append(s, card.Name)
+	// Bold card name
+	s = append(s, fmt.Sprintf("\x02%s\x0F", card.Name))
 	if card.ManaCost != "" {
 		s = append(s, card.formatManaCost())
 	}
@@ -236,6 +226,18 @@ func lookupUniqueNamePrefix(input string) string {
 	log.Debug("In lookupUniqueNamePrefix", "C", c)
 	if len(c) == 1 {
 		return c[0]
+	}
+	// Look for something legendary-ish
+	var i int
+	var j string
+	for _, x := range c {
+		if strings.Contains(x, ",") {
+			i++
+			j = x
+		}
+	}
+	if i == 1 {
+		return j
 	}
 	return ""
 }
@@ -361,7 +363,7 @@ func importCardNames(forceFetch bool) ([]string, error) {
 	cardCM, err = closestmatch.Load(cardNamesGob)
 	if err != nil {
 		log.Debug("Cards CM -- Creating from Scratch")
-		cardCM = closestmatch.New(cardNames, []int{2, 3})
+		cardCM = closestmatch.New(cardNames, []int{2, 3, 4, 5, 6, 7})
 		err = cardCM.Save(cardNamesGob)
 		log.Warn("Cards CM", "Error", err)
 	}
