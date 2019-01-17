@@ -483,7 +483,12 @@ func handleRulesQuery(input string) string {
 	// Then try normal rules
 	if ruleRegexp.MatchString(input) {
 		log.Debug("In handleRulesQuery", "Rules matched on", ruleRegexp.FindAllStringSubmatch(input, -1)[0][1])
-		return strings.Join(rules[ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]], "\n")
+    ruleNumber := []string{"", input, ". "}
+    ruleText := strings.Join(rules[ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]], "")
+    ruleWithNumber := append(ruleNumber, ruleText, "\n")
+    //ruleWithNumber = append(ruleWithNumber, "\n")
+    return strings.Join(ruleWithNumber, "")
+		//return strings.Join(rules[ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]], "\n")
 	}
 	// Finally try Glossary entries, people might do "!rule Deathtouch" rather than the proper "!define Deathtouch"
 	if strings.HasPrefix(input, "def ") || strings.HasPrefix(input, "define ") || strings.HasPrefix(input, "rule ") || strings.HasPrefix(input, "r ") || strings.HasPrefix(input, "cr ") {
