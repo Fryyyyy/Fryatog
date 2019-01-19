@@ -85,9 +85,16 @@ func readConfig() configuration {
 
 // TODO:
 // '[603.10a.] Example: Two' with highlighting of rule name and example
+// 03:41 < MW2> !305.3
+// 03:41 <+Fryatog> A player can’t play a land, for any reason, if it isn’t their turn. Ignore any part of an effect that instructs a player to do so.
+// ^^ Put a little Rule: beforehand.
+//  11:55 <@luma> !discovery
+//  11:55 <+Fryatog> Discovery // Dispersal {1U/B // 3UB} | Sorcery // Instant | · GRN-U · Vin,Leg,Mod,Std
+// ^ No rules text
 // TODO: 4 cards similar to "deadeye bond" found: (1) Deadeye Brawler (2) Deadeye Navigator (3) Deadeye Plunderers (4) Deadeye Tormentor
 // Say "card not found" in private message
 // LATER TODO:
+// Don't need ! in private message
 // Use chan to signal when WHO list is finished rather than strict timeout
 // Advanced search
 // Momir
@@ -118,7 +125,7 @@ func isSenderAnOp(m *hbot.Message) bool {
 	if _, ok := chanops[m.From]; !justGotWho && !ok {
 		// Maybe our list is out of date
 		getWho()
-		time.Sleep(1 * time.Second)
+		time.Sleep(4 * time.Second)
 		log.Debug("In isSenderAnOp Mark III", "Chanops", chanops)
 	}
 	_, ok := chanops[m.From]
@@ -126,6 +133,7 @@ func isSenderAnOp(m *hbot.Message) bool {
 }
 
 func handleWhoMessage(input []string) {
+	log.Debug("Handling Who Middle", "len7", len(input) == 7, "whichChans", whichChans)
 	// Input:
 	// 0 Bot Nickname
 	// 1 Channel
@@ -135,8 +143,9 @@ func handleWhoMessage(input []string) {
 	// 5 User Nick
 	// 6 Modes
 	if len(input) == 7 {
+		log.Debug("Handling Who Middle", "hasAt", strings.Contains(input[6], "@"), "isInChan", stringSliceContains(whichChans, input[1]))
 		// Are they an op in one of our Base channels?
-		if strings.Contains(input[6], "@") && stringSliceContains(conf.ProdChannels, input[1]) {
+		if strings.Contains(input[6], "@") && stringSliceContains(whichChans, input[1]) {
 			chanops[input[5]] = struct{}{}
 		}
 	}
@@ -242,7 +251,7 @@ func importRules(forceFetch bool) error {
 				if _, ok := rules[rm[0][1]]; ok {
 					log.Warn("In scanner", "Already had a rule!", line, "Existing rule", rules[rm[0][1]])
 				}
-				rules[rm[0][1]] = append(rules[rm[0][1]], rm[0][2])
+				rules[rm[0][1]] = append(rules[rm[0][1]], fmt.Sprintf("\x02%s\x0F: %s", rm[0][1], rm[0][2]))
 				lastRule = rm[0][1]
 			} else if strings.HasPrefix(line, "Example: ") {
 				if lastRule != "" {
@@ -257,7 +266,7 @@ func importRules(forceFetch bool) error {
 			if line == "" {
 				lastGlossary = ""
 			} else if lastGlossary != "" {
-				rules[lastGlossary] = append(rules[lastGlossary], line)
+				rules[lastGlossary] = append(rules[lastGlossary], fmt.Sprintf("\x02%s\x0F: %s", lastGlossary, line))
 			} else {
 				lastGlossary = line
 			}
@@ -477,13 +486,15 @@ func handleRulesQuery(input string) string {
 	log.Debug("In handleRulesQuery", "Input", input)
 	// Match example first, for !ex101.a and !example 101.1a so the rule regexp doesn't eat it as a normal rule
 	if (strings.HasPrefix(input, "ex") || strings.HasPrefix(input, "example ")) && ruleRegexp.MatchString(input) {
-		log.Debug("In handleRulesQuery", "Example matched on", ruleRegexp.FindAllStringSubmatch(input, -1)[0][1])
-		return strings.Join(rules["ex"+ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]], "\n")
+		rm := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
+		log.Debug("In handleRulesQuery", "Example matched on", rm)
+		return strings.Join(rules["ex"+rm], "\n")
 	}
 	// Then try normal rules
 	if ruleRegexp.MatchString(input) {
-		log.Debug("In handleRulesQuery", "Rules matched on", ruleRegexp.FindAllStringSubmatch(input, -1)[0][1])
-		return strings.Join(rules[ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]], "\n")
+		rm := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
+		log.Debug("In handleRulesQuery", "Rules matched on", rm)
+		return strings.Join(rules[rm], "\n")
 	}
 	// Finally try Glossary entries, people might do "!rule Deathtouch" rather than the proper "!define Deathtouch"
 	if strings.HasPrefix(input, "def ") || strings.HasPrefix(input, "define ") || strings.HasPrefix(input, "rule ") || strings.HasPrefix(input, "r ") || strings.HasPrefix(input, "cr ") {

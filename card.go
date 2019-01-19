@@ -31,11 +31,23 @@ func (ruling CardRuling) formatRuling() string {
 	return fmt.Sprintf("%v: %v", ruling.PublishedAt, ruling.Comment)
 }
 
-// CardRulingResult represents the JOSN returned by the /cards/{}/rulings Scryfall API
+// CardRulingResult represents the JSON returned by the /cards/{}/rulings Scryfall API
 type CardRulingResult struct {
 	Object  string       `json:"object"`
 	HasMore bool         `json:"has_more"`
 	Data    []CardRuling `json:"data"`
+}
+
+// CardFace represents the individual information for each face of a DFC
+type CardFace struct {
+	Object         string `json:"object"`
+	Name           string `json:"name"`
+	ManaCost       string `json:"mana_cost"`
+	TypeLine       string `json:"type_line"`
+	OracleText     string `json:"oracle_text"`
+	Watermark      string `json:"watermark"`
+	Artist         string `json:"artist"`
+	IllustrationID string `json:"illustration_id,omitempty"`
 }
 
 // Card represents the JSON returned by the /cards Scryfall API
@@ -62,15 +74,16 @@ type Card struct {
 		ArtCrop    string `json:"art_crop"`
 		BorderCrop string `json:"border_crop"`
 	} `json:"image_uris"`
-	ManaCost      string   `json:"mana_cost"`
-	Cmc           float32  `json:"cmc"`
-	TypeLine      string   `json:"type_line"`
-	OracleText    string   `json:"oracle_text"`
-	Power         string   `json:"power"`
-	Toughness     string   `json:"toughness"`
-	Loyalty       string   `json:"loyalty"`
-	Colors        []string `json:"colors"`
-	ColorIdentity []string `json:"color_identity"`
+	ManaCost      string     `json:"mana_cost"`
+	Cmc           float32    `json:"cmc"`
+	TypeLine      string     `json:"type_line"`
+	OracleText    string     `json:"oracle_text"`
+	Power         string     `json:"power"`
+	Toughness     string     `json:"toughness"`
+	Loyalty       string     `json:"loyalty"`
+	Colors        []string   `json:"colors"`
+	ColorIdentity []string   `json:"color_identity"`
+	CardFaces     []CardFace `json:"card_faces"`
 	Legalities    struct {
 		Standard  string `json:"standard"`
 		Future    string `json:"future"`
@@ -130,8 +143,8 @@ type Card struct {
 	Rulings []CardRuling
 }
 
-func (card Card) formatManaCost() string {
-	return fmt.Sprintf("{%s}", strings.Replace(strings.Replace(card.ManaCost, "{", "", -1), "}", "", -1))
+func formatManaCost(input string) string {
+	return fmt.Sprintf("{%s}", strings.Replace(strings.Replace(input, "{", "", -1), "}", "", -1))
 }
 
 // TODO: Find all printings using prints_search_uri
@@ -179,10 +192,28 @@ func (card Card) formatLegalities() string {
 
 func (card Card) formatCard() string {
 	var s []string
-	// Bold card name
+	if len(card.CardFaces) > 0 {
+		// DFC - produce two cards
+		for _, cf := range card.CardFaces {
+			var r []string
+			// Bold card name
+			r = append(r, fmt.Sprintf("\x02%s\x0F", cf.Name))
+			if card.ManaCost != "" {
+				r = append(r, formatManaCost(cf.ManaCost))
+			}
+			r = append(r, fmt.Sprintf("| %s |", cf.TypeLine))
+			r = append(r, strings.Replace(cf.OracleText, "\n", " \\ ", -1))
+			r = append(r, fmt.Sprintf("· %s ·", card.formatExpansions()))
+			r = append(r, card.formatLegalities())
+
+			s = append(s, strings.Join(r, " "))
+		}
+		return strings.Join(s, "\n")
+	}
+	// Normal card
 	s = append(s, fmt.Sprintf("\x02%s\x0F", card.Name))
 	if card.ManaCost != "" {
-		s = append(s, card.formatManaCost())
+		s = append(s, formatManaCost(card.ManaCost))
 	}
 	s = append(s, fmt.Sprintf("| %s |", card.TypeLine))
 	// P/T or Loyalty or Nothing
@@ -195,6 +226,7 @@ func (card Card) formatCard() string {
 	s = append(s, strings.Replace(card.OracleText, "\n", " \\ ", -1))
 	s = append(s, fmt.Sprintf("· %s ·", card.formatExpansions()))
 	s = append(s, card.formatLegalities())
+
 	return strings.Join(s, " ")
 }
 
