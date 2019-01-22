@@ -83,24 +83,6 @@ func readConfig() configuration {
 	return conf
 }
 
-// TODO:
-// '[603.10a.] Example: Two' with highlighting of rule name and example
-// 03:41 < MW2> !305.3
-// 03:41 <+Fryatog> A player can’t play a land, for any reason, if it isn’t their turn. Ignore any part of an effect that instructs a player to do so.
-// ^^ Put a little Rule: beforehand.
-//  11:55 <@luma> !discovery
-//  11:55 <+Fryatog> Discovery // Dispersal {1U/B // 3UB} | Sorcery // Instant | · GRN-U · Vin,Leg,Mod,Std
-// ^ No rules text
-// TODO: 4 cards similar to "deadeye bond" found: (1) Deadeye Brawler (2) Deadeye Navigator (3) Deadeye Plunderers (4) Deadeye Tormentor
-// Say "card not found" in private message
-// LATER TODO:
-// Don't need ! in private message
-// Use chan to signal when WHO list is finished rather than strict timeout
-// Advanced search
-// Momir
-// Coin/D6
-// Random
-
 func printHelp() string {
 	var ret []string
 	ret = append(ret, "!cardname to bring up rules text")
