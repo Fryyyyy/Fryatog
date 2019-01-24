@@ -631,7 +631,7 @@ var MainTrigger = hbot.Trigger{
 			if s != "" {
 				// Check if we've already sent it recently
 				if _, found := recentsCache.Get(s); found {
-					irc.Reply(m, fmt.Sprintf("Duplicate response witheld. (%s ...)", s[:23]))
+					irc.Reply(m, fmt.Sprintf("Duplicate response withheld. (%s ...)", s[:23]))
 					continue
 				}
 				recentsCache.Set(s, true, cache.DefaultExpiration)
