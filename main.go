@@ -233,7 +233,7 @@ func importRules(forceFetch bool) error {
 				if _, ok := rules[rm[0][1]]; ok {
 					log.Warn("In scanner", "Already had a rule!", line, "Existing rule", rules[rm[0][1]])
 				}
-				rules[rm[0][1]] = append(rules[rm[0][1]], fmt.Sprintf("\x02%s\x0F: %s", rm[0][1], rm[0][2]))
+				rules[rm[0][1]] = append(rules[rm[0][1]], rm[0][2])
 				lastRule = rm[0][1]
 			} else if strings.HasPrefix(line, "Example: ") {
 				if lastRule != "" {
@@ -287,7 +287,7 @@ func makeRulesCM(forceFetch bool) {
 // Any real commands are handed to the handleCommand function
 func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []string {
 	var (
-		botCommandRegex      = regexp.MustCompile(`[!&]([^!&]+)|\[\[(.*?)\]\]`)
+		botCommandRegex      = regexp.MustCompile(`[!&]([^!&?]+)|\[\[(.*?)\]\]`)
 		singleQuotedWord     = regexp.MustCompile(`^(?:\"|\')\w+(?:\"|\')$`)
 		nonTextRegex         = regexp.MustCompile(`^[^\w]+$`)
 		wordEndingInBang     = regexp.MustCompile(`\S+!(?: |\n)`)
@@ -406,7 +406,9 @@ func handleCommand(message string, c chan string, cardGetFunction CardGetter) {
 		strings.HasPrefix(message, "cr "),
 		strings.HasPrefix(message, "rule "),
 		strings.HasPrefix(message, "def "),
-		strings.HasPrefix(message, "define "):
+		strings.HasPrefix(message, "define "),
+		strings.HasPrefix(message, "ex "),
+		strings.HasPrefix(message, "example "):
 		log.Debug("Rules query", "Input", message)
 		c <- handleRulesQuery(message)
 		return
@@ -470,19 +472,25 @@ func handleRulesQuery(input string) string {
 	if (strings.HasPrefix(input, "ex") || strings.HasPrefix(input, "example ")) && ruleRegexp.MatchString(input) {
 		foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
 		log.Debug("In handleRulesQuery", "Example matched on", foundRuleNum)
-		exampleNumber := []string{"\x02[", foundRuleNum, ".] Example:\x0F "}
+		if _, ok := rules["ex"+foundRuleNum]; !ok {
+			return "Example not found"
+		}
+		exampleNumber := []string{"\x02[", foundRuleNum, "] Example:\x0F "}
 		exampleText := strings.Join(rules["ex"+foundRuleNum], "")[9:]
 		formattedExample := append(exampleNumber, exampleText, "\n")
-		return strings.Join(formattedExample, "")
+		return strings.TrimSpace(strings.Join(formattedExample, ""))
 	}
 	// Then try normal rules
 	if ruleRegexp.MatchString(input) {
 		foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
 		log.Debug("In handleRulesQuery", "Rules matched on", foundRuleNum)
 		ruleNumber := []string{"\x02", foundRuleNum, ".\x0F "}
+		if _, ok := rules[foundRuleNum]; !ok {
+			return "Rule not found"
+		}
 		ruleText := strings.Join(rules[foundRuleNum], "")
 		ruleWithNumber := append(ruleNumber, ruleText, "\n")
-		return strings.Join(ruleWithNumber, "")
+		return strings.TrimSpace(strings.Join(ruleWithNumber, ""))
 	}
 	// Finally try Glossary entries, people might do "!rule Deathtouch" rather than the proper "!define Deathtouch"
 	if strings.HasPrefix(input, "def ") || strings.HasPrefix(input, "define ") || strings.HasPrefix(input, "rule ") || strings.HasPrefix(input, "r ") || strings.HasPrefix(input, "cr ") {
@@ -494,7 +502,7 @@ func handleRulesQuery(input string) string {
 		}
 		bestGuess := rulesCM.Closest(query)
 		log.Debug("InExact match", "Guess", bestGuess)
-		return strings.Join(rules[bestGuess], "\n")
+		return strings.TrimSpace(strings.Join(rules[bestGuess], "\n"))
 	}
 	// Didn't match ??
 	return ""
@@ -621,15 +629,22 @@ var MainTrigger = hbot.Trigger{
 		for _, s := range sliceUniqMap(toPrint) {
 			if s != "" {
 				// Check if we've already sent it recently
-				if _, found := recentsCache.Get(s); found {
-					irc.Reply(m, fmt.Sprintf("Duplicate response withheld. (%s ...)", s[:23]))
+				if _, found := recentsCache.Get(s); found && !strings.Contains(s, "not found") {
+					irc.Reply(m, fmt.Sprintf("%s: Duplicate response withheld. (%s ...)", m.From, s[:23]))
 					continue
 				}
 				recentsCache.Set(s, true, cache.DefaultExpiration)
 				for _, ss := range strings.Split(s, "\n") {
 					{
-						for _, sss := range strings.Split(wordWrap(ss, 390), "\n") {
-							irc.Reply(m, sss)
+						if ss == "" {
+							continue
+						}
+						for i, sss := range strings.Split(wordWrap(ss, 390), "\n") {
+							if i == 0 {
+								irc.Reply(m, fmt.Sprintf("%s: %s", m.From, sss))
+							} else {
+								irc.Reply(m, sss)
+							}
 						}
 					}
 				}
