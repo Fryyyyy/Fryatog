@@ -85,8 +85,8 @@ func TestRules(t *testing.T) {
 		input  string
 		output []string
 	}{
-		{"100.1a", []string{"A two-player game is a game that begins with only two players."}},
-		{"Absorb", []string{`A keyword ability that prevents damage. See rule 702.63, "Absorb."`}},
+		{"100.1a", []string{"\x02100.1a\x0F: A two-player game is a game that begins with only two players."}},
+		{"Absorb", []string{`\x02Absorb\x0F: A keyword ability that prevents damage. See rule 702.63, "Absorb."`}},
 		{"ex101.2", []string{`Example: If one effect reads "You may play an additional land this turn" and another reads "You can’t play lands this turn," the effect that precludes you from playing lands wins.`}},
 	}
 	for _, table := range tables {

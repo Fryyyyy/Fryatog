@@ -45,6 +45,8 @@ type CardFace struct {
 	ManaCost       string `json:"mana_cost"`
 	TypeLine       string `json:"type_line"`
 	OracleText     string `json:"oracle_text"`
+	Power          string `json:"power"`
+	Toughness      string `json:"toughness"`
 	Watermark      string `json:"watermark"`
 	Artist         string `json:"artist"`
 	IllustrationID string `json:"illustration_id,omitempty"`
@@ -198,10 +200,13 @@ func (card Card) formatCard() string {
 			var r []string
 			// Bold card name
 			r = append(r, fmt.Sprintf("\x02%s\x0F", cf.Name))
-			if card.ManaCost != "" {
+			if cf.ManaCost != "" {
 				r = append(r, formatManaCost(cf.ManaCost))
 			}
 			r = append(r, fmt.Sprintf("| %s |", cf.TypeLine))
+			if strings.Contains(cf.TypeLine, "Creature") {
+				r = append(r, fmt.Sprintf("%s/%s", cf.Power, cf.Toughness))
+			}
 			r = append(r, strings.Replace(cf.OracleText, "\n", " \\ ", -1))
 			r = append(r, fmt.Sprintf("· %s ·", card.formatExpansions()))
 			r = append(r, card.formatLegalities())
