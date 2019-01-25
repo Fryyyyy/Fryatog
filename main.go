@@ -40,7 +40,6 @@ var (
 	// Caches
 	nameToCardCache *lru.ARCCache
 	recentCacheMap  = make(map[string]*cache.Cache)
-	// recentsCache    = cache.New(30*time.Second, 1*time.Second)
 
 	// IRC Variables
 	whichChans []string
@@ -297,7 +296,7 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []str
 	)
 
 	// Little bit of hackery for PMs
-	if !strings.HasPrefix(input, "!") {
+	if !strings.Contains(input, "!") && !strings.Contains(input, "[[") {
 		input = "!" + input
 	}
 
