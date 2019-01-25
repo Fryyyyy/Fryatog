@@ -108,13 +108,13 @@ func TestGetRule(t *testing.T) {
 		input  string
 		output string
 	}{
-		{"100.1a", "A two-player game is a game that begins with only two players."},
-		{"r 100.1a", "A two-player game is a game that begins with only two players."},
-		{"cr 100.1a", "A two-player game is a game that begins with only two players."},
-		{"rule 100.1a", "A two-player game is a game that begins with only two players."},
-		{"def Absorb", `A keyword ability that prevents damage. See rule 702.63, "Absorb."`},
-		{"define Absorb", `A keyword ability that prevents damage. See rule 702.63, "Absorb."`},
-		{"rule Absorb", `A keyword ability that prevents damage. See rule 702.63, "Absorb."`},
+		{"100.1a", "\x02100.1a\x0F: A two-player game is a game that begins with only two players."},
+		{"r 100.1a", "\x02100.1a\x0F: A two-player game is a game that begins with only two players."},
+		{"cr 100.1a", "\x02100.1a\x0F: A two-player game is a game that begins with only two players."},
+		{"rule 100.1a", "\x02100.1a\x0F: A two-player game is a game that begins with only two players."},
+		{"def Absorb", "\x02Absorb\x0F: A keyword ability that prevents damage. See rule 702.63, \"Absorb.\""},
+		{"define Absorb", "\x02Absorb\x0F: A keyword ability that prevents damage. See rule 702.63, \"Absorb.\""},
+		{"rule Absorb", "\x02Absorb\x0F: A keyword ability that prevents damage. See rule 702.63, \"Absorb.\""},
 		{"ex 101.2", `Example: If one effect reads "You may play an additional land this turn" and another reads "You can’t play lands this turn," the effect that precludes you from playing lands wins.`},
 		{"ex101.2", `Example: If one effect reads "You may play an additional land this turn" and another reads "You can’t play lands this turn," the effect that precludes you from playing lands wins.`},
 		{"example 101.2", `Example: If one effect reads "You may play an additional land this turn" and another reads "You can’t play lands this turn," the effect that precludes you from playing lands wins.`},
@@ -126,9 +126,9 @@ func TestGetRule(t *testing.T) {
 		{"rule 999.99", ""},
 		{"def CLOWNS", ""},
 		{"define CLOWNS", ""},
-		{"define adsorb", `A keyword ability that prevents damage. See rule 702.63, "Absorb."`},
-		{"define deaftouch", `A keyword ability that causes damage dealt by an object to be especially effective. See rule 702.2, "Deathtouch."`},
-		{"define die", `A creature or planeswalker "dies" if it is put into a graveyard from the battlefield. See rule 700.4.`},
+		{"define adsorb", "\x02Absorb\x0F: A keyword ability that prevents damage. See rule 702.63, \"Absorb.\""},
+		{"define deaftouch", "\x02Deathtouch\x0F: A keyword ability that causes damage dealt by an object to be especially effective. See rule 702.2, \"Deathtouch.\""},
+		{"define die", "\x02Dies\x0F: A creature or planeswalker \"dies\" if it is put into a graveyard from the battlefield. See rule 700.4."},
 	}
 	for _, table := range tables {
 		got := handleRulesQuery(table.input)

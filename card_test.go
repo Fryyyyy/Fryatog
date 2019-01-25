@@ -21,10 +21,11 @@ func TestPrintCard(t *testing.T) {
 		output string
 	}{
 		//{"test_data/ponder.json", "Ponder {U} |Sorcery| Look at the top three cards of your library, then put them back in any order. You may shuffle your library. / Draw a card. · C18-C,LRW-C,M10-C,M12-C,MPR-P,P08-P · Vin,VinRes,Leg,ModBan"},
-		{"test_data/ponder.json", `Ponder {U} | Sorcery | Look at the top three cards of your library, then put them back in any order. You may shuffle your library. \ Draw a card. · C18-C · VinRes,Leg,ModBan`},
+		{"test_data/ponder.json", "\x02Ponder\x0F {U} | Sorcery | Look at the top three cards of your library, then put them back in any order. You may shuffle your library. \\ Draw a card. · C18-C · VinRes,Leg,ModBan"},
 		//{"test_data/shahrazad.json", "Shahrazad {WW} |Sorcery| Players play a Magic subgame, using their libraries as their decks. Each player who doesn't win the subgame loses half their life, rounded up. · AN-R,AN-U2,Reserved · VinBan,LegBan"},
-		{"test_data/shahrazad.json", "Shahrazad {WW} | Sorcery | Players play a Magic subgame, using their libraries as their decks. Each player who doesn't win the subgame loses half their life, rounded up. · ARN-R · VinBan,LegBan"},
-		{"test_data/jacethemindsculptor.json", `Jace, the Mind Sculptor {2UU} | Legendary Planeswalker — Jace | [3] +2: Look at the top card of target player's library. You may put that card on the bottom of that player's library. \ 0: Draw three cards, then put two cards from your hand on top of your library in any order. \ −1: Return target creature to its owner's hand. \ −12: Exile all cards from target player's library, then that player shuffles their hand into their library. · A25-M · Vin,Leg,Mod`},
+		{"test_data/shahrazad.json", "\x02Shahrazad\x0F {WW} | Sorcery | Players play a Magic subgame, using their libraries as their decks. Each player who doesn't win the subgame loses half their life, rounded up. · ARN-R · VinBan,LegBan"},
+		{"test_data/jacethemindsculptor.json", "\x02Jace, the Mind Sculptor\x0F {2UU} | Legendary Planeswalker — Jace | [3] +2: Look at the top card of target player's library. You may put that card on the bottom of that player's library. \\ 0: Draw three cards, then put two cards from your hand on top of your library in any order. \\ −1: Return target creature to its owner's hand. \\ −12: Exile all cards from target player's library, then that player shuffles their hand into their library. · A25-M · Vin,Leg,Mod"},
+		{"test_data/expansion.json", "\x02Expansion\x0F {U/RU/R} | Instant | Copy target instant or sorcery spell with converted mana cost 4 or less. You may choose new targets for the copy. · GRN-R · Vin,Leg,Mod,Std\n\x02Explosion\x0F {XUURR} | Instant | Explosion deals X damage to any target. Target player draws X cards. · GRN-R · Vin,Leg,Mod,Std"},
 	}
 	for _, table := range tables {
 		fi, err := os.Open(table.file)
