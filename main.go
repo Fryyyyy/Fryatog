@@ -39,7 +39,8 @@ var (
 
 	// Caches
 	nameToCardCache *lru.ARCCache
-	recentsCache    = cache.New(30*time.Second, 1*time.Second)
+	recentCacheMap  = make(map[string]*cache.Cache)
+	// recentsCache    = cache.New(30*time.Second, 1*time.Second)
 
 	// IRC Variables
 	whichChans []string
@@ -554,7 +555,7 @@ func main() {
 		log.Warn("Error fetching card names", "Err", err)
 	}
 
-	// Initialise cache
+	// Initialise Cardname cache
 	nameToCardCache, err = lru.NewARC(2048)
 	if err != nil {
 		raven.CaptureErrorAndWait(err, nil)
@@ -605,6 +606,12 @@ func main() {
 		panic(err)
 	}
 
+	// Initialise per-channel recent cache
+	for _, channelName := range whichChans {
+		log.Debug("Initialising cache", "Channel name", channelName)
+		recentCacheMap[channelName] = cache.New(30*time.Second, 1*time.Second)
+	}
+
 	bot.AddTrigger(MainTrigger)
 	bot.AddTrigger(WhoTrigger)
 	bot.Logger.SetHandler(log.StdoutHandler)
@@ -622,7 +629,7 @@ func main() {
 // Most of this code stolen from Frytherer [https://github.com/Fryyyyy/Frytherer]
 var MainTrigger = hbot.Trigger{
 	Condition: func(bot *hbot.Bot, m *hbot.Message) bool {
-		return m.Command == "PRIVMSG" && (!strings.Contains(m.To, "#") || (strings.Contains(m.Content, "!") || strings.Contains(m.Content, "[[")))
+		return m.Command == "PRIVMSG" && ((!strings.Contains(m.To, "#") && !strings.Contains(m.Trailing, "VERSION")) || (strings.Contains(m.Content, "!") || strings.Contains(m.Content, "[[")))
 	},
 	Action: func(irc *hbot.Bot, m *hbot.Message) bool {
 		log.Debug("Dispatching message", "From", m.From, "To", m.To, "Content", m.Content)
@@ -640,11 +647,11 @@ var MainTrigger = hbot.Trigger{
 			if s != "" {
 				// Check if we've already sent it recently (only for public channels)
 				if isPublic {
-					if _, found := recentsCache.Get(s); found && !strings.Contains(s, "not found") {
+					if _, found := recentCacheMap[m.To].Get(s); found && !strings.Contains(s, "not found") {
 						irc.Reply(m, fmt.Sprintf("%sDuplicate response withheld. (%s ...)", prefix, s[:23]))
 						continue
 					}
-					recentsCache.Set(s, true, cache.DefaultExpiration)
+					recentCacheMap[m.To].Set(s, true, cache.DefaultExpiration)
 				}
 				for _, ss := range strings.Split(s, "\n") {
 					{
