@@ -95,7 +95,7 @@ func printHelp() string {
 func isSenderAnOp(m *hbot.Message) bool {
 	log.Debug("In isSenderAnOp", "Chanops", chanops)
 	var justGotWho bool
-	// Do we now about any ops?
+	// Do we know about any ops?
 	if len(chanops) == 0 {
 		getWho()
 		justGotWho = true
@@ -468,15 +468,21 @@ func handleRulesQuery(input string) string {
 	log.Debug("In handleRulesQuery", "Input", input)
 	// Match example first, for !ex101.a and !example 101.1a so the rule regexp doesn't eat it as a normal rule
 	if (strings.HasPrefix(input, "ex") || strings.HasPrefix(input, "example ")) && ruleRegexp.MatchString(input) {
-		rm := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
-		log.Debug("In handleRulesQuery", "Example matched on", rm)
-		return strings.Join(rules["ex"+rm], "\n")
+    foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
+		log.Debug("In handleRulesQuery", "Example matched on", foundRuleNum)
+    exampleNumber := []string{"[", foundRuleNum, ".] Example: "}
+    exampleText := strings.Join(rules["ex"+foundRuleNum], "")[9:]
+    formattedExample := append(exampleNumber, exampleText, "\n")
+		return strings.Join(formattedExample, "")
 	}
 	// Then try normal rules
 	if ruleRegexp.MatchString(input) {
-		rm := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
-		log.Debug("In handleRulesQuery", "Rules matched on", rm)
-		return strings.Join(rules[rm], "\n")
+    foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
+		log.Debug("In handleRulesQuery", "Rules matched on", foundRuleNum)
+    ruleNumber := []string{"", foundRuleNum, ". "}
+    ruleText := strings.Join(rules[foundRuleNum], "")
+    ruleWithNumber := append(ruleNumber, ruleText, "\n")
+    return strings.Join(ruleWithNumber, "")
 	}
 	// Finally try Glossary entries, people might do "!rule Deathtouch" rather than the proper "!define Deathtouch"
 	if strings.HasPrefix(input, "def ") || strings.HasPrefix(input, "define ") || strings.HasPrefix(input, "rule ") || strings.HasPrefix(input, "r ") || strings.HasPrefix(input, "cr ") {

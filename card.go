@@ -399,7 +399,7 @@ func importCardNames(forceFetch bool) ([]string, error) {
 		err = cardCM.Save(cardNamesGob)
 		log.Warn("Cards CM", "Error", err)
 	}
-	log.Debug("Cards CM", "Accuracy", cardCM.AccuracyMutatingWords())
+	// log.Debug("Cards CM", "Accuracy", cardCM.AccuracyMutatingWords())
 	return catalog.Data, nil
 }
 
