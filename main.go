@@ -295,7 +295,11 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []str
 		input                = m.Content
 	)
 
-	// if strings.Contains(input, "[[")
+	// Little bit of hackery for PMs
+	if !strings.HasPrefix(input, "!") {
+		input = "!" + input
+	}
+
 	commandList := botCommandRegex.FindAllString(input, -1)
 	// log.Debug("Beginning T.I", "CommandList", commandList)
 	c := make(chan string)
@@ -618,7 +622,7 @@ func main() {
 // Most of this code stolen from Frytherer [https://github.com/Fryyyyy/Frytherer]
 var MainTrigger = hbot.Trigger{
 	Condition: func(bot *hbot.Bot, m *hbot.Message) bool {
-		return m.Command == "PRIVMSG" && (strings.Contains(m.Content, "!") || strings.Contains(m.Content, "[["))
+		return m.Command == "PRIVMSG" && (!strings.Contains(m.To, "#") || (strings.Contains(m.Content, "!") || strings.Contains(m.Content, "[[")))
 	},
 	Action: func(irc *hbot.Bot, m *hbot.Message) bool {
 		log.Debug("Dispatching message", "From", m.From, "To", m.To, "Content", m.Content)
@@ -627,13 +631,21 @@ var MainTrigger = hbot.Trigger{
 		}
 		toPrint := tokeniseAndDispatchInput(m, getScryfallCard)
 		for _, s := range sliceUniqMap(toPrint) {
+			var prefix string
+			isPublic := strings.Contains(m.To, "#")
+			// If it's not a PM, address them
+			if isPublic {
+				prefix = fmt.Sprintf("%s: ", m.From)
+			}
 			if s != "" {
-				// Check if we've already sent it recently
-				if _, found := recentsCache.Get(s); found && !strings.Contains(s, "not found") {
-					irc.Reply(m, fmt.Sprintf("%s: Duplicate response withheld. (%s ...)", m.From, s[:23]))
-					continue
+				// Check if we've already sent it recently (only for public channels)
+				if isPublic {
+					if _, found := recentsCache.Get(s); found && !strings.Contains(s, "not found") {
+						irc.Reply(m, fmt.Sprintf("%sDuplicate response withheld. (%s ...)", prefix, s[:23]))
+						continue
+					}
+					recentsCache.Set(s, true, cache.DefaultExpiration)
 				}
-				recentsCache.Set(s, true, cache.DefaultExpiration)
 				for _, ss := range strings.Split(s, "\n") {
 					{
 						if ss == "" {
@@ -641,7 +653,7 @@ var MainTrigger = hbot.Trigger{
 						}
 						for i, sss := range strings.Split(wordWrap(ss, 390), "\n") {
 							if i == 0 {
-								irc.Reply(m, fmt.Sprintf("%s: %s", m.From, sss))
+								irc.Reply(m, fmt.Sprintf("%s%s", prefix, sss))
 							} else {
 								irc.Reply(m, sss)
 							}
