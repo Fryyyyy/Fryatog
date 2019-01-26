@@ -44,6 +44,7 @@ var (
 	// IRC Variables
 	whichChans []string
 	whichNick  string
+	whoChan    chan []string
 
 	// Rules & Glossary dictionary.
 	rules   = make(map[string][]string)
@@ -65,6 +66,7 @@ const crURL = "https://chat.mtgpairings.info/cr-stable/"
 const crFile = "CR.txt"
 const rulesGob = "rules.gob"
 const cardNamesGob = "cardnames.gob"
+const cardCacheGob = "cardcache.gob"
 const configFile = "config.json"
 
 // CardGetter defines a function that retrieves a card's text.
@@ -95,44 +97,37 @@ func printHelp() string {
 
 func isSenderAnOp(m *hbot.Message) bool {
 	log.Debug("In isSenderAnOp", "Chanops", chanops)
-	var justGotWho bool
-	// Do we know about any ops?
-	if len(chanops) == 0 {
-		getWho()
-		justGotWho = true
-		time.Sleep(1 * time.Second)
+	whoChan = make(chan []string)
+	getWho()
+	var whoMessages [][]string
+	for op := range whoChan {
+		whoMessages = append(whoMessages, op)
 	}
-	log.Debug("In isSenderAnOp Mark II", "Chanops", chanops)
-	// Is the user an OP in the channel that the message was sent from
-	// If it was a private message, are they an op in any of the channels we're in?
-	if _, ok := chanops[m.From]; !justGotWho && !ok {
-		// Maybe our list is out of date
-		getWho()
-		time.Sleep(4 * time.Second)
-		log.Debug("In isSenderAnOp Mark III", "Chanops", chanops)
-	}
+	handleWhoMessages(whoMessages)
 	_, ok := chanops[m.From]
 	return ok
 }
 
-func handleWhoMessage(input []string) {
-	log.Debug("Handling Who Middle", "len7", len(input) == 7, "whichChans", whichChans)
-	// Input:
-	// 0 Bot Nickname
-	// 1 Channel
-	// 2 User
-	// 3 Host
-	// 4 Server
-	// 5 User Nick
-	// 6 Modes
-	if len(input) == 7 {
-		log.Debug("Handling Who Middle", "hasAt", strings.Contains(input[6], "@"), "isInChan", stringSliceContains(whichChans, input[1]))
-		// Are they an op in one of our Base channels?
-		if strings.Contains(input[6], "@") && stringSliceContains(whichChans, input[1]) {
-			chanops[input[5]] = struct{}{}
+func handleWhoMessages(inputs [][]string) {
+	for _, input := range inputs {
+		log.Debug("Handling Who Middle", "len7", len(input) == 7, "whichChans", whichChans)
+		// Input:
+		// 0 Bot Nickname
+		// 1 Channel
+		// 2 User
+		// 3 Host
+		// 4 Server
+		// 5 User Nick
+		// 6 Modes
+		if len(input) == 7 {
+			log.Debug("Handling Who Middle", "hasAt", strings.Contains(input[6], "@"), "isInChan", stringSliceContains(whichChans, input[1]))
+			// Are they an op in one of our Base channels?
+			if strings.Contains(input[6], "@") && stringSliceContains(whichChans, input[1]) {
+				chanops[input[5]] = struct{}{}
+			}
 		}
+		log.Debug("Handling Who Message", "Chanops Result", chanops)
 	}
-	log.Debug("Handling Who Message", "Chanops Result", chanops)
 }
 
 func getWho() {
@@ -337,6 +332,7 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []str
 		if err != nil {
 			ret = append(ret, "Problem fetching card names")
 		}
+		ret = append(ret, "Done!")
 		return ret
 	}
 
@@ -397,7 +393,7 @@ func handleCommand(message string, c chan string, cardGetFunction CardGetter) {
 	cardTokens := strings.Fields(message)
 	log.Debug("Done tokenising", "Tokens", cardTokens)
 
-	cardMetadataRegex := regexp.MustCompile(`(?i)^(?:ruling(?:s?)|reminder)(?: )`)
+	cardMetadataRegex := regexp.MustCompile(`(?i)^(?:ruling(?:s?)|reminder|flavo(?:u?)r)(?: )`)
 
 	switch {
 
@@ -576,6 +572,17 @@ func main() {
 		raven.CaptureErrorAndWait(err, nil)
 		panic(err)
 	}
+	// Load existing cards if necessary
+	var cardsIn []Card
+	err = readGob(cardCacheGob, &cardsIn)
+	if err != nil {
+		log.Warn("Error importing dumped card cache", "Err", err)
+	}
+	log.Debug("Found previously cached cards", "Number", len(cardsIn))
+	for _, c := range cardsIn {
+		nameToCardCache.Add(c.Name, c)
+		nameToCardCache.Add(normaliseCardName(c.Name), c)
+	}
 
 	hijackSession := func(bot *hbot.Bot) {
 		bot.HijackSession = true
@@ -629,7 +636,15 @@ func main() {
 
 	bot.AddTrigger(MainTrigger)
 	bot.AddTrigger(WhoTrigger)
+	bot.AddTrigger(endOfWhoTrigger)
 	bot.Logger.SetHandler(log.StdoutHandler)
+
+	exitChan := getExitChannel()
+	go func() {
+		<-exitChan
+		dumpCardCache()
+		close(bot.Incoming)
+	}()
 
 	// Start up bot (this blocks until we disconnect)
 	bot.Run()
@@ -692,12 +707,25 @@ var MainTrigger = hbot.Trigger{
 // figure out who are the ChanOps.
 var WhoTrigger = hbot.Trigger{
 	Condition: func(bot *hbot.Bot, m *hbot.Message) bool {
-		// 352 is RPL_WHOREPLY -- https://tools.ietf.org/html/rfc1459#section-6.2
+		// 352 is RPL_WHOREPLY https://tools.ietf.org/html/rfc1459#section-6.2
+		// 315 is RPL_ENDOFWHO
 		return m.Command == "352"
 	},
 	Action: func(irc *hbot.Bot, m *hbot.Message) bool {
 		log.Debug("Got a WHO message!", "From", m.From, "To", m.To, "Params", m.Params)
-		handleWhoMessage(m.Params)
+		whoChan <- m.Params
+		return false
+	},
+}
+
+var endOfWhoTrigger = hbot.Trigger{
+	Condition: func(bot *hbot.Bot, m *hbot.Message) bool {
+		// 315 is RPL_ENDOFWHO https://tools.ietf.org/html/rfc1459#section-6.2
+		return m.Command == "315"
+	},
+	Action: func(irc *hbot.Bot, m *hbot.Message) bool {
+		log.Debug("Got an END OF WHO message!", "From", m.From, "To", m.To, "Params", m.Params)
+		close(whoChan)
 		return false
 	},
 }
