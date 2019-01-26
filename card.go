@@ -117,6 +117,7 @@ type Card struct {
 	CollectorNumber string   `json:"collector_number"`
 	Digital         bool     `json:"digital"`
 	Rarity          string   `json:"rarity"`
+	FlavourText     string   `json:"flavor_text"`
 	IllustrationID  string   `json:"illustration_id"`
 	Artist          string   `json:"artist"`
 	BorderColor     string   `json:"border_color"`
@@ -146,15 +147,45 @@ type Card struct {
 }
 
 func formatManaCost(input string) string {
-	return fmt.Sprintf("{%s}", strings.Replace(strings.Replace(input, "{", "", -1), "}", "", -1))
+	// return fmt.Sprintf("{%s}", strings.Replace(strings.Replace(input, "{", "", -1), "}", "", -1))
+	return input
 }
 
-// TODO: Find all printings using prints_search_uri
 func (card Card) formatExpansions() string {
 	return fmt.Sprintf("%s-%s", strings.ToUpper(card.Set), strings.ToUpper(card.Rarity[0:1]))
 }
 
-// "legalities":{"standard":"not_legal","future":"not_legal","frontier":"not_legal","modern":"legal","legacy":"legal","pauper":"not_legal","vintage":"legal","penny":"not_legal","commander":"legal","1v1":"legal","duel":"legal","brawl":"not_legal"}
+// Get all possible current reminder texts for a card, \n separated
+// TODO: Get most recent previous reminder text
+func (card Card) getReminderTexts() string {
+	reminderRegexp := regexp.MustCompile(`\((.*?)\)`)
+	cardText := card.OracleText
+	if len(card.CardFaces) > 0 {
+		cardText = ""
+		for _, cf := range card.CardFaces {
+			cardText += cf.OracleText
+		}
+	}
+	reminders := reminderRegexp.FindAllStringSubmatch(cardText, -1)
+	if len(reminders) == 0 {
+		return "Reminder text not found"
+	}
+	var ret []string
+	for _, m := range reminders {
+		ret = append(ret, m[1])
+	}
+	return strings.Join(ret, "\n")
+}
+
+// Gets the (most recent) Flavour text
+// TODO: Get all unique previous flavour texts
+func (card Card) getFlavourText() string {
+	if card.FlavourText != "" {
+		return card.FlavourText
+	}
+	return "Flavour text not found"
+}
+
 func (card Card) formatLegalities() string {
 	var ret []string
 	switch card.Legalities.Vintage {
@@ -195,7 +226,7 @@ func (card Card) formatLegalities() string {
 func (card Card) formatCard() string {
 	var s []string
 	if len(card.CardFaces) > 0 {
-		// DFC - produce two cards
+		// DFC and Flip and Split - produce two cards
 		for _, cf := range card.CardFaces {
 			var r []string
 			// Bold card name
@@ -268,7 +299,7 @@ func lookupUniqueNamePrefix(input string) string {
 	var i int
 	var j string
 	for _, x := range c {
-		if strings.Contains(x, ",") {
+		if strings.Contains(x, ",") || strings.Contains(x, "the") {
 			i++
 			j = x
 		}

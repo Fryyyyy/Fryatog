@@ -85,7 +85,8 @@ func readConfig() configuration {
 
 func printHelp() string {
 	var ret []string
-	ret = append(ret, "!cardname to bring up rules text")
+	ret = append(ret, "!cardname to bring up that card's rules text")
+	ret = append(ret, "!reminder <cardname> to bring up that card's reminder text")
 	ret = append(ret, "!ruling <cardname> [ruling number] to bring up Gatherer rulings")
 	ret = append(ret, "!rule <rulename> to bring up a Comprehensive Rule entry")
 	ret = append(ret, "!define <glossary> to bring up the definition of a term")
@@ -396,7 +397,7 @@ func handleCommand(message string, c chan string, cardGetFunction CardGetter) {
 	cardTokens := strings.Fields(message)
 	log.Debug("Done tokenising", "Tokens", cardTokens)
 
-	rulingOrFlavourRegex := regexp.MustCompile(`(?i)^(?:ruling(?: |s ))`)
+	cardMetadataRegex := regexp.MustCompile(`(?i)^(?:ruling(?:s?)|reminder)(?: )`)
 
 	switch {
 
@@ -417,9 +418,9 @@ func handleCommand(message string, c chan string, cardGetFunction CardGetter) {
 		c <- handleRulesQuery(message)
 		return
 
-	case rulingOrFlavourRegex.MatchString(message):
-		log.Debug("Ruling or flavour query")
-		c <- handleRulingOrFlavourQuery(cardTokens[0], message, cardGetFunction)
+	case cardMetadataRegex.MatchString(message):
+		log.Debug("Metadata query")
+		c <- handleCardMetadataQuery(cardTokens[0], message, cardGetFunction)
 		return
 
 	default:
@@ -434,19 +435,33 @@ func handleCommand(message string, c chan string, cardGetFunction CardGetter) {
 	return
 }
 
-func handleRulingOrFlavourQuery(command string, input string, cardGetFunction CardGetter) string {
+func handleCardMetadataQuery(command string, input string, cardGetFunction CardGetter) string {
 	var (
 		err                 error
-		cardName            string
 		rulingNumber        int
 		gathererRulingRegex = regexp.MustCompile(`^(?:(?P<start_number>\d+) ?(?P<name>.+)|(?P<name2>.*?) ?(?P<end_number>\d+).*?|(?P<name3>.+))`)
 	)
+	if command == "reminder" {
+		c, err := findCard(strings.Fields(input)[1:], cardGetFunction)
+		if err != nil {
+			return "Card not found"
+		}
+		return c.getReminderTexts()
+	}
+	if command == "flavor" || command == "flavour" {
+		c, err := findCard(strings.Fields(input)[1:], cardGetFunction)
+		if err != nil {
+			return "Card not found"
+		}
+		return c.getFlavourText()
+	}
 	if gathererRulingRegex.MatchString(strings.SplitN(input, " ", 2)[1]) {
+		var cardName string
 		fass := gathererRulingRegex.FindAllStringSubmatch(strings.SplitN(input, " ", 2)[1], -1)
 		// One of these is guaranteed to contain the name
 		cardName = fass[0][2] + fass[0][3] + fass[0][5]
 		if len(cardName) == 0 {
-			log.Debug("In handleRulingOrFlavourQuery", "Couldn't find card name", input)
+			log.Debug("In a Ruling Query", "Couldn't find card name", input)
 			return ""
 		}
 		if strings.HasPrefix(input, "ruling") {
@@ -460,13 +475,14 @@ func handleRulingOrFlavourQuery(command string, input string, cardGetFunction Ca
 				}
 			}
 		}
-		log.Debug("In handleRulingOrFlavourQuery - Valid command detected", "Command", command, "Card Name", cardName, "Ruling No.", rulingNumber)
+		log.Debug("In a Ruling Query - Valid command detected", "Command", command, "Card Name", cardName, "Ruling No.", rulingNumber)
 		c, err := findCard(strings.Split(cardName, " "), cardGetFunction)
 		if err != nil {
 			return "Unable to find card"
 		}
 		return c.getRulings(rulingNumber)
 	}
+
 	return "RULING/FLAVOUR"
 }
 

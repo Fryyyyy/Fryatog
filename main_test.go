@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -17,6 +19,19 @@ func fakeGetCard(cardname string) (Card, error) {
 	time.Sleep(time.Duration(r) * time.Millisecond)
 	for _, c := range FakeCards {
 		if cardname == c.Name {
+			return c, nil
+		}
+	}
+	for k, v := range RealCards {
+		if cardname == k {
+			var c Card
+			fi, err := os.Open(v)
+			if err != nil {
+				return c, fmt.Errorf("Unable to open card JSON: %s", err)
+			}
+			if err := json.NewDecoder(fi).Decode(&c); err != nil {
+				return c, fmt.Errorf("Something went wrong parsing the card: %s", err)
+			}
 			return c, nil
 		}
 	}
@@ -139,7 +154,7 @@ func TestGetRule(t *testing.T) {
 	}
 }
 
-func TestRulingsAndFlavour(t *testing.T) {
+func TestCardMetadata(t *testing.T) {
 	tables := []struct {
 		command string
 		message string
@@ -149,9 +164,15 @@ func TestRulingsAndFlavour(t *testing.T) {
 		{"ruling", "ruling TestCardWithOneWOTCRuling", "1900-01-01: Print Me"},
 		{"ruling", "ruling TestCardWithOneNonWOTCRuling 1", "Ruling not found"},
 		{"ruling", "ruling TestCardWithOneNonWOTCRuling", "Ruling not found"},
+		{"reminder", "reminder Ponder", "Reminder text not found"},
+		{"reminder", "reminder Faithless Looting", "You may cast this card from your graveyard for its flashback cost. Then exile it."},
+		{"reminder", "reminder Poison-Tip Archer", "This creature can block creatures with flying.\nAny amount of damage this deals to a creature is enough to destroy it."},
+		{"flavour", "flavour Ponder", "Tomorrow belongs to those who prepare for it today."},
+		{"flavor", "flavor Faithless Looting", "\"Avacyn has abandoned us! We have nothing left except what we can take!\""},
+		{"flavor", "flavor Bushi Tenderfoot", "Flavour text not found"},
 	}
 	for _, table := range tables {
-		got := handleRulingOrFlavourQuery(table.command, table.message, fakeGetCard)
+		got := handleCardMetadataQuery(table.command, table.message, fakeGetCard)
 		if got != table.output {
 			t.Errorf("Incorrect output -- got %s - want %s", got, table.output)
 		}
