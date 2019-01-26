@@ -1,6 +1,12 @@
 package main
 
-import "strings"
+import (
+	"encoding/gob"
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
+)
 
 func sliceUniqMap(s []string) []string {
 	seen := make(map[string]struct{}, len(s))
@@ -42,4 +48,48 @@ func wordWrap(text string, lineWidth int) string {
 		}
 	}
 	return wrapped
+}
+
+func writeGob(filePath string, object interface{}) error {
+	file, err := os.Create(filePath)
+	if err == nil {
+		encoder := gob.NewEncoder(file)
+		encoder.Encode(object)
+	}
+	file.Close()
+	return err
+}
+
+func readGob(filePath string, object interface{}) error {
+	file, err := os.Open(filePath)
+	if err == nil {
+		decoder := gob.NewDecoder(file)
+		err = decoder.Decode(object)
+	}
+	file.Close()
+	return err
+}
+
+func dumpCardCache() error {
+	// Dump cache keys
+	var outCards []Card
+	for _, k := range nameToCardCache.Keys() {
+		if v, ok := nameToCardCache.Get(k); ok {
+			outCards = append(outCards, v.(Card))
+		}
+	}
+	return writeGob(cardCacheGob, outCards)
+}
+
+func getExitChannel() chan os.Signal {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c,
+		syscall.SIGTERM,
+		syscall.SIGINT,
+		syscall.SIGQUIT,
+		syscall.SIGKILL,
+		syscall.SIGHUP,
+	)
+	return c
+
 }
