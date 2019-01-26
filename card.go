@@ -296,10 +296,8 @@ func lookupUniqueNamePrefix(input string) string {
 		return c[0]
 	}
 	// Look for something legendary-ish
-	var i int
 	for _, x := range c {
 		if strings.Contains(x, ",") || strings.Contains(x, "the") {
-			i++
 			return x
 		}
 	}
