@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -17,6 +18,16 @@ import (
 
 const namesFile = "names.json"
 const namesURL = "https://api.scryfall.com/catalog/card-names"
+
+// CardList represents the Scryfall List API when retrieving multiple cards
+type CardList struct {
+	Object     string   `json:"object"`
+	TotalCards int      `json:"total_cards"`
+	Warnings   []string `json:"warnings"`
+	HasMore    bool     `json:"has_more"`
+	NextPage   string   `json:"next_page"`
+	Data       []Card   `json:"data"`
+}
 
 // CardRuling contains an individual ruling on a card
 type CardRuling struct {
@@ -29,6 +40,13 @@ type CardRuling struct {
 
 func (ruling CardRuling) formatRuling() string {
 	return fmt.Sprintf("%v: %v", ruling.PublishedAt, ruling.Comment)
+}
+
+// CardMetadata contains some extraneous extra information we sometimes retrieve
+type CardMetadata struct {
+	PreviousPrintings     []string
+	PreviousFlavourTexts  []string
+	PreviousReminderTexts []string
 }
 
 // CardRulingResult represents the JSON returned by the /cards/{}/rulings Scryfall API
@@ -143,7 +161,72 @@ type Card struct {
 		Cardmarket  string `json:"cardmarket"`
 		Cardhoarder string `json:"cardhoarder"`
 	} `json:"purchase_uris"`
-	Rulings []CardRuling
+	Rulings  []CardRuling
+	Metadata CardMetadata
+}
+
+// TODO: Also CardFaces
+func (card Card) getExtraMetadata(inputURL string) error {
+	log.Debug("Getting Metadata")
+	// This is called even for empty Card objects, do don't do anything in that case
+	if card.ID == "" {
+		return nil
+	}
+	fetchURL := card.PrintsSearchURI
+	var cm CardMetadata
+	// Aready have metadata?
+	if !reflect.DeepEqual(card.Metadata, cm) {
+		return nil
+	}
+	// Use parameter over stored, for recursive lists
+	if inputURL != "" {
+		fetchURL = inputURL
+	}
+	// Have a url?
+	if fetchURL == "" {
+		return fmt.Errorf("No prints URI")
+	}
+	log.Debug("GetExtraMetadata: Attempting to fetch", "URL", fetchURL)
+	resp, err := http.Get(fetchURL)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Warn("GetExtraMetadata: The HTTP request failed", "Error", err)
+		return fmt.Errorf("Something went wrong fetching the card list")
+	}
+	defer resp.Body.Close()
+	var list CardList
+	if resp.StatusCode == 200 {
+		if err := json.NewDecoder(resp.Body).Decode(&list); err != nil {
+			raven.CaptureError(err, nil)
+			return fmt.Errorf("Something went wrong parsing the card list")
+		}
+		if len(list.Warnings) > 0 {
+			return fmt.Errorf("Scryfall said there were errors: %v", list.Warnings)
+		}
+		if list.HasMore {
+			defer card.getExtraMetadata(list.NextPage)
+		}
+		// These are in printing order, since the prints_search_uri includes "order=released"
+		for _, c := range list.Data {
+			if c.ID == card.ID {
+				continue
+			}
+			if c.FlavourText != "" {
+				cm.PreviousFlavourTexts = append(cm.PreviousFlavourTexts, c.FlavourText)
+			}
+			cm.PreviousPrintings = append(cm.PreviousPrintings, c.formatExpansions())
+			// Only need previous reminder text if current one doesn't have
+			if c.getReminderTexts() == "Reminder text not found" && c.getReminderTexts() != "Reminder text not found" {
+				cm.PreviousReminderTexts = append(cm.PreviousReminderTexts, c.getReminderTexts())
+			}
+		}
+		card.Metadata = cm
+		// Update the Cache ???? Necessary ?
+		nameToCardCache.Add(normaliseCardName(card.Name), card)
+		return nil
+	}
+	log.Info("GetExtraMetadata: Scryfall returned a non-200", "Status Code", resp.StatusCode)
+	return fmt.Errorf("Card list not found by Scryfall !?")
 }
 
 func formatManaCost(input string) string {
@@ -152,14 +235,20 @@ func formatManaCost(input string) string {
 }
 
 func (card Card) formatExpansions() string {
-	return fmt.Sprintf("%s-%s", strings.ToUpper(card.Set), strings.ToUpper(card.Rarity[0:1]))
+	ret := ""
+	if card.Name != "Plains" && card.Name != "Island" && card.Name != "Swamp" && card.Name != "Mountain" && card.Name != "Forest" {
+		ret = fmt.Sprintf("%s", strings.Join(card.Metadata.PreviousPrintings, ","))
+	}
+	return ret + fmt.Sprintf("%s-%s", strings.ToUpper(card.Set), strings.ToUpper(card.Rarity[0:1]))
 }
 
-// Get all possible current reminder texts for a card, \n separated
-// TODO: Get most recent previous reminder text
+// Get all possible most recent reminder texts for a card, \n separated
+// TODO/NOTE: This doesn't work, since Scryfall doesn't actually give the printed_text field for each previous printing,
+// just the current Oracle text.
 func (card Card) getReminderTexts() string {
 	reminderRegexp := regexp.MustCompile(`\((.*?)\)`)
 	cardText := card.OracleText
+
 	if len(card.CardFaces) > 0 {
 		cardText = ""
 		for _, cf := range card.CardFaces {
@@ -168,6 +257,9 @@ func (card Card) getReminderTexts() string {
 	}
 	reminders := reminderRegexp.FindAllStringSubmatch(cardText, -1)
 	if len(reminders) == 0 {
+		if len(card.Metadata.PreviousReminderTexts) > 0 {
+			return card.Metadata.PreviousReminderTexts[0]
+		}
 		return "Reminder text not found"
 	}
 	var ret []string
@@ -177,11 +269,13 @@ func (card Card) getReminderTexts() string {
 	return strings.Join(ret, "\n")
 }
 
-// Gets the (most recent) Flavour text
-// TODO: Get all unique previous flavour texts
+// Get the most recent Flavour Text that exists
 func (card Card) getFlavourText() string {
 	if card.FlavourText != "" {
 		return card.FlavourText
+	}
+	if len(card.Metadata.PreviousFlavourTexts) > 0 {
+		return card.Metadata.PreviousFlavourTexts[0]
 	}
 	return "Flavour text not found"
 }
@@ -312,11 +406,11 @@ func lookupUniqueNamePrefix(input string) string {
 
 func fetchScryfallCardByFuzzyName(input string) (Card, error) {
 	url := fmt.Sprintf("https://api.scryfall.com/cards/named?fuzzy=%s", url.QueryEscape(input))
-	log.Debug("Attempting to fetch", "URL", url)
+	log.Debug("fetchScryfallCard: Attempting to fetch", "URL", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		raven.CaptureError(err, nil)
-		log.Warn("The HTTP request failed", "Error", err)
+		log.Warn("fetchScryfallCard: The HTTP request failed", "Error", err)
 		return Card{}, fmt.Errorf("Something went wrong fetching the card")
 	}
 	defer resp.Body.Close()
@@ -328,12 +422,15 @@ func fetchScryfallCardByFuzzyName(input string) (Card, error) {
 		}
 		return card, nil
 	}
-	log.Info("Scryfall returned a non-200", "Status Code", resp.StatusCode)
+	log.Info("fetchScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
 	return card, fmt.Errorf("Card not found by Scryfall")
 }
 
 func getScryfallCard(input string) (Card, error) {
 	var card Card
+	defer func() {
+		go card.getExtraMetadata("")
+	}()
 	// Normalise input to match how we store in the cache:
 	// lowercase, no punctuation.
 	ncn := normaliseCardName(input)
@@ -380,24 +477,24 @@ func fetchCardNames() error {
 	if err != nil {
 		return err
 	}
-	log.Debug("Attempting to fetch", "URL", namesURL)
+	log.Debug("FetchCardNames: Attempting to fetch", "URL", namesURL)
 	resp, err := http.Get(namesURL)
 	if err != nil {
 		raven.CaptureError(err, nil)
-		log.Warn("The HTTP request failed", "Error", err)
+		log.Warn("FetchCardNames: The HTTP request failed", "Error", err)
 		return fmt.Errorf("Something went wrong fetching the cardname catalog")
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
 		_, err = io.Copy(out, resp.Body)
 		if err != nil {
-			log.Warn("Error writing to cardNames file", "Error", err)
+			log.Warn("FetchCardNames: Error writing to cardNames file", "Error", err)
 			return err
 		}
 		out.Close()
 		return nil
 	}
-	log.Warn("Scryfall returned a non-200", "Status Code", resp.StatusCode)
+	log.Warn("FetchCardNames: Scryfall returned a non-200", "Status Code", resp.StatusCode)
 	return fmt.Errorf("Scryfall returned a non-200")
 }
 
@@ -474,11 +571,11 @@ func (card Card) getRulings(rulingNumber int) string {
 
 func (card *Card) fetchRulings() error {
 	url := fmt.Sprintf(card.RulingsURI)
-	log.Debug("Attempting to fetch", "URL", url)
+	log.Debug("FetchRulings: Attempting to fetch", "URL", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		raven.CaptureError(err, nil)
-		log.Warn("The HTTP request failed", "Error", err)
+		log.Warn("FetchRulings: The HTTP request failed", "Error", err)
 		return fmt.Errorf("Something went wrong fetching the card")
 	}
 	defer resp.Body.Close()
@@ -492,6 +589,6 @@ func (card *Card) fetchRulings() error {
 		card.Rulings = crr.Data
 		return nil
 	}
-	log.Info("Scryfall returned a non-200", "Status Code", resp.StatusCode)
+	log.Info("FetchRulings: Scryfall returned a non-200", "Status Code", resp.StatusCode)
 	return fmt.Errorf("Unable to fetch rulings from Scryfall")
 }
