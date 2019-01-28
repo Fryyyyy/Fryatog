@@ -688,7 +688,7 @@ var MainTrigger = hbot.Trigger{
 						if ss == "" {
 							continue
 						}
-						for i, sss := range strings.Split(wordWrap(ss, 390), "\n") {
+						for i, sss := range strings.Split(wordWrap(ss, (390-len(prefix))), "\n") {
 							if i == 0 {
 								irc.Reply(m, fmt.Sprintf("%s%s", prefix, sss))
 							} else {
