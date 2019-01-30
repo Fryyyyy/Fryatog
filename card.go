@@ -237,7 +237,9 @@ func formatManaCost(input string) string {
 func (card Card) formatExpansions() string {
 	ret := ""
 	if card.Name != "Plains" && card.Name != "Island" && card.Name != "Swamp" && card.Name != "Mountain" && card.Name != "Forest" {
-		ret = fmt.Sprintf("%s", strings.Join(card.Metadata.PreviousPrintings, ","))
+		if len(card.Metadata.PreviousPrintings) > 0 {
+			ret = fmt.Sprintf("%s,", strings.Join(card.Metadata.PreviousPrintings, ","))
+		}
 	}
 	return ret + fmt.Sprintf("%s-%s", strings.ToUpper(card.Set), strings.ToUpper(card.Rarity[0:1]))
 }
