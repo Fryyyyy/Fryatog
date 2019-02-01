@@ -428,6 +428,36 @@ func fetchScryfallCardByFuzzyName(input string) (Card, error) {
 	return card, fmt.Errorf("Card not found by Scryfall")
 }
 
+func checkCacheForCard(ncn string) (Card, error) {
+	log.Debug("Checking cache for card", "Name", ncn)
+	var emptyCard Card
+	if cacheCard, found := nameToCardCache.Get(ncn); found {
+		log.Debug("Card was cached")
+		if cacheCard == nil {
+			log.Debug("But cached as nothing")
+			return emptyCard, fmt.Errorf("Card not found")
+		}
+		// Check to see we're returning the canonical card object
+		c := cacheCard.(Card)
+		cNCN := normaliseCardName(c.Name)
+		// It already was the card we wanted.
+		if ncn == cNCN {
+			log.Debug("It was the Canonical Object")
+			return c, nil
+		}
+		// Do we have the canonical object?
+		if cc2, found := nameToCardCache.Get(cNCN); found {
+			log.Debug("We have the Canonical Object")
+			return cc2.(Card), nil
+		}
+		// We don't, return what we got
+		log.Debug("We don't have the Canonical Object")
+		return c, nil
+	}
+	log.Debug("Not in cache")
+	return emptyCard, fmt.Errorf("Card not found in cache")
+}
+
 func getScryfallCard(input string) (Card, error) {
 	var card Card
 	defer func() {
@@ -436,16 +466,19 @@ func getScryfallCard(input string) (Card, error) {
 	// Normalise input to match how we store in the cache:
 	// lowercase, no punctuation.
 	ncn := normaliseCardName(input)
-	if cacheCard, found := nameToCardCache.Get(ncn); found {
-		log.Debug("Card was cached")
-		if cacheCard == nil {
-			return card, fmt.Errorf("Card not found")
-		}
-		return cacheCard.(Card), nil
+	log.Debug("Checking Scryfall for card", "Name", ncn)
+	c, err := checkCacheForCard(ncn)
+	if err != nil && err.Error() == "Card not found" {
+		return c, err
 	}
+
 	// Try fuzzily matching the name
-	card, err := fetchScryfallCardByFuzzyName(input)
+	card, err = fetchScryfallCardByFuzzyName(input)
 	if err == nil {
+		cc, err := checkCacheForCard(normaliseCardName(card.Name))
+		if err == nil {
+			return cc, err
+		}
 		nameToCardCache.Add(ncn, card)
 		nameToCardCache.Add(normaliseCardName(card.Name), card)
 		return card, nil
@@ -455,6 +488,10 @@ func getScryfallCard(input string) (Card, error) {
 	if cardName != "" {
 		card, err = fetchScryfallCardByFuzzyName(cardName)
 		if err == nil {
+			cc, err := checkCacheForCard(normaliseCardName(card.Name))
+			if err == nil {
+				return cc, err
+			}
 			nameToCardCache.Add(ncn, card)
 			nameToCardCache.Add(normaliseCardName(card.Name), card)
 			return card, nil
