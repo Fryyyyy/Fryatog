@@ -330,7 +330,7 @@ func (card Card) formatCard() string {
 			if cf.ManaCost != "" {
 				r = append(r, formatManaCost(cf.ManaCost))
 			}
-			r = append(r, fmt.Sprintf("| %s |", cf.TypeLine))
+			r = append(r, fmt.Sprintf("· %s ·", cf.TypeLine))
 			if strings.Contains(cf.TypeLine, "Creature") {
 				r = append(r, fmt.Sprintf("%s/%s", cf.Power, cf.Toughness))
 			}
@@ -347,7 +347,7 @@ func (card Card) formatCard() string {
 	if card.ManaCost != "" {
 		s = append(s, formatManaCost(card.ManaCost))
 	}
-	s = append(s, fmt.Sprintf("| %s |", card.TypeLine))
+	s = append(s, fmt.Sprintf("· %s ·", card.TypeLine))
 	// P/T or Loyalty or Nothing
 	if strings.Contains(card.TypeLine, "Creature") {
 		s = append(s, fmt.Sprintf("%s/%s", card.Power, card.Toughness))
