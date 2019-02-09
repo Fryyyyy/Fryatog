@@ -93,6 +93,8 @@ func printHelp() string {
 	ret = append(ret, "!ruling <cardname> [ruling number] to bring up Gatherer rulings")
 	ret = append(ret, "!rule <rulename> to bring up a Comprehensive Rule entry")
 	ret = append(ret, "!define <glossary> to bring up the definition of a term")
+	ret = append(ret, "!roll <X> to roll X-sided die; <XdY> to roll X d-sided dice")
+	ret = append(ret, "!coin to flip a coin (heads/tails")
 	return strings.Join(ret, " · ")
 }
 
@@ -290,6 +292,7 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []str
 		wordEndingInBang     = regexp.MustCompile(`\S+!(?: |\n)`)
 		wordStartingWithBang = regexp.MustCompile(`\s+!(?: *)\S+`)
 		input                = m.Content
+		user 								 = m.From
 	)
 
 	// Little bit of hackery for PMs
@@ -376,7 +379,7 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []str
 		}
 
 		log.Debug("Dispatching", "index", commands)
-		go handleCommand(message, c, cardGetFunction)
+		go handleCommand(user, message, c, cardGetFunction)
 		commands++
 	}
 	var ret []string
@@ -389,7 +392,7 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []str
 
 // handleCommand takes in a message, splits it into words
 // and attempts to dispatch it to the correct handler.
-func handleCommand(message string, c chan string, cardGetFunction CardGetter) {
+func handleCommand(user string, message string, c chan string, cardGetFunction CardGetter) {
 	log.Debug("In handleCommand", "Message", message)
 	cardTokens := strings.Fields(message)
 	log.Debug("Done tokenising", "Tokens", cardTokens)
@@ -413,6 +416,14 @@ func handleCommand(message string, c chan string, cardGetFunction CardGetter) {
 		strings.HasPrefix(message, "example "):
 		log.Debug("Rules query", "Input", message)
 		c <- handleRulesQuery(message)
+		return
+
+	case strings.HasPrefix(message, "roll "):
+	  c <- RollDice(message)
+	  return
+
+	case strings.HasPrefix(message, "coin"):
+		c <- CoinFlip(user)
 		return
 
 	case cardMetadataRegex.MatchString(message):
