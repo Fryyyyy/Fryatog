@@ -20,6 +20,7 @@ import (
 	hbot "github.com/whyrusleeping/hellabot"
 	charmap "golang.org/x/text/encoding/charmap"
 	log "gopkg.in/inconshreveable/log15.v2"
+	simplemath "github.com/villawhatever/simplemath"
 )
 
 // Configuration lists the configurable parameters, stored in config.json
@@ -678,7 +679,9 @@ var MainTrigger = hbot.Trigger{
 				// Check if we've already sent it recently (only for public channels)
 				if isPublic {
 					if _, found := recentCacheMap[m.To].Get(s); found && !strings.Contains(s, "not found") {
-						irc.Reply(m, fmt.Sprintf("%sDuplicate response withheld. (%s ...)", prefix, s[:23]))
+						// Safety net for the odd case where the cached string is shorter than 23 chars.
+						maxLen := simplemath.Max(len(s), 23)
+						irc.Reply(m, fmt.Sprintf("%sDuplicate response withheld. (%s ...)", prefix, s[:maxLen]))
 						continue
 					}
 					recentCacheMap[m.To].Set(s, true, cache.DefaultExpiration)
