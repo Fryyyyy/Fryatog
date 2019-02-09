@@ -93,7 +93,7 @@ func printHelp() string {
 	ret = append(ret, "!ruling <cardname> [ruling number] to bring up Gatherer rulings")
 	ret = append(ret, "!rule <rulename> to bring up a Comprehensive Rule entry")
 	ret = append(ret, "!define <glossary> to bring up the definition of a term")
-	ret = append(ret, "!roll <X> to roll X-sided die; <XdY> to roll X d-sided dice")
+	ret = append(ret, "!roll <X> to roll X-sided die; <XdY> to roll X Y-sided dice")
 	ret = append(ret, "!coin to flip a coin (heads/tails")
 	return strings.Join(ret, " · ")
 }
