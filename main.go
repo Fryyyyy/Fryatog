@@ -423,7 +423,7 @@ func handleCommand(user string, message string, c chan string, cardGetFunction C
 	  return
 
 	case strings.HasPrefix(message, "coin"):
-		c <- CoinFlip(user)
+		c <- FlipCoin(user)
 		return
 
 	case cardMetadataRegex.MatchString(message):

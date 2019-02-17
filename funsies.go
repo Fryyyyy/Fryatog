@@ -5,24 +5,39 @@ import (
     "math/rand"
     "regexp"
     "strconv"
+    "strings"
     "time"
 
     log "gopkg.in/inconshreveable/log15.v2"
 )
 
 func RollDice(input string) string {
-    diceRegex := regexp.MustCompile(`(\d+)d?(\d*)([+-]\d)?`)
-    log.Debug(input)
+    diceRegex := regexp.MustCompile(`^(\d+)(?:d?(\d+)([+-]\d+)?)?`)
+    //log.Debug(input)
     dice := diceRegex.FindStringSubmatch(input)
-    rand.Seed(time.Now().UnixNano())
-
+    rand.Seed(1)
+    //rand.Seed(time.Now().UnixNano())
     var operator byte
     var modifier int
     var typeDice int
+    log.Debug(fmt.Sprintf("%s :-> %#v", input, dice))
 
-    //Someone did a stupid thing and gave us something like 'roll h'
+    failure := "\x02roll\x0F: Try something like 'roll 4', 'roll 3d8', 'roll 2d6+2'"
+
     if len(dice) == 0 {
-        return "roll: Try something like 'roll 4', 'roll 3d8', 'roll 2d6+2'"
+        return failure
+    }
+
+    failCases := []bool{
+                      dice[2] == "" && len(input) > len(dice[1]),
+                      strings.Contains(input, "d") && dice[2] == "",
+                      strings.Contains(input, "-") && dice[3] == "",
+                      strings.Contains(input, "+") && dice[3] == "",} 
+
+    for _, failCase := range failCases {
+        if (failCase) {
+        return failure
+        }
     }
 
     numDice, _ := strconv.Atoi(dice[1])
@@ -59,10 +74,10 @@ func RollDice(input string) string {
     return ""
 }
 
-func CoinFlip(user string) string {
+func FlipCoin(user string) string {
     coin := []string{"heads", "tails",}
     rand.Seed(time.Now().UnixNano())
     side := coin[rand.Intn(len(coin))]
 
-    return fmt.Sprintf("%s flips a coin: %s.", user, side)
+    return fmt.Sprintf("%s flips a coin: \x02%s\x0F.", user, side)
 }
