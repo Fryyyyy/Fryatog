@@ -331,7 +331,7 @@ func (card Card) formatCard() string {
 				r = append(r, formatManaCost(cf.ManaCost))
 			}
 			r = append(r, fmt.Sprintf("· %s ·", cf.TypeLine))
-			if strings.Contains(cf.TypeLine, "Creature") {
+			if cf.Power != "" {
 				r = append(r, fmt.Sprintf("%s/%s", cf.Power, cf.Toughness))
 			}
 			r = append(r, strings.Replace(cf.OracleText, "\n", " \\ ", -1))
@@ -349,7 +349,7 @@ func (card Card) formatCard() string {
 	}
 	s = append(s, fmt.Sprintf("· %s ·", card.TypeLine))
 	// P/T or Loyalty or Nothing
-	if strings.Contains(card.TypeLine, "Creature") {
+	if card.Power != "" {
 		s = append(s, fmt.Sprintf("%s/%s", card.Power, card.Toughness))
 	}
 	if strings.Contains(card.TypeLine, "Planeswalker") {
