@@ -36,6 +36,8 @@ func TestRollDice(t *testing.T) {
         {"2d112", "When have you ever seen a die with that many sides? Come on."},
         {"100d12", "That's too many dice. Calm down."},
         {"4d8+1200", "Haha. No. Why do you need a mod that large?"},
+        {"92233720368547758072131231", "That's too many dice. Calm down."},
+        {"4d92233720368547758073213123", "When have you ever seen a die with that many sides? Come on."},
     }
 
     validateOutput := regexp.MustCompile(`\d+ \d+-sided dic?e(?::|\s(?:[+-]\d)?:) \d+`)
