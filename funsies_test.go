@@ -31,8 +31,11 @@ func TestRollDice(t *testing.T) {
         {"2daf3", plannedFailure},
         {"2d6+e", plannedFailure},
         {"2e6?_", plannedFailure},
-        {"-3", plannedFailure},
+        {"-3d8", plannedFailure},
         {"3d1", "Your spherical dice go careening off the flat earth. You know. Those two things that exist."},
+        {"2d112", "When have you ever seen a die with that many sides? Come on."},
+        {"100d12", "That's too many dice. Calm down."},
+        {"4d8+1200", "Haha. No. Why do you need a mod that large?"},
     }
 
     validateOutput := regexp.MustCompile(`\d+ \d+-sided dic?e(?::|\s(?:[+-]\d)?:) \d+`)
@@ -44,6 +47,7 @@ func TestRollDice(t *testing.T) {
         {"4d6"},
         {"2d20+3"},
         {"2d6-2"},
+        {"50d8"},
     }
 
     for _, table := range tables {
@@ -60,7 +64,7 @@ func TestRollDice(t *testing.T) {
         if !(validateOutput.MatchString(result)) {
             t.Errorf("FAIL: Input %s: Got %s", table.input, result)
         } else {
-            t.Logf("OK: %s", table.input)
+            t.Logf("OK: %s -> %s", table.input, result)
         }
     }
 }
