@@ -13,10 +13,10 @@ import (
 
 func RollDice(input string) string {
     diceRegex := regexp.MustCompile(`^(\d+)(?:d?(\d+)([+-]\d+)?)?`)
-    //log.Debug(input)
     dice := diceRegex.FindStringSubmatch(input)
-    rand.Seed(1)
-    //rand.Seed(time.Now().UnixNano())
+    //Testing seed
+    //rand.Seed(1)
+    rand.Seed(time.Now().UnixNano())
     var operator byte
     var modifier int
     var typeDice int
