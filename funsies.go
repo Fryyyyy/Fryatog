@@ -14,15 +14,13 @@ import (
 func RollDice(input string) string {
     diceRegex := regexp.MustCompile(`^(\d+)(?:d?(\d+)([+-]\d+)?)?`)
     dice := diceRegex.FindStringSubmatch(input)
-    //Testing seed
-    //rand.Seed(1)
     rand.Seed(time.Now().UnixNano())
     var operator byte
     var modifier int
     var typeDice int
     log.Debug(fmt.Sprintf("%s :-> %#v", input, dice))
 
-    failure := "\x02roll\x0F: Try something like 'roll 4', 'roll 3d8', 'roll 2d6+2'"
+    failure := "roll: Try something like 'roll 4', 'roll 3d8', 'roll 2d6+2'"
 
     if len(dice) == 0 {
         return failure
@@ -79,5 +77,5 @@ func FlipCoin(user string) string {
     rand.Seed(time.Now().UnixNano())
     side := coin[rand.Intn(len(coin))]
 
-    return fmt.Sprintf("%s flips a coin: \x02%s\x0F.", user, side)
+    return fmt.Sprintf("%s flips a coin: %s.", user, side)
 }
