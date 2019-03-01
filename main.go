@@ -286,7 +286,7 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []str
 		botCommandRegex      = regexp.MustCompile(`[!&]([^!&?]+)|\[\[(.*?)\]\]`)
 		singleQuotedWord     = regexp.MustCompile(`^(?:\"|\')\w+(?:\"|\')$`)
 		nonTextRegex         = regexp.MustCompile(`^[^\w]+$`)
-		wordEndingInBang     = regexp.MustCompile(`\S+!(?: |\n)`)
+		wordEndingInBang     = regexp.MustCompile(`\S+!(?: |"|'|\n)+`)
 		wordStartingWithBang = regexp.MustCompile(`\s+!(?: *)\S+`)
 		input                = m.Content
 	)
