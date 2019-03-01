@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 )
@@ -23,8 +24,40 @@ var (
 		"Poison-Tip Archer":       "test_data/poisontiparcher.json",
 		"Faithless Looting":       "test_data/faithlesslooting.json",
 		"Fleetwheel Cruiser":      "test_data/fleetwheelcruiser.json",
+		"Disenchant":              "test_data/disenchant.json",
 	}
 )
+
+func (card *Card) fakeGetMetadata() error {
+	var cm CardMetadata
+	var list CardList
+	fi, err := os.Open("test_data/" + normaliseCardName(card.Name) + "-printings.json")
+	if err != nil {
+		return fmt.Errorf("Unable to open printings JSON: %v", err)
+	}
+	if err := json.NewDecoder(fi).Decode(&list); err != nil {
+		return fmt.Errorf("Something went wrong parsing the card list")
+	}
+	if len(list.Warnings) > 0 {
+		return fmt.Errorf("Scryfall said there were errors: %v", list.Warnings)
+	}
+	// These are in printing order, since the prints_search_uri includes "order=released"
+	for _, c := range list.Data {
+		if c.ID == card.ID {
+			continue
+		}
+		if c.FlavourText != "" {
+			cm.PreviousFlavourTexts = append(cm.PreviousFlavourTexts, c.FlavourText)
+		}
+		cm.PreviousPrintings = append(cm.PreviousPrintings, c.formatExpansions())
+		// Only need previous reminder text if current one doesn't have
+		if c.getReminderTexts() == "Reminder text not found" && c.getReminderTexts() != "Reminder text not found" {
+			cm.PreviousReminderTexts = append(cm.PreviousReminderTexts, c.getReminderTexts())
+		}
+	}
+	card.Metadata = cm
+	return nil
+}
 
 func TestPrintCard(t *testing.T) {
 	tables := []struct {
@@ -125,6 +158,33 @@ func TestGetRulings(t *testing.T) {
 		got := (table.input).getRulings(table.rulingNumber)
 		if got != table.output {
 			t.Errorf("Incorrect output -- got %s -- want %s", got, table.output)
+		}
+	}
+}
+
+func TestGetPrintings(t *testing.T) {
+	tables := []struct {
+		cardname string
+		output   string
+	}{
+		{"Faithless Looting", "\x02Faithless Looting\x0F {R} · Sorcery · Draw two cards, then discard two cards. \\ Flashback {2}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) · CM2-C,EMA-C,PZ1-U,C15-C,C14-C,DDK-C,DKA-C,PIDW-R,UMA-C · Vin,Leg,Mod"},
+		{"Disenchant", "\x02Disenchant\x0F {1}{W} · Instant · Destroy target artifact or enchantment. · IMA-C,PRM-C,CN2-C,TPR-C,PRM-C,[...],A25-C · Vin,Leg,Mod"},
+	}
+	for _, table := range tables {
+		fi, err := os.Open(RealCards[table.cardname])
+		if err != nil {
+			t.Errorf("Unable to open %v", RealCards[table.cardname])
+		}
+		var c Card
+		if err := json.NewDecoder(fi).Decode(&c); err != nil {
+			t.Errorf("Something went wrong parsing the card: %s", err)
+		}
+		if err = c.fakeGetMetadata(); err != nil {
+			t.Errorf("Unexpected error: %v", err)
+		}
+		fc := c.formatCard()
+		if fc != table.output {
+			t.Errorf("Incorrect output -- got %s -- want %s", fc, table.output)
 		}
 	}
 }

@@ -234,11 +234,16 @@ func formatManaCost(input string) string {
 	return input
 }
 
+// TODO: Have a command to see all printing information
 func (card Card) formatExpansions() string {
 	ret := ""
 	if card.Name != "Plains" && card.Name != "Island" && card.Name != "Swamp" && card.Name != "Mountain" && card.Name != "Forest" {
 		if len(card.Metadata.PreviousPrintings) > 0 {
-			ret = fmt.Sprintf("%s,", strings.Join(card.Metadata.PreviousPrintings, ","))
+			if len(card.Metadata.PreviousPrintings) < 10 {
+				ret = fmt.Sprintf("%s,", strings.Join(card.Metadata.PreviousPrintings, ","))
+			} else {
+				ret = fmt.Sprintf("%s,[...],", strings.Join(card.Metadata.PreviousPrintings[:5], ","))
+			}
 		}
 	}
 	return ret + fmt.Sprintf("%s-%s", strings.ToUpper(card.Set), strings.ToUpper(card.Rarity[0:1]))
@@ -609,9 +614,8 @@ func (card Card) getRulings(rulingNumber int) string {
 }
 
 func (card *Card) fetchRulings() error {
-	url := fmt.Sprintf(card.RulingsURI)
-	log.Debug("FetchRulings: Attempting to fetch", "URL", url)
-	resp, err := http.Get(url)
+	log.Debug("FetchRulings: Attempting to fetch", "URL", card.RulingsURI)
+	resp, err := http.Get(card.RulingsURI)
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("FetchRulings: The HTTP request failed", "Error", err)
