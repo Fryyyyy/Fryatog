@@ -283,10 +283,10 @@ func makeRulesCM(forceFetch bool) {
 // Any real commands are handed to the handleCommand function
 func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []string {
 	var (
-		botCommandRegex      = regexp.MustCompile(`[!&]([^!&?]+)|\[\[(.*?)\]\]`)
+		botCommandRegex      = regexp.MustCompile(`[!&]([^!&?[]+)|\[\[(.*?)\]\]`)
 		singleQuotedWord     = regexp.MustCompile(`^(?:\"|\')\w+(?:\"|\')$`)
 		nonTextRegex         = regexp.MustCompile(`^[^\w]+$`)
-		wordEndingInBang     = regexp.MustCompile(`\S+!(?: |"|'|\n)+`)
+		wordEndingInBang     = regexp.MustCompile(`!(?:"|') |(?:\n)+`)
 		wordStartingWithBang = regexp.MustCompile(`\s+!(?: *)\S+`)
 		input                = m.Content
 	)
@@ -346,7 +346,7 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []str
 			log.Info("Double Iffy Skip", "Message", message)
 			continue
 		}
-		if wordEndingInBang.MatchString(input) && !wordStartingWithBang.MatchString(input) {
+		if wordEndingInBang.MatchString(message) && !wordStartingWithBang.MatchString(message) {
 			log.Info("WEIB Skip")
 			continue
 		}

@@ -80,10 +80,16 @@ func TestTokens(t *testing.T) {
 		{"<MW> !!fract ident &treas nabb", []string{testCardExpected, testCardExpected}},
 		{"!cr 100.1a", []string{"\x02100.1a.\x0F A two-player game is a game that begins with only two players."}},
 		{"!100.1a !!hi", []string{"\x02100.1a.\x0F A two-player game is a game that begins with only two players.", testCardExpected}},
-		{"Animate dead ETBing is a trigger. The *entire* trigger resolves like this: \"Bring back Karmic guide. Fail to attach to Karmic Guide.\" State-based actions check and go \"that's an aura not attached to anything!\" and sends Animate Dead to the graveyard", emptyStringSlice},
+		{`Animate dead ETBing is a trigger. The *entire* trigger resolves like this: "Bring back Karmic guide. Fail to attach to Karmic Guide." State-based actions check and go "that's an aura not attached to anything!" and sends Animate Dead to the graveyard`, emptyStringSlice},
 		{"!one&two&three", []string{testCardExpected, testCardExpected, testCardExpected}},
 		{"!\"testquote\"", []string{testCardExpected}},
 		{"\"!testquote\"", []string{testCardExpected}},
+		{"[[One]]", []string{testCardExpected}},
+		{"[[One]] [[Two]]", []string{testCardExpected, testCardExpected}},
+		{"[[One]]:[[Two]]", []string{testCardExpected, testCardExpected}},
+		{"Hello there! I have a question about [[Multani, Yavimaya's Avatar]]: Can you activate her ability with her being on the battlefield?", []string{testCardExpected}},
+		{"Hello there!lightning bolt", []string{testCardExpected}},
+		{`Hello there!"lightning bolt"`, []string{testCardExpected}},
 	}
 	for _, table := range tables {
 		got := tokeniseAndDispatchInput(&hbot.Message{Content: table.input}, fakeGetCard)
