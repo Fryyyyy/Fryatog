@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"time"
 
 	raven "github.com/getsentry/raven-go"
 	closestmatch "github.com/schollz/closestmatch"
@@ -629,9 +630,48 @@ func (card *Card) fetchRulings() error {
 			return fmt.Errorf("Something went wrong parsing the card")
 		}
 		// Store what they typed, and also the real card name.
-		card.Rulings = crr.Data
+		if len(crr.Data) != 0 {
+			card.Rulings = sortRulings(crr.Data)
+		} else {
+			card.Rulings = crr.Data
+		}
 		return nil
 	}
+
 	log.Info("FetchRulings: Scryfall returned a non-200", "Status Code", resp.StatusCode)
 	return fmt.Errorf("Unable to fetch rulings from Scryfall")
+}
+
+func sortRulings(rulings []CardRuling) []CardRuling {
+	var sortedRulings []CardRuling
+	var rulingsChunk []CardRuling
+
+	currentGroupedDate, err := shortDateFromString(rulings[0].PublishedAt)
+	if err != nil {
+		log.Error("Failed to parse date")
+	}
+
+	for _, ruling := range rulings {
+		rulingDate, err := shortDateFromString(ruling.PublishedAt)
+		if err != nil {
+			log.Error("Failed to parse date")
+		}
+		if rulingDate.Before(currentGroupedDate) {
+			currentGroupedDate = rulingDate
+			sortedRulings = append(rulingsChunk, sortedRulings...)
+			rulingsChunk = nil
+		}
+
+		rulingsChunk = append(rulingsChunk, ruling)
+	}
+	sortedRulings = append(rulingsChunk, sortedRulings...)
+	return sortedRulings
+}
+
+func shortDateFromString(ds string) (time.Time, error) {
+	t, err := time.Parse("2006-01-02", ds)
+	if err != nil {
+		return t, err
+	}
+	return t, nil
 }

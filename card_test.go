@@ -13,7 +13,8 @@ var (
 	TestCardWithOneNonWOTCRuling = Card{Name: "TestCardWithOneNonWOTCRuling", Rulings: []CardRuling{{Source: "Fry", Comment: "No Print!"}}}
 	TestCardWithOneWOTCRuling    = Card{Name: "TestCardWithOneWOTCRuling", Rulings: []CardRuling{{Source: "wotc", Comment: "Print Me", PublishedAt: "1900-01-01"}}}
 	TestCardWithTwoWOTCRulings   = Card{Name: "TestCardWithTwoWOTCRulings", Rulings: []CardRuling{{Source: "wotc", Comment: "Print Me", PublishedAt: "1900-02-02"}, {Source: "wotc", Comment: "Print Me Too!", PublishedAt: "1900-03-03"}}}
-	FakeCards                    = []Card{TestCardWithNoRulings, TestCardWithEmptyRulings, TestCardWithOneNonWOTCRuling, TestCardWithOneWOTCRuling, TestCardWithTwoWOTCRulings}
+	TawnosCoffin								 = Card{Name: "Tawnos's Coffin", RulingsURI: "https://api.scryfall.com/cards/286fcfbe-296d-4b24-92d5-a06b3d0437d5/rulings"}
+	FakeCards                    = []Card{TestCardWithNoRulings, TestCardWithEmptyRulings, TestCardWithOneNonWOTCRuling, TestCardWithOneWOTCRuling, TestCardWithTwoWOTCRulings, TawnosCoffin}
 	RealCards                    = map[string]string{
 		"Ponder":                  "test_data/ponder.json",
 		"Shahrazad":               "test_data/shahrazad.json",
@@ -153,6 +154,10 @@ func TestGetRulings(t *testing.T) {
 		{TestCardWithTwoWOTCRulings, 0, "1900-02-02: Print Me\n1900-03-03: Print Me Too!"},
 		{TestCardWithTwoWOTCRulings, 1, "1900-02-02: Print Me"},
 		{TestCardWithTwoWOTCRulings, 2, "1900-03-03: Print Me Too!"},
+		{TawnosCoffin, 1, "2004-10-04: The creature returns to the battlefield tapped. It does not return to the battlefield and then tap afterwards."},
+		{TawnosCoffin, 3, "2007-09-16: If the exiled card is returned to the battlefield and, for some reason, it now can’t be enchanted by an Aura that was also exiled by Tawnos’s Coffin, that Aura will remain exiled."},
+		{TawnosCoffin, 4, "2007-09-16: If Tawnos’s Coffin leaves the battlefield before its ability has resolved, it will exile the targeted creature forever, since its delayed triggered ability will never trigger."},
+		{TawnosCoffin, 6, "2008-04-01: The effect doesn’t care what types the card has after it is exiled, only that it have been a creature while on the battlefield."},
 	}
 	for _, table := range tables {
 		got := (table.input).getRulings(table.rulingNumber)
