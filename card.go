@@ -620,20 +620,20 @@ func (card *Card) fetchRulings() error {
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("FetchRulings: The HTTP request failed", "Error", err)
-		return fmt.Errorf("Something went wrong fetching the card")
+		return fmt.Errorf("Something went wrong fetching the rulings")
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
 		var crr CardRulingResult
 		if err := json.NewDecoder(resp.Body).Decode(&crr); err != nil {
 			raven.CaptureError(err, nil)
-			return fmt.Errorf("Something went wrong parsing the card")
+			return fmt.Errorf("Something went wrong parsing the rulings")
 		}
-		// Store what they typed, and also the real card name.
-		if len(crr.Data) != 0 {
-			card.Rulings = sortRulings(crr.Data)
-		} else {
-			card.Rulings = crr.Data
+
+		card.Rulings = crr.Data
+		err = card.sortRulings()
+		if err != nil {
+			return fmt.Errorf("Error sorting rules")
 		}
 		return nil
 	}
@@ -642,19 +642,24 @@ func (card *Card) fetchRulings() error {
 	return fmt.Errorf("Unable to fetch rulings from Scryfall")
 }
 
-func sortRulings(rulings []CardRuling) []CardRuling {
+func (card *Card) sortRulings() error {
+	if len(card.Rulings) == 0 {
+		return nil
+	}
 	var sortedRulings []CardRuling
 	var rulingsChunk []CardRuling
 
-	currentGroupedDate, err := shortDateFromString(rulings[0].PublishedAt)
+	currentGroupedDate, err := time.Parse("2006-01-02", card.Rulings[0].PublishedAt)
 	if err != nil {
 		log.Error("Failed to parse date")
+		return err
 	}
 
-	for _, ruling := range rulings {
-		rulingDate, err := shortDateFromString(ruling.PublishedAt)
+	for _, ruling := range card.Rulings {
+		rulingDate, err := time.Parse("2006-01-02", ruling.PublishedAt)
 		if err != nil {
 			log.Error("Failed to parse date")
+			return err
 		}
 		if rulingDate.Before(currentGroupedDate) {
 			currentGroupedDate = rulingDate
@@ -665,13 +670,6 @@ func sortRulings(rulings []CardRuling) []CardRuling {
 		rulingsChunk = append(rulingsChunk, ruling)
 	}
 	sortedRulings = append(rulingsChunk, sortedRulings...)
-	return sortedRulings
-}
-
-func shortDateFromString(ds string) (time.Time, error) {
-	t, err := time.Parse("2006-01-02", ds)
-	if err != nil {
-		return t, err
-	}
-	return t, nil
+	card.Rulings = sortedRulings
+	return nil
 }
