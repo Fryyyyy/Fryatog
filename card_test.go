@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -25,6 +26,8 @@ var (
 		"Faithless Looting":       "test_data/faithlesslooting.json",
 		"Fleetwheel Cruiser":      "test_data/fleetwheelcruiser.json",
 		"Disenchant":              "test_data/disenchant.json",
+		"Tawnos's Coffin":         "test_data/tawnosscoffin.json",
+		"Ixidron":                 "test_data/ixidron.json",
 	}
 )
 
@@ -57,6 +60,44 @@ func (card *Card) fakeGetMetadata() error {
 	}
 	card.Metadata = cm
 	return nil
+}
+
+func (card *Card) fakeGetRulings(rulingNumber int) string {
+	var crr CardRulingResult
+	fi, err := os.Open("test_data/" + normaliseCardName(card.Name) + "-rulings.json")
+	if err != nil {
+		return fmt.Sprintf("Unable to open printings JSON: %v", err)
+	}
+	if err = json.NewDecoder(fi).Decode(&crr); err != nil {
+		return fmt.Sprintf("Something went wrong parsing the rulings: %v", err)
+	}
+
+	card.Rulings = crr.Data
+
+	err = card.sortRulings()
+	if err != nil {
+		return fmt.Sprintf("Something went wrong sorting the rulings")
+	}
+
+	var ret []string
+	i := 0
+	for _, r := range card.Rulings {
+		if r.Source == "wotc" {
+			i++
+			// Do we want a specific ruling?
+			if rulingNumber > 0 && i == rulingNumber {
+				return r.formatRuling()
+			}
+			ret = append(ret, r.formatRuling())
+		}
+	}
+	if rulingNumber > 0 || len(ret) == 0 {
+		return "Ruling not found"
+	}
+	if len(ret) > 3 {
+		return "Too many rulings, please request a specific one"
+	}
+	return strings.Join(ret, "\n")
 }
 
 func TestPrintCard(t *testing.T) {
@@ -154,8 +195,39 @@ func TestGetRulings(t *testing.T) {
 		{TestCardWithTwoWOTCRulings, 1, "1900-02-02: Print Me"},
 		{TestCardWithTwoWOTCRulings, 2, "1900-03-03: Print Me Too!"},
 	}
+
 	for _, table := range tables {
 		got := (table.input).getRulings(table.rulingNumber)
+		if got != table.output {
+			t.Errorf("Incorrect output -- got %s -- want %s", got, table.output)
+		}
+	}
+}
+
+func TestSortRulings(t *testing.T) {
+	tables := []struct {
+		cardname     string
+		rulingNumber int
+		output       string
+	}{
+		{"Tawnos's Coffin", 1, "2004-10-04: The creature returns to the battlefield tapped. It does not return to the battlefield and then tap afterwards."},
+		{"Tawnos's Coffin", 5, "2008-04-01: Because the new wording doesn’t use phasing, the exiled card will suffer from summoning sickness upon its return to the battlefield."},
+		{"Ixidron", 2, "2006-09-25: The controller of a face-down creature can look at it at any time, even if it doesn’t have morph. Other players can’t, but the rules for face-down permanents state that “you must ensure at all times that your face-down spells and permanents can be easily differentiated from each other.” As a result, all players must be able to figure out what each of the creatures Ixidron turned face down is."},
+		{"Ixidron", 5, "2018-04-27: Creatures turned face down by Ixidron are 2/2 creatures with no text, no name, no subtypes, no expansion symbol, and no mana cost. These values are copiable if an object becomes a copy of one of those creatures, and their normal values are not copiable."},
+	}
+
+	for _, table := range tables {
+		fi, err := os.Open(RealCards[table.cardname])
+		if err != nil {
+			t.Errorf("Unable to open %v", RealCards[table.cardname])
+		}
+
+		var c Card
+		if err := json.NewDecoder(fi).Decode(&c); err != nil {
+			t.Errorf("Something went wrong parsing the card: %s", err)
+		}
+
+		got := c.fakeGetRulings(table.rulingNumber)
 		if got != table.output {
 			t.Errorf("Incorrect output -- got %s -- want %s", got, table.output)
 		}
