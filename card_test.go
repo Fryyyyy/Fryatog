@@ -211,7 +211,11 @@ func TestSortRulings(t *testing.T) {
 		output       string
 	}{
 		{"Tawnos's Coffin", 1, "2004-10-04: The creature returns to the battlefield tapped. It does not return to the battlefield and then tap afterwards."},
+		{"Tawnos's Coffin", 2, "2007-09-16: If the targeted creature is a token, it will cease to exist after being exiled. Any Auras that were attached to it will remain exiled forever."},
+		{"Tawnos's Coffin", 3, "2007-09-16: If the exiled card is returned to the battlefield and, for some reason, it now can’t be enchanted by an Aura that was also exiled by Tawnos’s Coffin, that Aura will remain exiled."},
+		{"Tawnos's Coffin", 4, "2007-09-16: If Tawnos’s Coffin leaves the battlefield before its ability has resolved, it will exile the targeted creature forever, since its delayed triggered ability will never trigger."},
 		{"Tawnos's Coffin", 5, "2008-04-01: Because the new wording doesn’t use phasing, the exiled card will suffer from summoning sickness upon its return to the battlefield."},
+		{"Tawnos's Coffin", 6, "2008-04-01: The effect doesn’t care what types the card has after it is exiled, only that it have been a creature while on the battlefield."},
 		{"Ixidron", 2, "2006-09-25: The controller of a face-down creature can look at it at any time, even if it doesn’t have morph. Other players can’t, but the rules for face-down permanents state that “you must ensure at all times that your face-down spells and permanents can be easily differentiated from each other.” As a result, all players must be able to figure out what each of the creatures Ixidron turned face down is."},
 		{"Ixidron", 5, "2018-04-27: Creatures turned face down by Ixidron are 2/2 creatures with no text, no name, no subtypes, no expansion symbol, and no mana cost. These values are copiable if an object becomes a copy of one of those creatures, and their normal values are not copiable."},
 	}
