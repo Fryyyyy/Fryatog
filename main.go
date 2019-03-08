@@ -500,11 +500,16 @@ func handleRulesQuery(input string) string {
 	if ruleRegexp.MatchString(input) {
 		foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
 		log.Debug("In handleRulesQuery", "Rules matched on", foundRuleNum)
-		ruleNumber := []string{"\x02", foundRuleNum, ".\x0F "}
+
 		if _, ok := rules[foundRuleNum]; !ok {
 			return "Rule not found"
 		}
 		ruleText := strings.Join(rules[foundRuleNum], "")
+		// Do ability nonsense
+		if strings.HasPrefix(foundRuleNum, "702.") {
+			ruleText, foundRuleNum = tryFindBetterAbilityRule(ruleText, foundRuleNum)
+		}
+		ruleNumber := []string{"\x02", foundRuleNum, ".\x0F "}
 		ruleWithNumber := append(ruleNumber, ruleText, "\n")
 		return strings.TrimSpace(strings.Join(ruleWithNumber, ""))
 	}
@@ -512,16 +517,82 @@ func handleRulesQuery(input string) string {
 	if strings.HasPrefix(input, "def ") || strings.HasPrefix(input, "define ") || strings.HasPrefix(input, "rule ") || strings.HasPrefix(input, "r ") || strings.HasPrefix(input, "cr ") {
 		log.Debug("In handleRulesQuery", "Define matched on", strings.SplitN(input, " ", 2))
 		query := strings.SplitN(input, " ", 2)[1]
-		if v, ok := rules[query]; ok {
+		var defineText string
+		v, ok := rules[query]
+		if ok {
 			log.Debug("Exact match")
-			return strings.Join(v, "\n")
+			defineText = strings.Join(v, "\n")
+		} else {
+			bestGuess := rulesCM.Closest(query)
+			log.Debug("InExact match", "Guess", bestGuess)
+			defineText = strings.Join(rules[bestGuess], "\n")
 		}
-		bestGuess := rulesCM.Closest(query)
-		log.Debug("InExact match", "Guess", bestGuess)
-		return strings.TrimSpace(strings.Join(rules[bestGuess], "\n"))
+		// Some crappy workaround/s
+		if !strings.HasPrefix(defineText, "\x02Dies\x0F:") {
+			defineText += tryFindSeeMoreRule(defineText)
+		}
+		return strings.TrimSpace(defineText)
 	}
 	// Didn't match ??
 	return ""
+}
+
+func tryFindSeeMoreRule(input string) string {
+	var seeRuleRegexp = regexp.MustCompile(`See rule (\d+\.{0,1}\d*)`)
+	if strings.Contains(input, "See rule") && !strings.Contains(input, "See rules") && !strings.Contains(input, "and rule") {
+		matches := seeRuleRegexp.FindAllStringSubmatch(input, -1)
+		if len(matches) > 0 {
+			return "\n" + handleRulesQuery(matches[0][1])
+		}
+	}
+	return ""
+}
+
+func tryFindBetterAbilityRule(ruleText, ruleNumber string) (string, string) {
+	var forceB bool
+	// 0) Exceptions: Landwalk, Forecast, Vigilance, Banding
+	switch ruleText {
+	case "Banding":
+		fallthrough
+	case "Landwalk":
+		subRuleCLabel := ruleNumber + "c"
+		subRuleC, ok := rules[subRuleCLabel]
+		if !ok {
+			log.Debug("In tryFindBetterAbilityRule", "There is no subrule C")
+			return ruleText, ruleNumber
+		}
+		subRuleCText := strings.Join(subRuleC, "")
+		return subRuleCText, subRuleCLabel
+	case "Forecast":
+		fallthrough
+	case "Vigilance":
+		forceB = true
+	}
+	// 1) If subrule a contains means and ends in Step."), take subrule a. This covers Rampage and Bushido.
+	subRuleALabel := ruleNumber + "a"
+	subRuleBLabel := ruleNumber + "b"
+	subRuleA, ok := rules[subRuleALabel]
+	if !ok {
+		log.Debug("In tryFindBetterAbilityRule", "There is no subrule A")
+		return ruleText, ruleNumber
+	}
+	subRuleAText := strings.Join(subRuleA, "")
+	if !forceB && strings.Contains(subRuleAText, "means") && strings.HasSuffix(subRuleAText, `Step.")`) {
+		return subRuleAText, subRuleALabel
+	}
+
+	// 2) If subrule a ends in ability. we should take subrule b. This covers the majority of your static and evasion abilities, except Landwalk, which has a useless a and mentions being a static ability in b.
+	if forceB || strings.HasSuffix(subRuleAText, "ability.") || strings.HasSuffix(subRuleAText, `Step.")`) {
+		subRuleB, ok := rules[subRuleBLabel]
+		if !ok {
+			log.Debug("In tryFindBetterAbilityRule", "There is no subrule B")
+			return subRuleAText, subRuleALabel
+		}
+		subRuleBText := strings.Join(subRuleB, "")
+		return subRuleBText, subRuleBLabel
+	}
+	// 3) Otherwise, just take subrule a
+	return subRuleAText, subRuleALabel
 }
 
 func findCard(cardTokens []string, cardGetFunction CardGetter) (Card, error) {
