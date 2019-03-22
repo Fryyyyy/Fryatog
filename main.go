@@ -325,18 +325,16 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []str
 	var commands int
 
 	// Special case the Operator Commands
-	if input == "!quitquitquit" && isSenderAnOp(m) {
+	switch {
+	case input == "!quitquitquit" && isSenderAnOp(m):
 		panic("quitquitquit")
-	}
-
-	if input == "!updaterules" && isSenderAnOp(m) {
+	case input == "!updaterules" && isSenderAnOp(m):
 		if err := importRules(true); err != nil {
 			log.Warn("Error importing Rules", "Error", err)
 			return []string{"Problem!"}
 		}
 		return []string{"Done!"}
-	}
-	if input == "!updatecardnames" && isSenderAnOp(m) {
+	case input == "!updatecardnames" && isSenderAnOp(m):
 		var err error
 		cardNames, err = importCardNames(true)
 		if err != nil {
@@ -344,8 +342,7 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []str
 			return []string{"Problem!"}
 		}
 		return []string{"Done!"}
-	}
-	if input == "!startup" && isSenderAnOp(m) {
+	case input == "!startup" && isSenderAnOp(m):
 		var ret []string
 		var err error
 		if err = importRules(false); err != nil {
@@ -357,6 +354,10 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []str
 		}
 		ret = append(ret, "Done!")
 		return ret
+	case input == "!dumpcardcache" && isSenderAnOp(m):
+		if err := dumpCardCache(); err != nil {
+			raven.CaptureErrorAndWait(err, nil)
+		}
 	}
 
 	for _, message := range commandList {
@@ -757,7 +758,7 @@ func main() {
 // Most of this code stolen from Frytherer [https://github.com/Fryyyyy/Frytherer]
 var MainTrigger = hbot.Trigger{
 	Condition: func(bot *hbot.Bot, m *hbot.Message) bool {
-		return m.Command == "PRIVMSG" && ((!strings.Contains(m.To, "#") && !strings.Contains(m.Trailing, "VERSION")) || (strings.Contains(m.Content, "!") || strings.Contains(m.Content, "[[")))
+		return m.Command == "PRIVMSG" && !(greetingRegexp.MatchString(m.Content)) && ((!strings.Contains(m.To, "#") && !strings.Contains(m.Trailing, "VERSION")) || (strings.Contains(m.Content, "!") || strings.Contains(m.Content, "[[")))
 	},
 	Action: func(irc *hbot.Bot, m *hbot.Message) bool {
 		defer recovery()
