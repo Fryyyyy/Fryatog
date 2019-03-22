@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -11,6 +12,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	raven "github.com/getsentry/raven-go"
@@ -73,6 +75,27 @@ const configFile = "config.json"
 // CardGetter defines a function that retrieves a card's text.
 // Defining this type allows us to override it in testing, and not hit scryfall.com a million times.
 type CardGetter func(cardname string) (Card, error)
+
+func recovery() {
+	if r := recover(); r != nil {
+		// Log
+		switch x := r.(type) {
+		case string:
+			raven.CaptureError(errors.New(x), nil)
+		case error:
+			raven.CaptureError(x, nil)
+		default:
+			raven.CaptureError(errors.New("unknown panic"), nil)
+		}
+		// If desired, actually quit
+		if r == "quitquitquit" {
+			p, _ := os.FindProcess(os.Getpid())
+			p.Signal(syscall.SIGQUIT)
+			return
+		}
+		// Else recover
+	}
+}
 
 func readConfig() configuration {
 	file, _ := os.Open(configFile)
@@ -304,7 +327,12 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []str
 
 	// Special case the Operator Commands
 	if input == "!quitquitquit" && isSenderAnOp(m) {
-		panic("Operator caused us to quit")
+		panic("quitquitquit")
+	}
+
+	if input == "!crash" {
+		n := []int{5, 7, 4}
+		fmt.Println(n[3])
 	}
 
 	if input == "!updaterules" && isSenderAnOp(m) {
@@ -735,6 +763,7 @@ var MainTrigger = hbot.Trigger{
 		return m.Command == "PRIVMSG" && ((!strings.Contains(m.To, "#") && !strings.Contains(m.Trailing, "VERSION")) || (strings.Contains(m.Content, "!") || strings.Contains(m.Content, "[[")))
 	},
 	Action: func(irc *hbot.Bot, m *hbot.Message) bool {
+		defer recovery()
 		log.Debug("Dispatching message", "From", m.From, "To", m.To, "Content", m.Content)
 		if m.From == whichNick {
 			log.Debug("Ignoring message from myself", "Input", m.Content)
