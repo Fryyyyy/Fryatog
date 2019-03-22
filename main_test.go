@@ -90,6 +90,7 @@ func TestTokens(t *testing.T) {
 		{"Hello there! I have a question about [[Multani, Yavimaya's Avatar]]: Can you activate her ability with her being on the battlefield?", []string{testCardExpected}},
 		{"Hello there!lightning bolt", []string{testCardExpected}},
 		{`Hello there!"lightning bolt"`, []string{testCardExpected}},
+		// {"Hello! I was wondering if Selvala, Explorer Returned flip triggers work. If I use Selvala and two nonlands are revealed, is that two triggers of life & mana gain", emptyStringSlice}, -- WONTFIX https://github.com/Fryyyyy/Fryatog/issues/42
 	}
 	for _, table := range tables {
 		got := tokeniseAndDispatchInput(&hbot.Message{Content: table.input}, fakeGetCard)
