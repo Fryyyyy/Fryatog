@@ -306,7 +306,7 @@ func makeRulesCM(forceFetch bool) {
 // Any real commands are handed to the handleCommand function
 func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []string {
 	var (
-		botCommandRegex      = regexp.MustCompile(`[!&]([^!&?[]+)|\[\[(.*?)\]\]`)
+		botCommandRegex      = regexp.MustCompile(`[!&]([^!&?[)]+)|\[\[(.*?)\]\]`)
 		singleQuotedWord     = regexp.MustCompile(`^(?:\"|\')\w+(?:\"|\')$`)
 		nonTextRegex         = regexp.MustCompile(`^[^\w]+$`)
 		wordEndingInBang     = regexp.MustCompile(`!(?:"|') |(?:\n)+`)
@@ -637,8 +637,11 @@ func reduceCardSentence(tokens []string) []string {
 	for i := len(tokens); i >= 1; i-- {
 		msg := strings.Join(tokens[0:i], " ")
 		msg = noPunctuationRegex.ReplaceAllString(msg, "")
-		log.Debug("Reverse descent", "i", i, "msg", msg)
-		ret = append(ret, msg)
+		// Eliminate short names which are not valid and would match too much
+		if len(msg) > 2 {
+			log.Debug("Reverse descent", "i", i, "msg", msg)
+			ret = append(ret, msg)
+		}
 	}
 	return ret
 }

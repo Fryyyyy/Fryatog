@@ -79,7 +79,7 @@ func TestTokens(t *testing.T) {
 		{"<+mtgrelay> [Fear12] Hi!! Quick question: Does !Sundial of the Infinite bypass/combo with !Psychic Vortex?", []string{testCardExpected, testCardExpected}},
 		{"<MW> !!fract ident &treas nabb", []string{testCardExpected, testCardExpected}},
 		{"!cr 100.1a", []string{"\x02100.1a.\x0F A two-player game is a game that begins with only two players."}},
-		{"!100.1a !!hi", []string{"\x02100.1a.\x0F A two-player game is a game that begins with only two players.", testCardExpected}},
+		{"!100.1a !!hello", []string{"\x02100.1a.\x0F A two-player game is a game that begins with only two players.", testCardExpected}},
 		{`Animate dead ETBing is a trigger. The *entire* trigger resolves like this: "Bring back Karmic guide. Fail to attach to Karmic Guide." State-based actions check and go "that's an aura not attached to anything!" and sends Animate Dead to the graveyard`, emptyStringSlice},
 		{"!one&two&three", []string{testCardExpected, testCardExpected, testCardExpected}},
 		{"!\"testquote\"", []string{testCardExpected}},
@@ -90,6 +90,9 @@ func TestTokens(t *testing.T) {
 		{"Hello there! I have a question about [[Multani, Yavimaya's Avatar]]: Can you activate her ability with her being on the battlefield?", []string{testCardExpected}},
 		{"Hello there!lightning bolt", []string{testCardExpected}},
 		{`Hello there!"lightning bolt"`, []string{testCardExpected}},
+		{"So what is the right talking to my opponent ( first thank you very much !) To avoid judge calling", emptyStringSlice},
+		{"To", []string{""}},
+		{"Too", []string{testCardExpected}},
 		// {"Hello! I was wondering if Selvala, Explorer Returned flip triggers work. If I use Selvala and two nonlands are revealed, is that two triggers of life & mana gain", emptyStringSlice}, -- WONTFIX https://github.com/Fryyyyy/Fryatog/issues/42
 	}
 	for _, table := range tables {
