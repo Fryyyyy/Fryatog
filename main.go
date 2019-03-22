@@ -91,7 +91,6 @@ func recovery() {
 		if r == "quitquitquit" {
 			p, _ := os.FindProcess(os.Getpid())
 			p.Signal(syscall.SIGQUIT)
-			return
 		}
 		// Else recover
 	}
@@ -328,11 +327,6 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []str
 	// Special case the Operator Commands
 	if input == "!quitquitquit" && isSenderAnOp(m) {
 		panic("quitquitquit")
-	}
-
-	if input == "!crash" {
-		n := []int{5, 7, 4}
-		fmt.Println(n[3])
 	}
 
 	if input == "!updaterules" && isSenderAnOp(m) {
