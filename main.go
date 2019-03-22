@@ -57,7 +57,8 @@ var (
 	chanops = make(map[string]struct{})
 
 	// Used in multiple functions.
-	ruleRegexp = regexp.MustCompile(`((?:\d)+\.(?:\w{1,4}))`)
+	ruleRegexp     = regexp.MustCompile(`((?:\d)+\.(?:\w{1,4}))`)
+	greetingRegexp = regexp.MustCompile(`(?i)^h(ello|i)(\!|\.|\?)*$`)
 )
 
 // Is there a stable URL that always points to a text version of the most up to date CR ?
@@ -708,6 +709,7 @@ func main() {
 	bot.AddTrigger(MainTrigger)
 	bot.AddTrigger(WhoTrigger)
 	bot.AddTrigger(endOfWhoTrigger)
+	bot.AddTrigger(greetingTrigger)
 	bot.Logger.SetHandler(log.StdoutHandler)
 
 	exitChan := getExitChannel()
@@ -799,6 +801,17 @@ var endOfWhoTrigger = hbot.Trigger{
 	Action: func(irc *hbot.Bot, m *hbot.Message) bool {
 		log.Debug("Got an END OF WHO message!", "From", m.From, "To", m.To, "Params", m.Params)
 		close(whoChan)
+		return false
+	},
+}
+
+var greetingTrigger = hbot.Trigger{
+	Condition: func(bot *hbot.Bot, m *hbot.Message) bool {
+		return (m.Command == "PRIVMSG") && (greetingRegexp.MatchString(m.Content))
+	},
+	Action: func(irc *hbot.Bot, m *hbot.Message) bool {
+		log.Debug("Got a greeting!", "From", m.From, "To", m.To, "Content", m.Content)
+		irc.Reply(m, fmt.Sprintf("%s: Hello! If you have a question about Magic rules, please go ahead and ask. [This is an automated message]", m.From))
 		return false
 	},
 }
