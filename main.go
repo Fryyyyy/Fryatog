@@ -834,7 +834,7 @@ var greetingTrigger = hbot.Trigger{
 	},
 	Action: func(irc *hbot.Bot, m *hbot.Message) bool {
 		log.Debug("Got a greeting!", "From", m.From, "To", m.To, "Content", m.Content)
-		irc.Reply(m, fmt.Sprintf("%s: Hello! If you have a question about Magic rules, please go ahead and ask. [This is an automated message]", m.From))
+		irc.Reply(m, fmt.Sprintf("%s: Hello! If you have a question about Magic rules, please go ahead and ask.", m.From))
 		return false
 	},
 }
