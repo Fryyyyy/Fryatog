@@ -761,7 +761,8 @@ func main() {
 	go func() {
 		<-exitChan
 		dumpCardCache()
-		close(bot.Incoming)
+		// close(bot.Incoming) // This has a tendency to panic when messages are received on a closed channel
+		os.Exit(0) // Exit cleanly so we don't get autorestarted by supervisord. Also note https://github.com/golang/go/issues/24284
 	}()
 
 	// Start up bot (this blocks until we disconnect)
