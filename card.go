@@ -18,7 +18,9 @@ import (
 )
 
 const namesFile = "names.json"
-const namesURL = "https://api.scryfall.com/catalog/card-names"
+const scryfallNamesAPIURL = "https://api.scryfall.com/catalog/card-names"
+const scryfallFuzzyAPIURL = "https://api.scryfall.com/cards/named?fuzzy=%s"
+const scryfallRandomAPIURL = "https://api.scryfall.com/cards/random"
 
 // CardList represents the Scryfall List API when retrieving multiple cards
 type CardList struct {
@@ -413,7 +415,7 @@ func lookupUniqueNamePrefix(input string) string {
 }
 
 func fetchScryfallCardByFuzzyName(input string) (Card, error) {
-	url := fmt.Sprintf("https://api.scryfall.com/cards/named?fuzzy=%s", url.QueryEscape(input))
+	url := fmt.Sprintf(scryfallFuzzyAPIURL, url.QueryEscape(input))
 	log.Debug("fetchScryfallCard: Attempting to fetch", "URL", url)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -508,6 +510,31 @@ func getScryfallCard(input string) (Card, error) {
 	return card, fmt.Errorf("No card found")
 }
 
+func getRandomScryfallCard() (Card, error) {
+	var card Card
+	defer func() {
+		go card.getExtraMetadata("")
+	}()
+	log.Debug("GetRandomScryfallCard: Attempting to fetch", "URL", scryfallRandomAPIURL)
+	resp, err := http.Get(scryfallRandomAPIURL)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Warn("FetchCardNames: The HTTP request failed", "Error", err)
+		return card, fmt.Errorf("Something went wrong fetching the cardname catalog")
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == 200 {
+		if err := json.NewDecoder(resp.Body).Decode(&card); err != nil {
+			raven.CaptureError(err, nil)
+			return card, fmt.Errorf("Something went wrong parsing the card")
+		}
+		nameToCardCache.Add(normaliseCardName(card.Name), card)
+		return card, nil
+	}
+	log.Info("fetchScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
+	return card, fmt.Errorf("Card not found by Scryfall")
+}
+
 // CardCatalog stores the result of the catalog/card-names API call
 type CardCatalog struct {
 	Object      string   `json:"object"`
@@ -522,8 +549,8 @@ func fetchCardNames() error {
 	if err != nil {
 		return err
 	}
-	log.Debug("FetchCardNames: Attempting to fetch", "URL", namesURL)
-	resp, err := http.Get(namesURL)
+	log.Debug("FetchCardNames: Attempting to fetch", "URL", scryfallNamesAPIURL)
+	resp, err := http.Get(scryfallNamesAPIURL)
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("FetchCardNames: The HTTP request failed", "Error", err)

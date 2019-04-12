@@ -38,6 +38,10 @@ func fakeGetCard(cardname string) (Card, error) {
 	return Card{Name: "CARD", Set: "TestSet", Rarity: "TestRare", ID: cardname}, nil
 }
 
+func fakeGetRandomCard() (Card, error) {
+	return Card{Name: "RANDOMCARD", Set: "RandomTestSet", Rarity: "RandomTestRare", ID: "randomCard"}, nil
+}
+
 func TestNormaliseCardName(t *testing.T) {
 	tables := []struct {
 		input  string
@@ -64,6 +68,7 @@ func TestTokens(t *testing.T) {
 	}
 	var emptyStringSlice []string
 	var testCardExpected = "\x02CARD\x0F ·  ·  · TESTSET-T · "
+	var testRandomCardExpected = "\x02RANDOMCARD\x0F ·  ·  · RANDOMTESTSET-R · "
 	tables := []struct {
 		input  string
 		output []string
@@ -93,10 +98,11 @@ func TestTokens(t *testing.T) {
 		{"So what is the right talking to my opponent ( first thank you very much !) To avoid judge calling", emptyStringSlice},
 		{"To", []string{""}},
 		{"Too", []string{testCardExpected}},
+		{"random", []string{testRandomCardExpected}},
 		// {"Hello! I was wondering if Selvala, Explorer Returned flip triggers work. If I use Selvala and two nonlands are revealed, is that two triggers of life & mana gain", emptyStringSlice}, -- WONTFIX https://github.com/Fryyyyy/Fryatog/issues/42
 	}
 	for _, table := range tables {
-		got := tokeniseAndDispatchInput(&hbot.Message{Content: table.input}, fakeGetCard)
+		got := tokeniseAndDispatchInput(&hbot.Message{Content: table.input}, fakeGetCard, fakeGetRandomCard)
 		if !reflect.DeepEqual(got, table.output) {
 			t.Errorf("Incorrect output for [%v] -- got %s -- want %s", table.input, got, table.output)
 		}

@@ -76,6 +76,9 @@ const configFile = "config.json"
 // Defining this type allows us to override it in testing, and not hit scryfall.com a million times.
 type CardGetter func(cardname string) (Card, error)
 
+// RandomCardGetter defines a function that retrieves a random card's text.
+type RandomCardGetter func() (Card, error)
+
 func recovery() {
 	if r := recover(); r != nil {
 		// Log
@@ -304,7 +307,7 @@ func makeRulesCM(forceFetch bool) {
 // tokeniseAndDispatchInput splits the given user-supplied string into a number of commands
 // and does some pre-processing to sort out real commands from just normal chat
 // Any real commands are handed to the handleCommand function
-func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []string {
+func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter, randomCardGetFunction RandomCardGetter) []string {
 	var (
 		botCommandRegex      = regexp.MustCompile(`[!&]([^!&?[)]+)|\[\[(.*?)\]\]`)
 		singleQuotedWord     = regexp.MustCompile(`^(?:\"|\')\w+(?:\"|\')$`)
@@ -399,7 +402,7 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []str
 		}
 
 		log.Debug("Dispatching", "index", commands)
-		go handleCommand(message, c, cardGetFunction)
+		go handleCommand(message, c, cardGetFunction, randomCardGetFunction)
 		commands++
 	}
 	var ret []string
@@ -412,7 +415,7 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter) []str
 
 // handleCommand takes in a message, splits it into words
 // and attempts to dispatch it to the correct handler.
-func handleCommand(message string, c chan string, cardGetFunction CardGetter) {
+func handleCommand(message string, c chan string, cardGetFunction CardGetter, randomCardGetFunction RandomCardGetter) {
 	log.Debug("In handleCommand", "Message", message)
 	cardTokens := strings.Fields(message)
 	log.Debug("Done tokenising", "Tokens", cardTokens)
@@ -442,6 +445,13 @@ func handleCommand(message string, c chan string, cardGetFunction CardGetter) {
 		log.Debug("Metadata query")
 		c <- handleCardMetadataQuery(cardTokens[0], message, cardGetFunction)
 		return
+
+	case message == "random":
+		log.Debug("Asked for random card")
+		if card, err := getRandomCard(randomCardGetFunction); err == nil {
+			c <- card.formatCard()
+			return
+		}
 
 	default:
 		log.Debug("I think it's a card")
@@ -631,6 +641,15 @@ func findCard(cardTokens []string, cardGetFunction CardGetter) (Card, error) {
 	return Card{}, fmt.Errorf("Card not found")
 }
 
+func getRandomCard(randomCardGetFunction RandomCardGetter) (Card, error) {
+	card, err := randomCardGetFunction()
+	if err == nil {
+		log.Debug("Found card!", "CardID", card.ID, "Object", card)
+		return card, nil
+	}
+	return Card{}, fmt.Errorf("Error retrieving random card")
+}
+
 func reduceCardSentence(tokens []string) []string {
 	noPunctuationRegex := regexp.MustCompile(`\W$`)
 	log.Debug("In ReduceCard -- Tokens were", "Tokens", tokens, "Length", len(tokens))
@@ -766,7 +785,7 @@ var MainTrigger = hbot.Trigger{
 		if m.From == whichNick {
 			log.Debug("Ignoring message from myself", "Input", m.Content)
 		}
-		toPrint := tokeniseAndDispatchInput(m, getScryfallCard)
+		toPrint := tokeniseAndDispatchInput(m, getScryfallCard, getRandomScryfallCard)
 		for _, s := range sliceUniqMap(toPrint) {
 			var prefix string
 			isPublic := strings.Contains(m.To, "#")
