@@ -99,6 +99,7 @@ func TestTokens(t *testing.T) {
 		{"To", []string{""}},
 		{"Too", []string{testCardExpected}},
 		{"random", []string{testRandomCardExpected}},
+		{"!rule of law", []string{testCardExpected}},
 		// {"Hello! I was wondering if Selvala, Explorer Returned flip triggers work. If I use Selvala and two nonlands are revealed, is that two triggers of life & mana gain", emptyStringSlice}, -- WONTFIX https://github.com/Fryyyyy/Fryatog/issues/42
 	}
 	for _, table := range tables {

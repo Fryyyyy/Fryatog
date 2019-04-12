@@ -430,13 +430,8 @@ func handleCommand(message string, c chan string, cardGetFunction CardGetter, ra
 		return
 
 	case ruleRegexp.MatchString(message),
-		strings.HasPrefix(message, "r "),
-		strings.HasPrefix(message, "cr "),
-		strings.HasPrefix(message, "rule "),
 		strings.HasPrefix(message, "def "),
-		strings.HasPrefix(message, "define "),
-		strings.HasPrefix(message, "ex "),
-		strings.HasPrefix(message, "example "):
+		strings.HasPrefix(message, "define "):
 		log.Debug("Rules query", "Input", message)
 		c <- handleRulesQuery(message)
 		return
