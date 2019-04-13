@@ -18,7 +18,7 @@ import (
 	raven "github.com/getsentry/raven-go"
 	lru "github.com/hashicorp/golang-lru"
 	cache "github.com/patrickmn/go-cache"
-	closestmatch "github.com/schollz/closestmatch"
+	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 	hbot "github.com/whyrusleeping/hellabot"
 	charmap "golang.org/x/text/encoding/charmap"
 	log "gopkg.in/inconshreveable/log15.v2"
@@ -49,11 +49,10 @@ var (
 	whoChan    chan []string
 
 	// Rules & Glossary dictionary.
-	rules   = make(map[string][]string)
-	rulesCM *closestmatch.ClosestMatch
+	rules     = make(map[string][]string)
+	rulesKeys []string
 	// Card names catalog
 	cardNames []string
-	cardCM    *closestmatch.ClosestMatch
 
 	// Store people who we know of as Ops
 	chanops = make(map[string]struct{})
@@ -67,8 +66,6 @@ var (
 // Fuck it I'll do it myself
 const crURL = "https://chat.mtgpairings.info/cr-stable/"
 const crFile = "CR.txt"
-const rulesGob = "rules.gob"
-const cardNamesGob = "cardnames.gob"
 const cardCacheGob = "cardcache.gob"
 const configFile = "config.json"
 
@@ -245,7 +242,9 @@ func importRules(forceFetch bool) error {
 				metCredits = true
 			} else {
 				// Done!
-				makeRulesCM(forceFetch)
+				for key := range rules {
+					rulesKeys = append(rulesKeys, key)
+				}
 				return nil
 			}
 		} else if rulesMode {
@@ -280,28 +279,6 @@ func importRules(forceFetch bool) error {
 		fmt.Fprintln(os.Stderr, "reading standard input:", err)
 	}
 	return nil
-}
-
-func makeRulesCM(forceFetch bool) {
-	var err error
-	if !forceFetch {
-		rulesCM, err = closestmatch.Load(rulesGob)
-		if err != nil {
-			log.Warn("Making Rules CM", "Error loading", err)
-			makeRulesCM(true)
-			return
-		}
-	}
-	rulesKeys := make([]string, len(rules))
-	for k := range rules {
-		rulesKeys = append(rulesKeys, k)
-	}
-	rulesCM = closestmatch.New(rulesKeys, []int{2, 3, 4, 5, 6, 7})
-	log.Debug("Rules CM", "Accuracy", rulesCM.AccuracyMutatingWords())
-	err = rulesCM.Save(rulesGob)
-	if err != nil {
-		log.Warn("Rules CM", "Error", err)
-	}
 }
 
 // tokeniseAndDispatchInput splits the given user-supplied string into a number of commands
@@ -552,9 +529,18 @@ func handleRulesQuery(input string) string {
 			log.Debug("Exact match")
 			defineText = strings.Join(v, "\n")
 		} else {
-			bestGuess := rulesCM.Closest(query)
-			log.Debug("InExact match", "Guess", bestGuess)
-			defineText = strings.Join(rules[bestGuess], "\n")
+			// Special case, otherwise it matches "Planar Die" better
+			if query == "die" {
+				query = "dies"
+			}
+			if bestGuess, err := fuzzy.ExtractOne(query, rulesKeys); err != nil {
+				log.Info("InExact match", "Error", err)
+			} else {
+				log.Debug("InExact match", "Guess", bestGuess)
+				if bestGuess.Score > 80 {
+					defineText = strings.Join(rules[bestGuess.Match], "\n")
+				}
+			}
 		}
 		// Some crappy workaround/s
 		if !strings.HasPrefix(defineText, "\x02Dies\x0F:") {
@@ -692,6 +678,7 @@ func main() {
 	}
 	log.Debug("Found previously cached cards", "Number", len(cardsIn))
 	for _, c := range cardsIn {
+		log.Debug("Adding card", "Name", c.Name)
 		nameToCardCache.Add(c.Name, c)
 		nameToCardCache.Add(normaliseCardName(c.Name), c)
 	}

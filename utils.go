@@ -6,6 +6,8 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+
+	log "gopkg.in/inconshreveable/log15.v2"
 )
 
 func sliceUniqMap(s []string) []string {
@@ -55,6 +57,8 @@ func writeGob(filePath string, object interface{}) error {
 	if err == nil {
 		encoder := gob.NewEncoder(file)
 		encoder.Encode(object)
+	} else {
+		log.Warn("Error creating GOB file", "Error", err)
 	}
 	file.Close()
 	return err
@@ -75,6 +79,7 @@ func dumpCardCache() error {
 	var outCards []Card
 	for _, k := range nameToCardCache.Keys() {
 		if v, ok := nameToCardCache.Get(k); ok {
+			log.Debug("Dumping card", "Name", (v.(Card)).Name)
 			outCards = append(outCards, v.(Card))
 		}
 	}

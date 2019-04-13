@@ -13,7 +13,6 @@ import (
 	"time"
 
 	raven "github.com/getsentry/raven-go"
-	closestmatch "github.com/schollz/closestmatch"
 	log "gopkg.in/inconshreveable/log15.v2"
 )
 
@@ -597,14 +596,6 @@ func importCardNames(forceFetch bool) ([]string, error) {
 		log.Warn("Error parsing cardnames file", "Error", err)
 		return []string{}, fmt.Errorf("Something went wrong parsing the cardname catalog")
 	}
-	cardCM, err = closestmatch.Load(cardNamesGob)
-	if err != nil {
-		log.Debug("Cards CM -- Creating from Scratch")
-		cardCM = closestmatch.New(cardNames, []int{2, 3, 4, 5, 6, 7})
-		err = cardCM.Save(cardNamesGob)
-		log.Warn("Cards CM", "Error", err)
-	}
-	// log.Debug("Cards CM", "Accuracy", cardCM.AccuracyMutatingWords())
 	return catalog.Data, nil
 }
 
