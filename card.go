@@ -391,10 +391,6 @@ func standardiseColorIndicator(ColorIndicators []string) string {
 					"Black": 2,
 					"Red": 3,
 					"Green": 4 }
-	type kv struct {
-		Key string
-		Value int
-	}
 
 	var colorWords []string
 	for _, color := range ColorIndicators {
