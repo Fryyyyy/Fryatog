@@ -229,6 +229,7 @@ func importRules(forceFetch bool) error {
 		// Clean up line
 		line = strings.Replace(line, "“", `"`, -1)
 		line = strings.Replace(line, "”", `"`, -1)
+		line = strings.Replace(line, "’", `'`, -1)
 		// "Glossary" in the T.O.C
 		if line == "Glossary" {
 			if !metGlossary {
