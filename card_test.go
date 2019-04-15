@@ -28,6 +28,9 @@ var (
 		"Disenchant":              "test_data/disenchant.json",
 		"Tawnos's Coffin":         "test_data/tawnosscoffin.json",
 		"Ixidron":                 "test_data/ixidron.json",
+		"Nicol Bolas, the Arisen": "test_data/nicolbolasthearisen.json",
+    		"Dryad Arbor":             "test_data/dryadarbor.json",
+    		"Arlinn Kord":             "test_data/arlinnkord.json",
 	}
 )
 
@@ -111,6 +114,9 @@ func TestPrintCard(t *testing.T) {
 		{"Expansion", "\x02Expansion\x0F {U/R}{U/R} · Instant · Copy target instant or sorcery spell with converted mana cost 4 or less. You may choose new targets for the copy. · GRN-R · Vin,Leg,Mod,Std\n\x02Explosion\x0F {X}{U}{U}{R}{R} · Instant · Explosion deals X damage to any target. Target player draws X cards. · GRN-R · Vin,Leg,Mod,Std"},
 		{"Bushi Tenderfoot", "\x02Bushi Tenderfoot\x0F {W} · Creature — Human Soldier · 1/1 · When a creature dealt damage by Bushi Tenderfoot this turn dies, flip Bushi Tenderfoot. · CHK-U · Vin,Leg,Mod\n\x02Kenzo the Hardhearted\x0F · Legendary Creature — Human Samurai · 3/4 · Double strike; bushido 2 (Whenever this creature blocks or becomes blocked, it gets +2/+2 until end of turn.) · CHK-U · Vin,Leg,Mod"},
 		{"Fleetwheel Cruiser", "\x02Fleetwheel Cruiser\x0F {4} · Artifact — Vehicle · 5/3 · Trample, haste \\ When Fleetwheel Cruiser enters the battlefield, it becomes an artifact creature until end of turn. \\ Crew 2 (Tap any number of creatures you control with total power 2 or more: This Vehicle becomes an artifact creature until end of turn.) · KLD-R · Vin,Leg,Mod"},
+		{"Nicol Bolas, the Arisen", "\x02Nicol Bolas, the Ravager\x0F {1}{U}{B}{R} · Legendary Creature — Elder Dragon · 4/4 · Flying \\ When Nicol Bolas, the Ravager enters the battlefield, each opponent discards a card. \\ {4}{U}{B}{R}: Exile Nicol Bolas, the Ravager, then return him to the battlefield transformed under his owner's control. Activate this ability only any time you could cast a sorcery. · M19-M · Vin,Leg,Mod,Std\n\x02Nicol Bolas, the Arisen\x0F · Legendary Planeswalker — Bolas · [Blue/Black/Red] · +2: Draw two cards. \\ −3: Nicol Bolas, the Arisen deals 10 damage to target creature or planeswalker. \\ −4: Put target creature or planeswalker card from a graveyard onto the battlefield under your control. \\ −12: Exile all but the bottom card of target player's library. · M19-M · Vin,Leg,Mod,Std"},
+    		{"Dryad Arbor", "\x02Dryad Arbor\x0F · Land Creature — Forest Dryad · 1/1 · [Green] · (Dryad Arbor isn't a spell, it's affected by summoning sickness, and it has \"{T}: Add {G}.\") · FUT-U · Vin,Leg,Mod"},
+    		{"Arlinn Kord", "\x02Arlinn Kord\x0F {2}{R}{G} · Legendary Planeswalker — Arlinn · +1: Until end of turn, up to one target creature gets +2/+2 and gains vigilance and haste. \\ 0: Create a 2/2 green Wolf creature token. Transform Arlinn Kord. · SOI-M · Vin,Leg,Mod\n\x02Arlinn, Embraced by the Moon\x0F · Legendary Planeswalker — Arlinn · [Red/Green] · +1: Creatures you control get +1/+1 and gain trample until end of turn. \\ −1: Arlinn, Embraced by the Moon deals 3 damage to any target. Transform Arlinn, Embraced by the Moon. \\ −6: You get an emblem with \"Creatures you control have haste and '{T}: This creature deals damage equal to its power to any target.'\" · SOI-M · Vin,Leg,Mod"},
 	}
 	for _, table := range tables {
 		fi, err := os.Open(RealCards[table.cardname])

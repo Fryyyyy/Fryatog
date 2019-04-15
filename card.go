@@ -9,6 +9,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -60,16 +61,17 @@ type CardRulingResult struct {
 
 // CardFace represents the individual information for each face of a DFC
 type CardFace struct {
-	Object         string `json:"object"`
-	Name           string `json:"name"`
-	ManaCost       string `json:"mana_cost"`
-	TypeLine       string `json:"type_line"`
-	OracleText     string `json:"oracle_text"`
-	Power          string `json:"power"`
-	Toughness      string `json:"toughness"`
-	Watermark      string `json:"watermark"`
-	Artist         string `json:"artist"`
-	IllustrationID string `json:"illustration_id,omitempty"`
+	Object          string `json:"object"`
+	Name            string `json:"name"`
+	ManaCost        string `json:"mana_cost"`
+	TypeLine        string `json:"type_line"`
+	ColorIndicators []string `json:"color_indicator"`
+	OracleText      string `json:"oracle_text"`
+	Power           string `json:"power"`
+	Toughness       string `json:"toughness"`
+	Watermark       string `json:"watermark"`
+	Artist          string `json:"artist"`
+	IllustrationID  string `json:"illustration_id,omitempty"`
 }
 
 // Card represents the JSON returned by the /cards Scryfall API
@@ -96,16 +98,17 @@ type Card struct {
 		ArtCrop    string `json:"art_crop"`
 		BorderCrop string `json:"border_crop"`
 	} `json:"image_uris"`
-	ManaCost      string     `json:"mana_cost"`
-	Cmc           float32    `json:"cmc"`
-	TypeLine      string     `json:"type_line"`
-	OracleText    string     `json:"oracle_text"`
-	Power         string     `json:"power"`
-	Toughness     string     `json:"toughness"`
-	Loyalty       string     `json:"loyalty"`
-	Colors        []string   `json:"colors"`
-	ColorIdentity []string   `json:"color_identity"`
-	CardFaces     []CardFace `json:"card_faces"`
+	ManaCost        string     `json:"mana_cost"`
+	Cmc             float32    `json:"cmc"`
+	TypeLine        string     `json:"type_line"`
+	OracleText      string     `json:"oracle_text"`
+	Power           string     `json:"power"`
+	Toughness       string     `json:"toughness"`
+	Loyalty         string     `json:"loyalty"`
+	Colors          []string   `json:"colors"`
+	ColorIndicators []string `json:"color_indicator"`
+	ColorIdentity   []string   `json:"color_identity"`
+	CardFaces       []CardFace `json:"card_faces"`
 	Legalities    struct {
 		Standard  string `json:"standard"`
 		Future    string `json:"future"`
@@ -341,6 +344,10 @@ func (card Card) formatCard() string {
 			if cf.Power != "" {
 				r = append(r, fmt.Sprintf("%s/%s ·", cf.Power, cf.Toughness))
 			}
+			if len(cf.ColorIndicators) > 0 {
+				formattedColorIndicator := standardiseColorIndicator(cf.ColorIndicators)
+				r = append(r, fmt.Sprintf("%s ·", formattedColorIndicator))
+			}
 			r = append(r, strings.Replace(cf.OracleText, "\n", " \\ ", -1))
 			r = append(r, fmt.Sprintf("· %s ·", card.formatExpansions()))
 			r = append(r, card.formatLegalities())
@@ -359,6 +366,10 @@ func (card Card) formatCard() string {
 	if card.Power != "" {
 		s = append(s, fmt.Sprintf("%s/%s ·", card.Power, card.Toughness))
 	}
+	if len(card.ColorIndicators) > 0 {
+		formattedColorIndicator := standardiseColorIndicator(card.ColorIndicators)
+		s = append(s, fmt.Sprintf("%s ·", formattedColorIndicator))
+	}
 	if strings.Contains(card.TypeLine, "Planeswalker") {
 		s = append(s, fmt.Sprintf("[%s]", card.Loyalty))
 	}
@@ -367,6 +378,30 @@ func (card Card) formatCard() string {
 	s = append(s, card.formatLegalities())
 
 	return strings.Join(s, " ")
+}
+
+func standardiseColorIndicator(ColorIndicators []string) string {
+	expandedColors := map[string]string{ "W": "White",
+					     "U": "Blue",
+					     "B": "Black",
+					     "R": "Red",
+					     "G": "Green" }
+	mappedColors := map[string]int{ "White": 0,
+					"Blue": 1,
+					"Black": 2,
+					"Red": 3,
+					"Green": 4 }
+
+	var colorWords []string
+	for _, color := range ColorIndicators {
+		colorWords = append(colorWords, expandedColors[color])
+	}
+
+	sort.Slice(colorWords, func(i, j int) bool {
+		return mappedColors[colorWords[i]] < mappedColors[colorWords[j]]
+	})
+
+	return "[" + strings.Join(colorWords, "/") + "]"
 }
 
 func normaliseCardName(input string) string {
