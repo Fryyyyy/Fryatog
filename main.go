@@ -513,8 +513,10 @@ func handleRulesQuery(input string) string {
 		}
 
 		ruleText := strings.Join(rules[foundRuleNum], "")
+
 		// keyword abilities can just tag subrule a
-		if strings.HasPrefix(foundRuleNum, "701.") {
+		foundKeywordAbilityRegexp := regexp.MustCompile(`701.\d+\b`)
+		if foundKeywordAbilityRegexp.MatchString(input) {
 			subRuleALabel := foundRuleNum + "a"
 			subRuleA, ok := rules[subRuleALabel]
 			if !ok {
@@ -525,7 +527,6 @@ func handleRulesQuery(input string) string {
 			}
 
 		}
-
 
 		// keyword actions need a little bit more work
 		if strings.HasPrefix(foundRuleNum, "702.") {
