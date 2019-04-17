@@ -166,6 +166,7 @@ func TestGetRule(t *testing.T) {
 		{"define adsorb", "\x02Absorb\x0F: A keyword ability that prevents damage. See rule 702.63, \"Absorb.\"\n\x02702.63a.\x0F Absorb is a static ability. \"Absorb N\" means \"If a source would deal damage to this creature, prevent N of that damage.\""},
 		{"define deaftouch", "\x02Deathtouch\x0F: A keyword ability that causes damage dealt by an object to be especially effective. See rule 702.2, \"Deathtouch.\"\n\x02702.2b.\x0F A creature with toughness greater than 0 that's been dealt damage by a source with deathtouch since the last time state-based actions were checked is destroyed as a state-based action. See rule 704."},
 		{"define die", "\x02Dies\x0F: A creature or planeswalker \"dies\" if it is put into a graveyard from the battlefield. See rule 700.4."},
+		{"define detain", "\x02Detain\x0F: A keyword action that temporarily stops a permanent from attacking, blocking, or having its activated abilities activated. See rule 701.28, \"Detain.\"\n\x02701.28a.\x0F Certain spells and abilities can detain a permanent. Until the next turn of the controller of that spell or ability, that permanent can't attack or block and its activated abilities can't be activated."},
 	}
 	for _, table := range tables {
 		got := handleRulesQuery(table.input)
