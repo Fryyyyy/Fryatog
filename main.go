@@ -511,8 +511,21 @@ func handleRulesQuery(input string) string {
 		if _, ok := rules[foundRuleNum]; !ok {
 			return "Rule not found"
 		}
+
 		ruleText := strings.Join(rules[foundRuleNum], "")
-		// Do ability nonsense
+		// keyword abilities can just tag subrule a
+		if strings.HasPrefix(foundRuleNum, "701.") {
+			subRuleALabel := foundRuleNum + "a"
+			subRuleA, ok := rules[subRuleALabel]
+			if !ok {
+				log.Debug("In 701 handler", "There is no subrule A")
+			}
+			foundRuleNum = subRuleALabel
+			ruleText = strings.Join(subRuleA, "")
+		}
+
+
+		// keyword actions need a little bit more work
 		if strings.HasPrefix(foundRuleNum, "702.") {
 			ruleText, foundRuleNum = tryFindBetterAbilityRule(ruleText, foundRuleNum)
 		}
