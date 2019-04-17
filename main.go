@@ -519,9 +519,11 @@ func handleRulesQuery(input string) string {
 			subRuleA, ok := rules[subRuleALabel]
 			if !ok {
 				log.Debug("In 701 handler", "There is no subrule A")
+			} else {
+				foundRuleNum = subRuleALabel
+				ruleText = strings.Join(subRuleA, "")
 			}
-			foundRuleNum = subRuleALabel
-			ruleText = strings.Join(subRuleA, "")
+
 		}
 
 

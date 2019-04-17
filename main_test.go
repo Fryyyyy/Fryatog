@@ -149,6 +149,7 @@ func TestGetRule(t *testing.T) {
 		{"r 100.1a", "\x02100.1a.\x0F A two-player game is a game that begins with only two players."},
 		{"cr 100.1a", "\x02100.1a.\x0F A two-player game is a game that begins with only two players."},
 		{"rule 100.1a", "\x02100.1a.\x0F A two-player game is a game that begins with only two players."},
+		{"rule 701.28", "\x02701.28a.\x0F Certain spells and abilities can detain a permanent. Until the next turn of the controller of that spell or ability, that permanent can't attack or block and its activated abilities can't be activated."},
 		{"def Absorb", "\x02Absorb\x0F: A keyword ability that prevents damage. See rule 702.63, \"Absorb.\"\n\x02702.63a.\x0F Absorb is a static ability. \"Absorb N\" means \"If a source would deal damage to this creature, prevent N of that damage.\""},
 		{"define Absorb", "\x02Absorb\x0F: A keyword ability that prevents damage. See rule 702.63, \"Absorb.\"\n\x02702.63a.\x0F Absorb is a static ability. \"Absorb N\" means \"If a source would deal damage to this creature, prevent N of that damage.\""},
 		{"rule Absorb", "\x02Absorb\x0F: A keyword ability that prevents damage. See rule 702.63, \"Absorb.\"\n\x02702.63a.\x0F Absorb is a static ability. \"Absorb N\" means \"If a source would deal damage to this creature, prevent N of that damage.\""},
