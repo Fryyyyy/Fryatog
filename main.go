@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
@@ -56,10 +55,6 @@ var (
 
 	// Store people who we know of as Ops
 	chanops = make(map[string]struct{})
-
-	// Used in multiple functions.
-	ruleRegexp     = regexp.MustCompile(`((?:\d)+\.(?:\w{1,4}))`)
-	greetingRegexp = regexp.MustCompile(`(?i)^h(ello|i)(\!|\.|\?)*$`)
 )
 
 // Is there a stable URL that always points to a text version of the most up to date CR ?
@@ -214,7 +209,6 @@ func importRules(forceFetch bool) error {
 		lastRule       string
 		lastGlossary   string
 		rulesMode      = true
-		ruleParseRegex = regexp.MustCompile(`^(?P<ruleno>\d+\.\w{1,4})\.? (?P<ruletext>.*)`)
 	)
 
 	// Clear rules map
@@ -286,14 +280,7 @@ func importRules(forceFetch bool) error {
 // and does some pre-processing to sort out real commands from just normal chat
 // Any real commands are handed to the handleCommand function
 func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter, randomCardGetFunction RandomCardGetter) []string {
-	var (
-		botCommandRegex      = regexp.MustCompile(`[!&]([^!&?[)]+)|\[\[(.*?)\]\]`)
-		singleQuotedWord     = regexp.MustCompile(`^(?:\"|\')\w+(?:\"|\')$`)
-		nonTextRegex         = regexp.MustCompile(`^[^\w]+$`)
-		wordEndingInBang     = regexp.MustCompile(`!(?:"|') |(?:\n)+`)
-		wordStartingWithBang = regexp.MustCompile(`\s+!(?: *)\S+`)
-		input                = m.Content
-	)
+	var input = m.Content
 
 	// Little bit of hackery for PMs
 	if !strings.Contains(input, "!") && !strings.Contains(input, "[[") {
@@ -398,8 +385,6 @@ func handleCommand(message string, c chan string, cardGetFunction CardGetter, ra
 	cardTokens := strings.Fields(message)
 	log.Debug("Done tokenising", "Tokens", cardTokens)
 
-	cardMetadataRegex := regexp.MustCompile(`(?i)^(?:ruling(?:s?)|reminder|flavo(?:u?)r)(?: )`)
-
 	switch {
 
 	case message == "help":
@@ -442,7 +427,6 @@ func handleCardMetadataQuery(command string, input string, cardGetFunction CardG
 	var (
 		err                 error
 		rulingNumber        int
-		gathererRulingRegex = regexp.MustCompile(`^(?:(?P<start_number>\d+) ?(?P<name>.+)|(?P<name2>.*?) ?(?P<end_number>\d+).*?|(?P<name3>.+))`)
 	)
 	if command == "reminder" {
 		c, err := findCard(strings.Fields(input)[1:], cardGetFunction)
@@ -515,7 +499,6 @@ func handleRulesQuery(input string) string {
 		ruleText := strings.Join(rules[foundRuleNum], "")
 
 		// keyword abilities can just tag subrule a
-		foundKeywordAbilityRegexp := regexp.MustCompile(`701.\d+\b`)
 		if foundKeywordAbilityRegexp.MatchString(input) {
 			subRuleALabel := foundRuleNum + "a"
 			subRuleA, ok := rules[subRuleALabel]
@@ -529,7 +512,6 @@ func handleRulesQuery(input string) string {
 		}
 
 		// keyword actions need a little bit more work
-		foundKeywordActionRegexp := regexp.MustCompile(`702.\d+\b`)
 		if foundKeywordActionRegexp.MatchString(input) {
 			ruleText, foundRuleNum = tryFindBetterAbilityRule(ruleText, foundRuleNum)
 		}
@@ -571,7 +553,6 @@ func handleRulesQuery(input string) string {
 }
 
 func tryFindSeeMoreRule(input string) string {
-	var seeRuleRegexp = regexp.MustCompile(`See rule (\d+\.{0,1}\d*)`)
 	if strings.Contains(input, "See rule") && !strings.Contains(input, "See rules") && !strings.Contains(input, "and rule") {
 		matches := seeRuleRegexp.FindAllStringSubmatch(input, -1)
 		if len(matches) > 0 {
@@ -650,7 +631,6 @@ func getRandomCard(randomCardGetFunction RandomCardGetter) (Card, error) {
 }
 
 func reduceCardSentence(tokens []string) []string {
-	noPunctuationRegex := regexp.MustCompile(`\W$`)
 	log.Debug("In ReduceCard -- Tokens were", "Tokens", tokens, "Length", len(tokens))
 	var ret []string
 	for i := len(tokens); i >= 1; i-- {

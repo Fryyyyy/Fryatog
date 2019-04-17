@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"os"
 	"reflect"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -258,7 +257,6 @@ func (card Card) formatExpansions() string {
 // TODO/NOTE: This doesn't work, since Scryfall doesn't actually give the printed_text field for each previous printing,
 // just the current Oracle text.
 func (card Card) getReminderTexts() string {
-	reminderRegexp := regexp.MustCompile(`\((.*?)\)`)
 	cardText := card.OracleText
 
 	if len(card.CardFaces) > 0 {
@@ -405,7 +403,6 @@ func standardiseColorIndicator(ColorIndicators []string) string {
 }
 
 func normaliseCardName(input string) string {
-	nonAlphaRegex := regexp.MustCompile(`\W+`)
 	ret := nonAlphaRegex.ReplaceAllString(strings.ToLower(input), "")
 	// log.Debug("Normalising", "Input", input, "Output", ret)
 	return ret
