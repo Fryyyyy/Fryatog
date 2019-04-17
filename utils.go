@@ -6,8 +6,42 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"regexp"
 
 	log "gopkg.in/inconshreveable/log15.v2"
+)
+
+var (
+	//Pulling all regex here *should* make it all compile once and then be left alone
+
+
+	//Stuff pared from main.go
+	botCommandRegex      = regexp.MustCompile(`[!&]([^!&?[)]+)|\[\[(.*?)\]\]`)
+	singleQuotedWord     = regexp.MustCompile(`^(?:\"|\')\w+(?:\"|\')$`)
+	nonTextRegex         = regexp.MustCompile(`^[^\w]+$`)
+	wordEndingInBang     = regexp.MustCompile(`!(?:"|') |(?:\n)+`)
+	wordStartingWithBang = regexp.MustCompile(`\s+!(?: *)\S+`)
+
+	cardMetadataRegex = regexp.MustCompile(`(?i)^(?:ruling(?:s?)|reminder|flavo(?:u?)r)(?: )`)
+
+	gathererRulingRegex = regexp.MustCompile(`^(?:(?P<start_number>\d+) ?(?P<name>.+)|(?P<name2>.*?) ?(?P<end_number>\d+).*?|(?P<name3>.+))`)
+
+	ruleParseRegex = regexp.MustCompile(`^(?P<ruleno>\d+\.\w{1,4})\.? (?P<ruletext>.*)`)
+
+	seeRuleRegexp = regexp.MustCompile(`See rule (\d+\.{0,1}\d*)`)
+
+	noPunctuationRegex = regexp.MustCompile(`\W$`)
+
+	// Used in multiple functions.
+	ruleRegexp     = regexp.MustCompile(`((?:\d)+\.(?:\w{1,4}))`)
+	greetingRegexp = regexp.MustCompile(`(?i)^h(ello|i)(\!|\.|\?)*$`)
+
+	foundKeywordAbilityRegexp = regexp.MustCompile(`701.\d+\b`)
+	foundKeywordActionRegexp = regexp.MustCompile(`702.\d+\b`)
+
+	//Stuff pared from card.go
+	reminderRegexp = regexp.MustCompile(`\((.*?)\)`)
+	nonAlphaRegex = regexp.MustCompile(`\W+`)
 )
 
 func sliceUniqMap(s []string) []string {
