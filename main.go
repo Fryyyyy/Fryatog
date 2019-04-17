@@ -512,18 +512,7 @@ func handleRulesQuery(input string) string {
 			return "Rule not found"
 		}
 		ruleText := strings.Join(rules[foundRuleNum], "")
-		// Keyword actions should be forced to subrule a
-		if strings.HasPrefix(foundRuleNum, "701") {
-			subRuleALabel := foundRuleNum+"a"
-			subRuleA, ok := rules[subRuleALabel]
-			if !ok {
-				log.Debug("In handleRulesQuery", "There is no subrule A")
-			}
-			foundRuleNum = subRuleALabel
-			ruleText = strings.Join(subRuleA, "")
-		}
-
-		// Keyword abilities require a little bit work
+		// Do ability nonsense
 		if strings.HasPrefix(foundRuleNum, "702.") {
 			ruleText, foundRuleNum = tryFindBetterAbilityRule(ruleText, foundRuleNum)
 		}
@@ -576,7 +565,6 @@ func tryFindSeeMoreRule(input string) string {
 }
 
 func tryFindBetterAbilityRule(ruleText, ruleNumber string) (string, string) {
-	log.Debug("BEGIN", ruleText)
 	var forceB bool
 	// 0) Exceptions: Landwalk, Forecast, Vigilance, Banding
 	switch ruleText {
