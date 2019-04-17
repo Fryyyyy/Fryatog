@@ -529,7 +529,8 @@ func handleRulesQuery(input string) string {
 		}
 
 		// keyword actions need a little bit more work
-		if strings.HasPrefix(foundRuleNum, "702.") {
+		foundKeywordActionRegexp := regexp.MustCompile(`702.\d+\b`)
+		if foundKeywordActionRegexp.MatchString(input) {
 			ruleText, foundRuleNum = tryFindBetterAbilityRule(ruleText, foundRuleNum)
 		}
 		ruleNumber := []string{"\x02", foundRuleNum, ".\x0F "}
