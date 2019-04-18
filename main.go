@@ -204,11 +204,11 @@ func importRules(forceFetch bool) error {
 	r := charmap.Windows1252.NewDecoder().Reader(f)
 	scanner := bufio.NewScanner(r)
 	var (
-		metGlossary    bool
-		metCredits     bool
-		lastRule       string
-		lastGlossary   string
-		rulesMode      = true
+		metGlossary  bool
+		metCredits   bool
+		lastRule     string
+		lastGlossary string
+		rulesMode    = true
 	)
 
 	// Clear rules map
@@ -326,6 +326,7 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter, rando
 		if err := dumpCardCache(); err != nil {
 			raven.CaptureErrorAndWait(err, nil)
 		}
+		return []string{"Done!"}
 	}
 
 	for _, message := range commandList {
@@ -425,8 +426,8 @@ func handleCommand(message string, c chan string, cardGetFunction CardGetter, ra
 
 func handleCardMetadataQuery(command string, input string, cardGetFunction CardGetter) string {
 	var (
-		err                 error
-		rulingNumber        int
+		err          error
+		rulingNumber int
 	)
 	if command == "reminder" {
 		c, err := findCard(strings.Fields(input)[1:], cardGetFunction)

@@ -40,7 +40,7 @@ type CardRuling struct {
 	Comment     string `json:"comment"`
 }
 
-func (ruling CardRuling) formatRuling() string {
+func (ruling *CardRuling) formatRuling() string {
 	return fmt.Sprintf("%v: %v", ruling.PublishedAt, ruling.Comment)
 }
 
@@ -60,17 +60,17 @@ type CardRulingResult struct {
 
 // CardFace represents the individual information for each face of a DFC
 type CardFace struct {
-	Object          string `json:"object"`
-	Name            string `json:"name"`
-	ManaCost        string `json:"mana_cost"`
-	TypeLine        string `json:"type_line"`
+	Object          string   `json:"object"`
+	Name            string   `json:"name"`
+	ManaCost        string   `json:"mana_cost"`
+	TypeLine        string   `json:"type_line"`
 	ColorIndicators []string `json:"color_indicator"`
-	OracleText      string `json:"oracle_text"`
-	Power           string `json:"power"`
-	Toughness       string `json:"toughness"`
-	Watermark       string `json:"watermark"`
-	Artist          string `json:"artist"`
-	IllustrationID  string `json:"illustration_id,omitempty"`
+	OracleText      string   `json:"oracle_text"`
+	Power           string   `json:"power"`
+	Toughness       string   `json:"toughness"`
+	Watermark       string   `json:"watermark"`
+	Artist          string   `json:"artist"`
+	IllustrationID  string   `json:"illustration_id,omitempty"`
 }
 
 // Card represents the JSON returned by the /cards Scryfall API
@@ -105,10 +105,10 @@ type Card struct {
 	Toughness       string     `json:"toughness"`
 	Loyalty         string     `json:"loyalty"`
 	Colors          []string   `json:"colors"`
-	ColorIndicators []string `json:"color_indicator"`
+	ColorIndicators []string   `json:"color_indicator"`
 	ColorIdentity   []string   `json:"color_identity"`
 	CardFaces       []CardFace `json:"card_faces"`
-	Legalities    struct {
+	Legalities      struct {
 		Standard  string `json:"standard"`
 		Future    string `json:"future"`
 		Frontier  string `json:"frontier"`
@@ -170,17 +170,17 @@ type Card struct {
 }
 
 // TODO: Also CardFaces
-func (card Card) getExtraMetadata(inputURL string) error {
+func (card *Card) getExtraMetadata(inputURL string) {
 	log.Debug("Getting Metadata")
 	// This is called even for empty Card objects, do don't do anything in that case
 	if card.ID == "" {
-		return nil
+		return
 	}
 	fetchURL := card.PrintsSearchURI
 	var cm CardMetadata
 	// Aready have metadata?
 	if !reflect.DeepEqual(card.Metadata, cm) {
-		return nil
+		return
 	}
 	// Use parameter over stored, for recursive lists
 	if inputURL != "" {
@@ -188,24 +188,24 @@ func (card Card) getExtraMetadata(inputURL string) error {
 	}
 	// Have a url?
 	if fetchURL == "" {
-		return fmt.Errorf("No prints URI")
+		return
 	}
 	log.Debug("GetExtraMetadata: Attempting to fetch", "URL", fetchURL)
 	resp, err := http.Get(fetchURL)
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("GetExtraMetadata: The HTTP request failed", "Error", err)
-		return fmt.Errorf("Something went wrong fetching the card list")
+		return
 	}
 	defer resp.Body.Close()
 	var list CardList
 	if resp.StatusCode == 200 {
 		if err := json.NewDecoder(resp.Body).Decode(&list); err != nil {
 			raven.CaptureError(err, nil)
-			return fmt.Errorf("Something went wrong parsing the card list")
+			return
 		}
 		if len(list.Warnings) > 0 {
-			return fmt.Errorf("Scryfall said there were errors: %v", list.Warnings)
+			return
 		}
 		if list.HasMore {
 			defer card.getExtraMetadata(list.NextPage)
@@ -226,11 +226,12 @@ func (card Card) getExtraMetadata(inputURL string) error {
 		}
 		card.Metadata = cm
 		// Update the Cache ???? Necessary ?
-		nameToCardCache.Add(normaliseCardName(card.Name), card)
-		return nil
+		nameToCardCache.Add(normaliseCardName(card.Name), *card)
+		log.Debug("After metadata extraction", "Card", card)
+		return
 	}
 	log.Info("GetExtraMetadata: Scryfall returned a non-200", "Status Code", resp.StatusCode)
-	return fmt.Errorf("Card list not found by Scryfall !?")
+	return
 }
 
 func formatManaCost(input string) string {
@@ -239,7 +240,7 @@ func formatManaCost(input string) string {
 }
 
 // TODO: Have a command to see all printing information
-func (card Card) formatExpansions() string {
+func (card *Card) formatExpansions() string {
 	ret := ""
 	if card.Name != "Plains" && card.Name != "Island" && card.Name != "Swamp" && card.Name != "Mountain" && card.Name != "Forest" {
 		if len(card.Metadata.PreviousPrintings) > 0 {
@@ -280,7 +281,7 @@ func (card Card) getReminderTexts() string {
 }
 
 // Get the most recent Flavour Text that exists
-func (card Card) getFlavourText() string {
+func (card *Card) getFlavourText() string {
 	if card.FlavourText != "" {
 		return card.FlavourText
 	}
@@ -290,7 +291,7 @@ func (card Card) getFlavourText() string {
 	return "Flavour text not found"
 }
 
-func (card Card) formatLegalities() string {
+func (card *Card) formatLegalities() string {
 	var ret []string
 	switch card.Legalities.Vintage {
 	case "legal":
@@ -327,7 +328,7 @@ func (card Card) formatLegalities() string {
 	return strings.Join(ret, ",")
 }
 
-func (card Card) formatCard() string {
+func (card *Card) formatCard() string {
 	var s []string
 	if len(card.CardFaces) > 0 {
 		// DFC and Flip and Split - produce two cards
@@ -379,16 +380,16 @@ func (card Card) formatCard() string {
 }
 
 func standardiseColorIndicator(ColorIndicators []string) string {
-	expandedColors := map[string]string{ "W": "White",
-					     "U": "Blue",
-					     "B": "Black",
-					     "R": "Red",
-					     "G": "Green" }
-	mappedColors := map[string]int{ "White": 0,
-					"Blue": 1,
-					"Black": 2,
-					"Red": 3,
-					"Green": 4 }
+	expandedColors := map[string]string{"W": "White",
+		"U": "Blue",
+		"B": "Black",
+		"R": "Red",
+		"G": "Green"}
+	mappedColors := map[string]int{"White": 0,
+		"Blue":  1,
+		"Black": 2,
+		"Red":   3,
+		"Green": 4}
 
 	var colorWords []string
 	for _, color := range ColorIndicators {
@@ -499,16 +500,13 @@ func checkCacheForCard(ncn string) (Card, error) {
 
 func getScryfallCard(input string) (Card, error) {
 	var card Card
-	defer func() {
-		go card.getExtraMetadata("")
-	}()
 	// Normalise input to match how we store in the cache:
 	// lowercase, no punctuation.
 	ncn := normaliseCardName(input)
 	log.Debug("Checking Scryfall for card", "Name", ncn)
-	c, err := checkCacheForCard(ncn)
-	if err != nil && err.Error() == "Card not found" {
-		return c, err
+	card, err := checkCacheForCard(ncn)
+	if err == nil || (err != nil && err.Error() == "Card not found") {
+		return card, err
 	}
 
 	// Try fuzzily matching the name
@@ -520,6 +518,7 @@ func getScryfallCard(input string) (Card, error) {
 		}
 		nameToCardCache.Add(ncn, card)
 		nameToCardCache.Add(normaliseCardName(card.Name), card)
+		card.getExtraMetadata("")
 		return card, nil
 	}
 	// No luck - try unique prefix
@@ -531,6 +530,7 @@ func getScryfallCard(input string) (Card, error) {
 			if err == nil {
 				return cc, err
 			}
+			card.getExtraMetadata("")
 			nameToCardCache.Add(ncn, card)
 			nameToCardCache.Add(normaliseCardName(card.Name), card)
 			return card, nil
@@ -543,9 +543,6 @@ func getScryfallCard(input string) (Card, error) {
 
 func getRandomScryfallCard() (Card, error) {
 	var card Card
-	defer func() {
-		go card.getExtraMetadata("")
-	}()
 	log.Debug("GetRandomScryfallCard: Attempting to fetch", "URL", scryfallRandomAPIURL)
 	resp, err := http.Get(scryfallRandomAPIURL)
 	if err != nil {
@@ -559,6 +556,7 @@ func getRandomScryfallCard() (Card, error) {
 			raven.CaptureError(err, nil)
 			return card, fmt.Errorf("Something went wrong parsing the card")
 		}
+		card.getExtraMetadata("")
 		nameToCardCache.Add(normaliseCardName(card.Name), card)
 		return card, nil
 	}
@@ -631,11 +629,11 @@ func importCardNames(forceFetch bool) ([]string, error) {
 	return catalog.Data, nil
 }
 
-func (card Card) getRulings(rulingNumber int) string {
+func (card *Card) getRulings(rulingNumber int) string {
 	// Do we already have the Rulings?
 	if card.Rulings == nil {
 		// If we don't, fetch them
-		err := (&card).fetchRulings()
+		err := (card).fetchRulings()
 		if err != nil {
 			return "Problem fetching the rulings"
 		}
