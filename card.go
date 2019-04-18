@@ -348,8 +348,10 @@ func (card *Card) formatCard() string {
 				r = append(r, fmt.Sprintf("%s ·", formattedColorIndicator))
 			}
 			r = append(r, strings.Replace(cf.OracleText, "\n", " \\ ", -1))
-			r = append(r, fmt.Sprintf("· %s ·", card.formatExpansions()))
-			r = append(r, card.formatLegalities())
+			if cf.ManaCost != "" {
+				r = append(r, fmt.Sprintf("· %s ·", card.formatExpansions()))
+				r = append(r, card.formatLegalities())
+			}
 
 			s = append(s, strings.Join(r, " "))
 		}
