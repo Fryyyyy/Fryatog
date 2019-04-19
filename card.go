@@ -219,6 +219,10 @@ func (card *Card) getExtraMetadata(inputURL string) {
 				cm.PreviousFlavourTexts = append(cm.PreviousFlavourTexts, c.FlavourText)
 			}
 			cm.PreviousPrintings = append(cm.PreviousPrintings, c.formatExpansions())
+		
+			if card.getReminderTexts() == "Reminder text not found" && c.getReminderTexts() != "Reminder text not found" {
+				cm.PreviousReminderTexts = append(cm.PreviousReminderTexts, c.getReminderTexts())
+			}
 		}
 		card.Metadata = cm
 		// Update the Cache ???? Necessary ?
@@ -370,9 +374,10 @@ func (card *Card) formatCard() string {
 	if strings.Contains(card.TypeLine, "Planeswalker") {
 		s = append(s, fmt.Sprintf("[%s]", card.Loyalty))
 	}
-	//Bold the name of the card
+
+	// Change linebreaks to \\
 	modifiedOracleText := strings.Replace(card.OracleText, "\n", " \\ ", -1)
-	//Change the open/closing parens of reminder text to also start and end italics
+	// Change the open/closing parens of reminder text to also start and end italics
 	modifiedOracleText = strings.Replace(modifiedOracleText, "(", "\x1D(", -1)
 	modifiedOracleText = strings.Replace(modifiedOracleText, ")", ")\x0F", -1)
 	
