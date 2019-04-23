@@ -266,6 +266,7 @@ func (card Card) getReminderTexts() string {
 		for _, cf := range card.CardFaces {
 			cardText += cf.OracleText
 		}
+
 	}
 	reminders := reminderRegexp.FindAllStringSubmatch(cardText, -1)
 	if len(reminders) == 0 {
@@ -348,10 +349,7 @@ func (card *Card) formatCard() string {
 				formattedColorIndicator := standardiseColorIndicator(cf.ColorIndicators)
 				r = append(r, fmt.Sprintf("%s ·", formattedColorIndicator))
 			}
-			log.Debug(cf.Loyalty)
 			if cf.Loyalty !="" {
-				log.Debug("IN PLANESWALKER SHIT")
-				log.Debug(cf.Loyalty)
 				r = append(r, fmt.Sprintf("[%s]", cf.Loyalty))
 			}
 			log.Debug(strings.Join(r, " "))
