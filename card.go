@@ -352,7 +352,7 @@ func (card *Card) formatCard() string {
 			if cf.Loyalty !="" {
 				r = append(r, fmt.Sprintf("[%s]", cf.Loyalty))
 			}
-			log.Debug(strings.Join(r, " "))
+			
 			modifiedOracleText := strings.Replace(cf.OracleText, "\n", " \\ ", -1)
 			// Change the open/closing parens of reminder text to also start and end italics
 			modifiedOracleText = strings.Replace(modifiedOracleText, "(", "\x1D(", -1)
