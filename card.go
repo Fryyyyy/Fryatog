@@ -647,7 +647,7 @@ func (card *Card) getRulings(rulingNumber int) string {
 			return "Problem fetching the rulings"
 		}
 		// Update the Cache ???? Necessary ?
-		nameToCardCache.Add(normaliseCardName(card.Name), card)
+		nameToCardCache.Add(normaliseCardName(card.Name), *card)
 	}
 	// Now we have them
 	var ret []string
