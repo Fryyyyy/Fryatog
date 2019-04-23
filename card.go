@@ -68,6 +68,7 @@ type CardFace struct {
 	OracleText      string   `json:"oracle_text"`
 	Power           string   `json:"power"`
 	Toughness       string   `json:"toughness"`
+	Loyalty 	string 	 `json:"loyalty"`
 	Watermark       string   `json:"watermark"`
 	Artist          string   `json:"artist"`
 	IllustrationID  string   `json:"illustration_id,omitempty"`
@@ -219,7 +220,7 @@ func (card *Card) getExtraMetadata(inputURL string) {
 				cm.PreviousFlavourTexts = append(cm.PreviousFlavourTexts, c.FlavourText)
 			}
 			cm.PreviousPrintings = append(cm.PreviousPrintings, c.formatExpansions())
-		
+
 			if card.getReminderTexts() == "Reminder text not found" && c.getReminderTexts() != "Reminder text not found" {
 				cm.PreviousReminderTexts = append(cm.PreviousReminderTexts, c.getReminderTexts())
 			}
@@ -347,7 +348,19 @@ func (card *Card) formatCard() string {
 				formattedColorIndicator := standardiseColorIndicator(cf.ColorIndicators)
 				r = append(r, fmt.Sprintf("%s ·", formattedColorIndicator))
 			}
-			r = append(r, strings.Replace(cf.OracleText, "\n", " \\ ", -1))
+			log.Debug(cf.Loyalty)
+			if cf.Loyalty !="" {
+				log.Debug("IN PLANESWALKER SHIT")
+				log.Debug(cf.Loyalty)
+				r = append(r, fmt.Sprintf("[%s]", cf.Loyalty))
+			}
+			log.Debug(strings.Join(r, " "))
+			modifiedOracleText := strings.Replace(cf.OracleText, "\n", " \\ ", -1)
+			// Change the open/closing parens of reminder text to also start and end italics
+			modifiedOracleText = strings.Replace(modifiedOracleText, "(", "\x1D(", -1)
+			modifiedOracleText = strings.Replace(modifiedOracleText, ")", ")\x0F", -1)
+
+			r = append(r, modifiedOracleText)
 			if cf.ManaCost != "" {
 				r = append(r, fmt.Sprintf("· %s ·", card.formatExpansions()))
 				r = append(r, card.formatLegalities())
