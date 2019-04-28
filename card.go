@@ -727,9 +727,6 @@ func (card *Card) sortRulings() error {
 	// Scryfall doesn't acknowledge Gatherer ruling order as canonical,
 	// so their "ruling 11" is Gatherer's "ruling 1." Yes, I hate this.
 	if card.Name == "Mairsil, the Pretender" {
-		for _, r:= range card.Rulings[len(card.Rulings)-1:] {
-			log.Debug(r.Comment)
-		}
 		card.Rulings = append(card.Rulings[len(card.Rulings)-1:], card.Rulings...)
 		card.Rulings = card.Rulings[:len(card.Rulings)-1]
 		return nil

@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	log "gopkg.in/inconshreveable/log15.v2"
 )
 
 var (
@@ -33,12 +34,14 @@ var (
 		"Arlinn Kord":             "test_data/arlinnkord.json",
 		"Consign":		   "test_data/consign.json",
 		"Jace, Vryn's Prodigy":    "test_data/jacevrynsprodigy.json",
+		"Mairsil, the Pretender":  "test_data/mairsil.json",
 	}
 )
 
 func (card *Card) fakeGetMetadata() error {
 	var cm CardMetadata
 	var list CardList
+	log.Debug("CARD NAME IS RIGHT HERE " + card.Name)
 	fi, err := os.Open("test_data/" + normaliseCardName(card.Name) + "-printings.json")
 	if err != nil {
 		return fmt.Errorf("Unable to open printings JSON: %v", err)
@@ -228,6 +231,9 @@ func TestSortRulings(t *testing.T) {
 		{"Tawnos's Coffin", 6, "2008-04-01: The effect doesn’t care what types the card has after it is exiled, only that it have been a creature while on the battlefield."},
 		{"Ixidron", 2, "2006-09-25: The controller of a face-down creature can look at it at any time, even if it doesn’t have morph. Other players can’t, but the rules for face-down permanents state that “you must ensure at all times that your face-down spells and permanents can be easily differentiated from each other.” As a result, all players must be able to figure out what each of the creatures Ixidron turned face down is."},
 		{"Ixidron", 5, "2018-04-27: Creatures turned face down by Ixidron are 2/2 creatures with no text, no name, no subtypes, no expansion symbol, and no mana cost. These values are copiable if an object becomes a copy of one of those creatures, and their normal values are not copiable."},
+		{"Mairsil, the Pretender", 1, "2017-08-25: The exiled cards remain exiled with cage counters when Mairsil leaves the battlefield. If Mairsil returns to the battlefield, it will see all of those exiled cards with cage counters on them."},
+		{"Mairsil, the Pretender", 2, "2017-08-25: If another player gains control of Mairsil, it will have the abilities of only cards that player owns in exile with cage counters on them."},
+		{"Mairsil, the Pretender", 12, "Ruling not found"},
 	}
 
 	for _, table := range tables {
