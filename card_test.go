@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	log "gopkg.in/inconshreveable/log15.v2"
 )
 
 var (
@@ -41,7 +40,6 @@ var (
 func (card *Card) fakeGetMetadata() error {
 	var cm CardMetadata
 	var list CardList
-	log.Debug("CARD NAME IS RIGHT HERE " + card.Name)
 	fi, err := os.Open("test_data/" + normaliseCardName(card.Name) + "-printings.json")
 	if err != nil {
 		return fmt.Errorf("Unable to open printings JSON: %v", err)
