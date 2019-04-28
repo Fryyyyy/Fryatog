@@ -723,6 +723,20 @@ func (card *Card) sortRulings() error {
 		return err
 	}
 
+	// Special case for Mairsil, the Pretender
+	// Scryfall doesn't acknowledge Gatherer ruling order as canonical,
+	// so their "ruling 11" is Gatherer's "ruling 1." Yes, I hate this.
+	if card.Name == "Mairsil, the Pretender" {
+		// Since append requires a slice as its first arg, so we can't just do card.Rulings[11]
+		// We can't use negative indices in Go like we can in Python, so we get a slice that's
+		// just the last object in the list.
+		card.Rulings = append(card.Rulings[len(card.Rulings)-1:], card.Rulings...)
+		// Get a slice that drops the last ruling, since we just moved it to the front of the list
+		// and we don't want it duplicated. 
+		card.Rulings = card.Rulings[:len(card.Rulings)-1]
+		return nil
+	}
+
 	for _, ruling := range card.Rulings {
 		rulingDate, err := time.Parse("2006-01-02", ruling.PublishedAt)
 		if err != nil {

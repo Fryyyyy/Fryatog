@@ -363,8 +363,14 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter, rando
 		}
 
 		// Longest possible card name query is ~30 chars
-		if len(message) > 35 {
-			message = message[0:35]
+
+		// TODO: Right now this is very magic number-y.
+		//
+		// Last time it bit us, the query '!ruling kozilek the great distortion 1'
+		// was getting chopped off because we had this capped at 35.
+		// Maybe look for some way to make this more robust and Actually Programmatic.
+		if len(message) > 41 {
+			message = message[0:41]
 		}
 
 		log.Debug("Dispatching", "index", commands)
