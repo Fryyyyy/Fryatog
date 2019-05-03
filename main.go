@@ -34,8 +34,9 @@ var (
 	conf configuration
 
 	// Caches
-	nameToCardCache *lru.ARCCache
-	recentCacheMap  = make(map[string]*cache.Cache)
+	nameToCardCache      *lru.ARCCache
+	recentCacheMap       = make(map[string]*cache.Cache)
+	recentPeopleCacheMap = make(map[string]*cache.Cache)
 
 	// IRC Variables
 	whichChans []string
@@ -565,12 +566,19 @@ func main() {
 		log.Debug("Initialising cache", "Channel name", channelName)
 		// Expires in 30 seconds, checks every 1 second
 		recentCacheMap[channelName] = cache.New(30*time.Second, 1*time.Second)
+
+		// And for greeting new-joiners
+		if strings.Contains(channelName, "-rules") {
+			log.Debug("Initialising new joiner cache", "Channel name", channelName)
+			recentPeopleCacheMap[channelName] = cache.New(30*time.Second, 1*time.Second)
+		}
 	}
 
-	bot.AddTrigger(MainTrigger)
-	bot.AddTrigger(WhoTrigger)
+	bot.AddTrigger(mainTrigger)
+	bot.AddTrigger(whoTrigger)
 	bot.AddTrigger(endOfWhoTrigger)
 	bot.AddTrigger(greetingTrigger)
+	bot.AddTrigger(joinTrigger)
 	bot.Logger.SetHandler(log.StdoutHandler)
 
 	go dumpCardCacheTimer(&conf, nameToCardCache)
@@ -588,13 +596,13 @@ func main() {
 	fmt.Println("Bot shutting down.")
 }
 
-// MainTrigger handles all command input.
+// mainTrigger handles all command input.
 // It could contain multiple comamnds, so for a message,
 // we need to figure out how to handle it and if it does contain commands, handle them
 // The message should probably start with a "!" or at least individual commands within it should.
 // Also supports [[Cardname]]
 // Most of this code stolen from Frytherer [https://github.com/Fryyyyy/Frytherer]
-var MainTrigger = hbot.Trigger{
+var mainTrigger = hbot.Trigger{
 	Condition: func(bot *hbot.Bot, m *hbot.Message) bool {
 		return m.Command == "PRIVMSG" && !(greetingRegexp.MatchString(m.Content)) && ((!strings.Contains(m.To, "#") && !strings.Contains(m.Trailing, "VERSION")) || (strings.Contains(m.Content, "!") || strings.Contains(m.Content, "[[")))
 	},
@@ -643,9 +651,8 @@ var MainTrigger = hbot.Trigger{
 	},
 }
 
-// WhoTrigger handles the reply from the WHO comamnd we send to
-// figure out who are the ChanOps.
-var WhoTrigger = hbot.Trigger{
+// whoTrigger handles the reply from the WHO comamnd we send to figure out who are the ChanOps.
+var whoTrigger = hbot.Trigger{
 	Condition: func(bot *hbot.Bot, m *hbot.Message) bool {
 		// 352 is RPL_WHOREPLY https://tools.ietf.org/html/rfc1459#section-6.2
 		// 315 is RPL_ENDOFWHO
@@ -676,7 +683,22 @@ var greetingTrigger = hbot.Trigger{
 	},
 	Action: func(irc *hbot.Bot, m *hbot.Message) bool {
 		log.Debug("Got a greeting!", "From", m.From, "To", m.To, "Content", m.Content)
-		irc.Reply(m, fmt.Sprintf("%s: Hello! If you have a question about Magic rules, please go ahead and ask.", m.From))
+		if _, found := recentPeopleCacheMap[m.To].Get(m.From); found {
+			irc.Reply(m, fmt.Sprintf("%s: Hello! If you have a question about Magic rules, please go ahead and ask.", m.From))
+		} else {
+			log.Debug("But they've been here a while")
+		}
+		return false
+	},
+}
+
+var joinTrigger = hbot.Trigger{
+	Condition: func(bot *hbot.Bot, m *hbot.Message) bool {
+		return (m.Command == "JOIN") && (strings.Contains(m.To, "-rules"))
+	},
+	Action: func(irc *hbot.Bot, m *hbot.Message) bool {
+		log.Debug("JOIN Trigger in Rules", "From", m.From, "To", m.To)
+		recentPeopleCacheMap[m.To].Set(m.From, true, cache.DefaultExpiration)
 		return false
 	},
 }
