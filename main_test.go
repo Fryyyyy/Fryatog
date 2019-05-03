@@ -103,7 +103,7 @@ func TestTokens(t *testing.T) {
 		// {"Hello! I was wondering if Selvala, Explorer Returned flip triggers work. If I use Selvala and two nonlands are revealed, is that two triggers of life & mana gain", emptyStringSlice}, -- WONTFIX https://github.com/Fryyyyy/Fryatog/issues/42
 	}
 	for _, table := range tables {
-		got := tokeniseAndDispatchInput(&hbot.Message{Content: table.input}, fakeGetCard, fakeGetRandomCard)
+		got := tokeniseAndDispatchInput(&fryatogParams{m: &hbot.Message{Content: table.input}}, fakeGetCard, fakeGetRandomCard)
 		if !reflect.DeepEqual(got, table.output) {
 			t.Errorf("Incorrect output for [%v] -- got %s -- want %s", table.input, got, table.output)
 		}

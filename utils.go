@@ -46,6 +46,7 @@ var (
 	//Stuff pared from card.go
 	reminderRegexp = regexp.MustCompile(`\((.*?)\)`)
 	nonAlphaRegex  = regexp.MustCompile(`\W+`)
+	emojiRegex     = regexp.MustCompile(`{\d+}|{[A-Z]}|{\d\/[A-Z]}|{[A-Z]\/[A-Z]}`)
 )
 
 func sliceUniqMap(s []string) []string {

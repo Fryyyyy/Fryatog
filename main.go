@@ -12,6 +12,7 @@ import (
 
 	raven "github.com/getsentry/raven-go"
 	lru "github.com/hashicorp/golang-lru"
+	"github.com/nlopes/slack"
 	cache "github.com/patrickmn/go-cache"
 	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 	hbot "github.com/whyrusleeping/hellabot"
@@ -27,11 +28,13 @@ type configuration struct {
 	DevChannels  []string `json:"DevChannels"`
 	ProdNick     string   `json:"ProdNick"`
 	DevNick      string   `json:"DevNick"`
+	SlackToken   string   `json:"SlackToken"`
 }
 
 var (
-	bot  *hbot.Bot
-	conf configuration
+	bot         *hbot.Bot
+	conf        configuration
+	slackClient *slack.Client
 
 	// Caches
 	nameToCardCache      *lru.ARCCache
@@ -73,6 +76,8 @@ type RandomCardGetter func() (Card, error)
 // fryatogParams contains the common things passed to and from functions.
 type fryatogParams struct {
 	m                     *hbot.Message
+	slackm                string
+	isIRC                 bool
 	message               string
 	cardGetFunction       CardGetter
 	randomCardGetFunction RandomCardGetter
@@ -155,8 +160,17 @@ func getWho() {
 // tokeniseAndDispatchInput splits the given user-supplied string into a number of commands
 // and does some pre-processing to sort out real commands from just normal chat
 // Any real commands are handed to the handleCommand function
-func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter, randomCardGetFunction RandomCardGetter) []string {
-	var input = m.Content
+func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, randomCardGetFunction RandomCardGetter) []string {
+	var input string
+	isIRC := (fp.m != nil)
+	if isIRC {
+		input = fp.m.Content
+	} else if fp.slackm != "" {
+		input = fp.slackm
+	} else {
+		log.Warn("A Global Message with neither IRC nor SLack")
+		return []string{}
+	}
 
 	// Little bit of hackery for PMs
 	if !strings.Contains(input, "!") && !strings.Contains(input, "[[") {
@@ -168,42 +182,44 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter, rando
 	c := make(chan string)
 	var commands int
 
-	// Special case the Operator Commands
-	switch {
-	case input == "!quitquitquit" && isSenderAnOp(m):
-		p, _ := os.FindProcess(os.Getpid())
-		p.Signal(syscall.SIGQUIT)
-	case input == "!updaterules" && isSenderAnOp(m):
-		if err := importRules(true); err != nil {
-			log.Warn("Error importing Rules", "Error", err)
-			return []string{"Problem!"}
+	if isIRC {
+		// Special case the Operator Commands
+		switch {
+		case input == "!quitquitquit" && isSenderAnOp(fp.m):
+			p, _ := os.FindProcess(os.Getpid())
+			p.Signal(syscall.SIGQUIT)
+		case input == "!updaterules" && isSenderAnOp(fp.m):
+			if err := importRules(true); err != nil {
+				log.Warn("Error importing Rules", "Error", err)
+				return []string{"Problem!"}
+			}
+			return []string{"Done!"}
+		case input == "!updatecardnames" && isSenderAnOp(fp.m):
+			var err error
+			cardNames, err = importCardNames(true)
+			if err != nil {
+				log.Warn("Error importing card names", "Error", err)
+				return []string{"Problem!"}
+			}
+			return []string{"Done!"}
+		case input == "!startup" && isSenderAnOp(fp.m):
+			var ret []string
+			var err error
+			if err = importRules(false); err != nil {
+				ret = append(ret, "Problem fetching rules")
+			}
+			cardNames, err = importCardNames(false)
+			if err != nil {
+				ret = append(ret, "Problem fetching card names")
+			}
+			ret = append(ret, "Done!")
+			return ret
+		case input == "!dumpcardcache" && isSenderAnOp(fp.m):
+			if err := dumpCardCache(&conf, nameToCardCache); err != nil {
+				raven.CaptureErrorAndWait(err, nil)
+			}
+			return []string{"Done!"}
 		}
-		return []string{"Done!"}
-	case input == "!updatecardnames" && isSenderAnOp(m):
-		var err error
-		cardNames, err = importCardNames(true)
-		if err != nil {
-			log.Warn("Error importing card names", "Error", err)
-			return []string{"Problem!"}
-		}
-		return []string{"Done!"}
-	case input == "!startup" && isSenderAnOp(m):
-		var ret []string
-		var err error
-		if err = importRules(false); err != nil {
-			ret = append(ret, "Problem fetching rules")
-		}
-		cardNames, err = importCardNames(false)
-		if err != nil {
-			ret = append(ret, "Problem fetching card names")
-		}
-		ret = append(ret, "Done!")
-		return ret
-	case input == "!dumpcardcache" && isSenderAnOp(m):
-		if err := dumpCardCache(&conf, nameToCardCache); err != nil {
-			raven.CaptureErrorAndWait(err, nil)
-		}
-		return []string{"Done!"}
 	}
 
 	for _, message := range commandList {
@@ -251,7 +267,7 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter, rando
 		}
 
 		log.Debug("Dispatching", "index", commands)
-		params := fryatogParams{message: message, cardGetFunction: cardGetFunction, randomCardGetFunction: randomCardGetFunction}
+		params := fryatogParams{message: message, isIRC: isIRC, cardGetFunction: cardGetFunction, randomCardGetFunction: randomCardGetFunction}
 		go handleCommand(&params, c)
 		commands++
 	}
@@ -293,14 +309,23 @@ func handleCommand(params *fryatogParams, c chan string) {
 	case message == "random":
 		log.Debug("Asked for random card")
 		if card, err := getRandomCard(params.randomCardGetFunction); err == nil {
-			c <- card.formatCard()
+			if params.isIRC {
+				c <- card.formatCardForIRC()
+			} else {
+				c <- card.formatCardForSlack()
+			}
 			return
 		}
 
 	default:
 		log.Debug("I think it's a card")
 		if card, err := findCard(cardTokens, params.cardGetFunction); err == nil {
-			c <- card.formatCard()
+			log.Debug("Got ye card", "IRC?", params.isIRC)
+			if params.isIRC {
+				c <- card.formatCardForIRC()
+			} else {
+				c <- card.formatCardForSlack()
+			}
 			return
 		}
 	}
@@ -536,12 +561,16 @@ func main() {
 		nonSSLServ := flag.String("server", "irc.freenode.net:6667", "hostname and port for irc server to connect to")
 		nick := flag.String("nick", conf.DevNick, "nickname for the bot")
 		bot, err = hbot.NewBot(*nonSSLServ, *nick, hijackSession, devChannels, noSSLOptions, timeOut)
+
+		slackClient = slack.New(conf.SlackToken, slack.OptionDebug(true))
 	} else {
 		whichChans = conf.ProdChannels
 		whichNick = conf.ProdNick
 		sslServ := flag.String("server", "irc.freenode.net:6697", "hostname and port for irc server to connect to")
 		nick := flag.String("nick", conf.ProdNick, "nickname for the bot")
 		bot, err = hbot.NewBot(*sslServ, *nick, noHijackSession, prodChannels, yesSSLOptions, saslOptions, timeOut)
+
+		slackClient = slack.New(conf.SlackToken)
 	}
 	if err != nil {
 		raven.CaptureErrorAndWait(err, nil)
@@ -591,8 +620,17 @@ func main() {
 		os.Exit(0) // Exit cleanly so we don't get autorestarted by supervisord. Also note https://github.com/golang/go/issues/24284
 	}()
 
+	// Start Slack stuff
+	rtm := slackClient.NewRTM()
+	go rtm.ManageConnection()
+	go runSlack(rtm, slackClient)
+
 	// Start up bot (this blocks until we disconnect)
-	bot.Run()
+	//bot.Run()
+	for {
+		time.Sleep(10 * time.Second)
+		log.Debug("Waking")
+	}
 	fmt.Println("Bot shutting down.")
 }
 
@@ -612,7 +650,7 @@ var mainTrigger = hbot.Trigger{
 		if m.From == whichNick {
 			log.Debug("Ignoring message from myself", "Input", m.Content)
 		}
-		toPrint := tokeniseAndDispatchInput(m, getScryfallCard, getRandomScryfallCard)
+		toPrint := tokeniseAndDispatchInput(&fryatogParams{m: m}, getScryfallCard, getRandomScryfallCard)
 		for _, s := range sliceUniqMap(toPrint) {
 			var prefix string
 			isPublic := strings.Contains(m.To, "#")

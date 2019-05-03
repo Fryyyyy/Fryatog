@@ -239,6 +239,17 @@ func formatManaCost(input string) string {
 	return input
 }
 
+func replaceManaCostForSlack(input string) string {
+	manaString := strings.Replace(input, "{1000000}", ":mana-1000000-1::mana-1000000-2::mana-1000000-3::mana-1000000-4:", -1)
+	for _, match := range emojiRegex.FindAllString(manaString, -1) {
+		replacement := strings.Replace(match, "{", ":mana-", -1)
+		replacement = strings.Replace(replacement, "}", ":", -1)
+		replacement = strings.Replace(replacement, "/", "", -1)
+		manaString = strings.Replace(manaString, match, replacement, 1)
+	}
+	return manaString
+}
+
 // TODO: Have a command to see all printing information
 func (card *Card) formatExpansions() string {
 	var ret []string
@@ -334,7 +345,53 @@ func (card *Card) formatLegalities() string {
 	return strings.Join(ret, ",")
 }
 
-func (card *Card) formatCard() string {
+func (card *Card) formatCardForSlack() string {
+	var s []string
+	if len(card.CardFaces) > 0 {
+		for _, cf := range card.CardFaces {
+			var r []string
+			r = append(r, fmt.Sprintf("*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=%v|%v>*", card.MultiverseIds[0], cf.Name))
+			if cf.ManaCost != "" {
+				r = append(r, replaceManaCostForSlack(cf.ManaCost))
+			}
+			r = append(r, fmt.Sprintf("· %s ·", cf.TypeLine))
+			if cf.Power != "" {
+				r = append(r, fmt.Sprintf("%s/%s ·", cf.Power, cf.Toughness))
+			}
+			if len(cf.ColorIndicators) > 0 {
+				formattedColorIndicator := standardiseColorIndicator(cf.ColorIndicators)
+				r = append(r, fmt.Sprintf("%s ·", formattedColorIndicator))
+			}
+			if cf.Loyalty != "" {
+				r = append(r, fmt.Sprintf("[%s]", cf.Loyalty))
+			}
+			modifiedOracleText := strings.Replace(replaceManaCostForSlack(cf.OracleText), "\n", " \\ ", -1)
+			r = append(r, modifiedOracleText)
+			s = append(s, strings.Join(r, " "))
+		}
+		return strings.Join(s, "\n")
+	}
+	s = append(s, fmt.Sprintf("*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=%v|%v>*", card.MultiverseIds[0], card.Name))
+	if card.ManaCost != "" {
+		s = append(s, replaceManaCostForSlack(card.ManaCost))
+	}
+	s = append(s, fmt.Sprintf("· %s ·", card.TypeLine))
+	if card.Power != "" {
+		s = append(s, fmt.Sprintf("%s/%s ·", card.Power, card.Toughness))
+	}
+	if len(card.ColorIndicators) > 0 {
+		formattedColorIndicator := standardiseColorIndicator(card.ColorIndicators)
+		s = append(s, fmt.Sprintf("%s ·", formattedColorIndicator))
+	}
+	if strings.Contains(card.TypeLine, "Planeswalker") {
+		s = append(s, fmt.Sprintf("[%s]", card.Loyalty))
+	}
+	modifiedOracleText := strings.Replace(replaceManaCostForSlack(card.OracleText), "\n", " \\ ", -1)
+	s = append(s, modifiedOracleText)
+	return strings.Join(s, " ")
+}
+
+func (card *Card) formatCardForIRC() string {
 	var s []string
 	if len(card.CardFaces) > 0 {
 		// DFC and Flip and Split - produce two cards
