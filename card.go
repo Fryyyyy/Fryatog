@@ -68,7 +68,7 @@ type CardFace struct {
 	OracleText      string   `json:"oracle_text"`
 	Power           string   `json:"power"`
 	Toughness       string   `json:"toughness"`
-	Loyalty 	string 	 `json:"loyalty"`
+	Loyalty         string   `json:"loyalty"`
 	Watermark       string   `json:"watermark"`
 	Artist          string   `json:"artist"`
 	IllustrationID  string   `json:"illustration_id,omitempty"`
@@ -228,7 +228,7 @@ func (card *Card) getExtraMetadata(inputURL string) {
 		card.Metadata = cm
 		// Update the Cache ???? Necessary ?
 		nameToCardCache.Add(normaliseCardName(card.Name), *card)
-		log.Debug("After metadata extraction", "Card", card)
+		// log.Debug("After metadata extraction", "Card", card)
 		return
 	}
 	log.Info("GetExtraMetadata: Scryfall returned a non-200", "Status Code", resp.StatusCode)
@@ -236,23 +236,27 @@ func (card *Card) getExtraMetadata(inputURL string) {
 }
 
 func formatManaCost(input string) string {
-	// return fmt.Sprintf("{%s}", strings.Replace(strings.Replace(input, "{", "", -1), "}", "", -1))
 	return input
 }
 
 // TODO: Have a command to see all printing information
 func (card *Card) formatExpansions() string {
-	ret := ""
+	var ret []string
 	if card.Name != "Plains" && card.Name != "Island" && card.Name != "Swamp" && card.Name != "Mountain" && card.Name != "Forest" {
 		if len(card.Metadata.PreviousPrintings) > 0 {
 			if len(card.Metadata.PreviousPrintings) < 10 {
-				ret = fmt.Sprintf("%s,", strings.Join(card.Metadata.PreviousPrintings, ","))
+				// ret = fmt.Sprintf("%s,", strings.Join(card.Metadata.PreviousPrintings, ","))
+				ret = card.Metadata.PreviousPrintings
 			} else {
-				ret = fmt.Sprintf("%s,[...],", strings.Join(card.Metadata.PreviousPrintings[:5], ","))
+				// ret = fmt.Sprintf("%s,[...],", strings.Join(card.Metadata.PreviousPrintings[:5], ","))
+				ret = card.Metadata.PreviousPrintings[:5]
+				ret = append(ret, "[...]")
 			}
 		}
 	}
-	return ret + fmt.Sprintf("%s-%s", strings.ToUpper(card.Set), strings.ToUpper(card.Rarity[0:1]))
+	ret = append(ret, fmt.Sprintf("%s-%s", strings.ToUpper(card.Set), strings.ToUpper(card.Rarity[0:1])))
+	return strings.Join(sliceUniqMap(ret), ",")
+	//return ret + fmt.Sprintf("%s-%s", strings.ToUpper(card.Set), strings.ToUpper(card.Rarity[0:1]))
 }
 
 // Get all possible most recent reminder texts for a card, \n separated
@@ -349,10 +353,10 @@ func (card *Card) formatCard() string {
 				formattedColorIndicator := standardiseColorIndicator(cf.ColorIndicators)
 				r = append(r, fmt.Sprintf("%s ·", formattedColorIndicator))
 			}
-			if cf.Loyalty !="" {
+			if cf.Loyalty != "" {
 				r = append(r, fmt.Sprintf("[%s]", cf.Loyalty))
 			}
-			
+
 			modifiedOracleText := strings.Replace(cf.OracleText, "\n", " \\ ", -1)
 			// Change the open/closing parens of reminder text to also start and end italics
 			modifiedOracleText = strings.Replace(modifiedOracleText, "(", "\x1D(", -1)
@@ -391,7 +395,7 @@ func (card *Card) formatCard() string {
 	// Change the open/closing parens of reminder text to also start and end italics
 	modifiedOracleText = strings.Replace(modifiedOracleText, "(", "\x1D(", -1)
 	modifiedOracleText = strings.Replace(modifiedOracleText, ")", ")\x0F", -1)
-	
+
 	s = append(s, modifiedOracleText)
 	s = append(s, fmt.Sprintf("· %s ·", card.formatExpansions()))
 	s = append(s, card.formatLegalities())
@@ -430,7 +434,8 @@ func normaliseCardName(input string) string {
 }
 
 func lookupUniqueNamePrefix(input string) string {
-	log.Debug("in lookupUniqueNamePrefix", "Input", input, "NCN", normaliseCardName(input), "Length of CN", len(cardNames))
+	ncn := normaliseCardName(input)
+	log.Debug("in lookupUniqueNamePrefix", "Input", input, "NCN", ncn, "Length of CN", len(cardNames))
 	var err error
 	if len(cardNames) == 0 {
 		log.Debug("In lookupUniqueNamePrefix -- Importing")
@@ -442,7 +447,7 @@ func lookupUniqueNamePrefix(input string) string {
 	}
 	c := cardNames[:0]
 	for _, x := range cardNames {
-		if strings.HasPrefix(normaliseCardName(x), normaliseCardName(input)) {
+		if strings.HasPrefix(normaliseCardName(x), ncn) {
 			log.Debug("In lookupUniqueNamePrefix", "Gottem", x)
 			c = append(c, x)
 		}
@@ -493,7 +498,7 @@ func checkCacheForCard(ncn string) (Card, error) {
 	var emptyCard Card
 	if cacheCard, found := nameToCardCache.Get(ncn); found {
 		log.Debug("Card was cached")
-		if cacheCard == nil {
+		if cacheCard == nil || reflect.DeepEqual(cacheCard, emptyCard) {
 			log.Debug("But cached as nothing")
 			return emptyCard, fmt.Errorf("Card not found")
 		}
@@ -518,46 +523,59 @@ func checkCacheForCard(ncn string) (Card, error) {
 	return emptyCard, fmt.Errorf("Card not found in cache")
 }
 
+func getCachedOrStoreCard(card Card, ncn string, cNcn string) (Card, error) {
+	log.Debug("In GCOSC")
+
+	card.getExtraMetadata("")
+	// Remember what they typed
+	nameToCardCache.Add(ncn, card)
+
+	// What they typed was the real card name, so we're done.
+	if ncn == cNcn {
+		return card, nil
+	}
+
+	// Else, check to see if we have the real card
+	cc, err := checkCacheForCard(cNcn)
+	if err == nil {
+		// Return the canonical cached object
+		log.Debug("Returning existing Canonical object")
+		return cc, err
+	}
+
+	// We didn't, so store the canonical object
+	log.Debug("Storing new Canonical object")
+	nameToCardCache.Add(cNcn, card)
+	return card, nil
+}
+
 func getScryfallCard(input string) (Card, error) {
 	var card Card
 	// Normalise input to match how we store in the cache:
 	// lowercase, no punctuation.
 	ncn := normaliseCardName(input)
-	log.Debug("Checking Scryfall for card", "Name", ncn)
+	log.Debug("Asked for card", "Name", ncn)
 	card, err := checkCacheForCard(ncn)
 	if err == nil || (err != nil && err.Error() == "Card not found") {
 		return card, err
 	}
 
+	log.Debug("Checking Scryfall for card", "Name", ncn)
 	// Try fuzzily matching the name
 	card, err = fetchScryfallCardByFuzzyName(input)
 	if err == nil {
-		cc, err := checkCacheForCard(normaliseCardName(card.Name))
-		if err == nil {
-			return cc, err
-		}
-		nameToCardCache.Add(ncn, card)
-		nameToCardCache.Add(normaliseCardName(card.Name), card)
-		card.getExtraMetadata("")
-		return card, nil
+		return getCachedOrStoreCard(card, ncn, normaliseCardName(card.Name))
 	}
 	// No luck - try unique prefix
 	cardName := lookupUniqueNamePrefix(input)
 	if cardName != "" {
 		card, err = fetchScryfallCardByFuzzyName(cardName)
 		if err == nil {
-			cc, err := checkCacheForCard(normaliseCardName(card.Name))
-			if err == nil {
-				return cc, err
-			}
-			card.getExtraMetadata("")
-			nameToCardCache.Add(ncn, card)
-			nameToCardCache.Add(normaliseCardName(card.Name), card)
-			return card, nil
+			return getCachedOrStoreCard(card, ncn, normaliseCardName(card.Name))
 		}
 	}
-	// Store what they typed
-	nameToCardCache.Add(ncn, nil)
+	// Store the empty result
+	nameToCardCache.Add(ncn, card)
 	return card, fmt.Errorf("No card found")
 }
 
@@ -646,6 +664,7 @@ func importCardNames(forceFetch bool) ([]string, error) {
 		log.Warn("Error parsing cardnames file", "Error", err)
 		return []string{}, fmt.Errorf("Something went wrong parsing the cardname catalog")
 	}
+	log.Debug("Finished importing", "Length", len(catalog.Data))
 	return catalog.Data, nil
 }
 
@@ -732,7 +751,7 @@ func (card *Card) sortRulings() error {
 		// just the last object in the list.
 		card.Rulings = append(card.Rulings[len(card.Rulings)-1:], card.Rulings...)
 		// Get a slice that drops the last ruling, since we just moved it to the front of the list
-		// and we don't want it duplicated. 
+		// and we don't want it duplicated.
 		card.Rulings = card.Rulings[:len(card.Rulings)-1]
 		return nil
 	}

@@ -4,8 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 var (
@@ -31,9 +35,10 @@ var (
 		"Nicol Bolas, the Arisen": "test_data/nicolbolasthearisen.json",
 		"Dryad Arbor":             "test_data/dryadarbor.json",
 		"Arlinn Kord":             "test_data/arlinnkord.json",
-		"Consign":		   "test_data/consign.json",
+		"Consign":                 "test_data/consign.json",
 		"Jace, Vryn's Prodigy":    "test_data/jacevrynsprodigy.json",
 		"Mairsil, the Pretender":  "test_data/mairsil.json",
+		"Ral, Storm Conduit":      "test_data/ralstormconduit.json",
 	}
 )
 
@@ -258,7 +263,8 @@ func TestGetPrintings(t *testing.T) {
 		output   string
 	}{
 		{"Faithless Looting", "\x02Faithless Looting\x0F {R} · Sorcery · Draw two cards, then discard two cards. \\ Flashback {2}{R} \x1D(You may cast this card from your graveyard for its flashback cost. Then exile it.)\x0F · CM2-C,EMA-C,PZ1-U,C15-C,C14-C,DDK-C,DKA-C,PIDW-R,UMA-C · Vin,Leg,Mod"},
-		{"Disenchant", "\x02Disenchant\x0F {1}{W} · Instant · Destroy target artifact or enchantment. · IMA-C,PRM-C,CN2-C,TPR-C,PRM-C,[...],A25-C · Vin,Leg,Mod"},
+		{"Disenchant", "\x02Disenchant\x0F {1}{W} · Instant · Destroy target artifact or enchantment. · IMA-C,PRM-C,CN2-C,TPR-C,[...],A25-C · Vin,Leg,Mod"},
+		{"Ral, Storm Conduit", "\x02Ral, Storm Conduit\x0F {2}{U}{R} · Legendary Planeswalker — Ral · [4] Whenever you cast or copy an instant or sorcery spell, Ral, Storm Conduit deals 1 damage to target opponent or planeswalker. \\ +2: Scry 1. \\ −2: When you cast your next instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy. · WAR-R · Vin,Leg,Mod,Std"},
 	}
 	for _, table := range tables {
 		fi, err := os.Open(RealCards[table.cardname])
@@ -276,5 +282,51 @@ func TestGetPrintings(t *testing.T) {
 		if fc != table.output {
 			t.Errorf("Incorrect output -- got %s -- want %s", fc, table.output)
 		}
+	}
+}
+
+func TestCardCache(t *testing.T) {
+	var emptyCard Card
+	var err error
+	nameToCardCache, err = lru.NewARC(2048)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+
+	// Empty cache
+	c, err := checkCacheForCard("testCardNotFound")
+	if err == nil {
+		t.Errorf("Unexpected non-error: %v", err)
+	}
+	if err.Error() != "Card not found in cache" {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if !reflect.DeepEqual(c, emptyCard) {
+		t.Errorf("Expected empty card, but got %v", c)
+	}
+
+	var faithlessLooting Card
+	fi, err := os.Open(RealCards["Faithless Looting"])
+	if err != nil {
+		t.Errorf("Unable to open %v", RealCards["Faithless Looting"])
+	}
+	if err := json.NewDecoder(fi).Decode(&faithlessLooting); err != nil {
+		t.Errorf("Something went wrong parsing the card: %s", err)
+	}
+	nameToCardCache.Add(normaliseCardName(faithlessLooting.Name), faithlessLooting)
+
+	// Change it slightly and add it as a non-canonical
+	fakeFaithless := faithlessLooting
+	fakeFaithless.ManaCost = "{F}"
+	nameToCardCache.Add("faithless", fakeFaithless)
+	// Try the real one
+	cc, err := checkCacheForCard("faithlesslooting")
+	if diff := cmp.Diff(cc, faithlessLooting); diff != "" {
+		t.Errorf("Incorrect card (-want +got):\n%s", diff)
+	}
+	// Try the fake one
+	cc, err = checkCacheForCard("faithless")
+	if diff := cmp.Diff(cc, faithlessLooting); diff != "" {
+		t.Errorf("Incorrect card (-want +got):\n%s", diff)
 	}
 }

@@ -197,7 +197,7 @@ func TestCardMetadata(t *testing.T) {
 		{"flavor", "flavor Bushi Tenderfoot", "Flavour text not found"},
 	}
 	for _, table := range tables {
-		got := handleCardMetadataQuery(table.command, table.message, fakeGetCard)
+		got := handleCardMetadataQuery(&fryatogParams{message: table.message, cardGetFunction: fakeGetCard}, table.command)
 		if got != table.output {
 			t.Errorf("Incorrect output -- got %s - want %s", got, table.output)
 		}

@@ -2,18 +2,22 @@ package main
 
 import (
 	"encoding/gob"
+	"encoding/json"
+	"io"
+	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"strings"
 	"syscall"
-	"regexp"
+	"time"
 
+	lru "github.com/hashicorp/golang-lru"
 	log "gopkg.in/inconshreveable/log15.v2"
 )
 
 var (
 	//Pulling all regex here *should* make it all compile once and then be left alone
-
 
 	//Stuff pared from main.go
 	botCommandRegex      = regexp.MustCompile(`[!&]([^!&?[)]+)|\[\[(.*?)\]\]`)
@@ -37,11 +41,11 @@ var (
 	greetingRegexp = regexp.MustCompile(`(?i)^h(ello|i)(\!|\.|\?)*$`)
 
 	foundKeywordAbilityRegexp = regexp.MustCompile(`701.\d+\b`)
-	foundKeywordActionRegexp = regexp.MustCompile(`702.\d+\b`)
+	foundKeywordActionRegexp  = regexp.MustCompile(`702.\d+\b`)
 
 	//Stuff pared from card.go
 	reminderRegexp = regexp.MustCompile(`\((.*?)\)`)
-	nonAlphaRegex = regexp.MustCompile(`\W+`)
+	nonAlphaRegex  = regexp.MustCompile(`\W+`)
 )
 
 func sliceUniqMap(s []string) []string {
@@ -103,18 +107,25 @@ func readGob(filePath string, object interface{}) error {
 	if err == nil {
 		decoder := gob.NewDecoder(file)
 		err = decoder.Decode(object)
+		log.Debug("readGOB", "Object", object)
 	}
 	file.Close()
 	return err
 }
 
-func dumpCardCache() error {
+func dumpCardCache(conf *configuration, cache *lru.ARCCache) error {
+	// c = &cache
 	// Dump cache keys
+	log.Debug("Dumping card cache", "len", cache.Len())
 	var outCards []Card
-	for _, k := range nameToCardCache.Keys() {
-		if v, ok := nameToCardCache.Get(k); ok {
-			log.Debug("Dumping card", "Name", (v.(Card)).Name)
-			outCards = append(outCards, v.(Card))
+	for _, k := range cache.Keys() {
+		if v, ok := cache.Get(k); ok {
+			if v != nil {
+				if conf.DevMode {
+					log.Debug("Dumping card", "Key", k, "Name", (v.(Card)).Name)
+				}
+				outCards = append(outCards, v.(Card))
+			}
 		}
 	}
 	return writeGob(cardCacheGob, outCards)
@@ -138,4 +149,53 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func readConfig() configuration {
+	file, _ := os.Open(configFile)
+	defer file.Close()
+	decoder := json.NewDecoder(file)
+	conf := configuration{}
+	err := decoder.Decode(&conf)
+	if err != nil {
+		panic(err)
+	}
+	return conf
+}
+
+func fetchRulesFile() error {
+	// Fetch it
+	out, err := os.Create(crFile)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.Get(crURL)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return err
+	}
+	out.Close()
+	return nil
+}
+
+func dumpCardCacheTimer(conf *configuration, cache *lru.ARCCache) {
+	for {
+		if err := dumpCardCache(conf, cache); err != nil {
+			log.Warn("Dump card cache timer", "Error", err)
+		}
+		// Override for Dev
+		if conf.DevMode {
+			log.Debug("Cache dumped, sleeping (short)")
+			time.Sleep(30 * time.Second)
+		} else {
+			log.Debug("Cache dumped, sleeping (long)")
+			time.Sleep(cacheDumpTimer)
+		}
+	}
 }

@@ -1,0 +1,100 @@
+{
+    "object": "card",
+    "id": "678ce3bf-152d-45ca-87ae-ad46c921328b",
+    "oracle_id": "b7da26c9-78a6-41c5-a5ef-6555e8274d7a",
+    "multiverse_ids": [
+      461138
+    ],
+    "mtgo_id": 72028,
+    "arena_id": 69660,
+    "tcgplayer_id": 188346,
+    "name": "Ral, Storm Conduit",
+    "lang": "en",
+    "released_at": "2019-05-03",
+    "uri": "https://api.scryfall.com/cards/678ce3bf-152d-45ca-87ae-ad46c921328b",
+    "scryfall_uri": "https://scryfall.com/card/war/211/ral-storm-conduit?utm_source=api",
+    "layout": "normal",
+    "highres_image": false,
+    "image_uris": {
+      "small": "https://img.scryfall.com/cards/small/front/6/7/678ce3bf-152d-45ca-87ae-ad46c921328b.jpg?1555741331",
+      "normal": "https://img.scryfall.com/cards/normal/front/6/7/678ce3bf-152d-45ca-87ae-ad46c921328b.jpg?1555741331",
+      "large": "https://img.scryfall.com/cards/large/front/6/7/678ce3bf-152d-45ca-87ae-ad46c921328b.jpg?1555741331",
+      "png": "https://img.scryfall.com/cards/png/front/6/7/678ce3bf-152d-45ca-87ae-ad46c921328b.png?1555741331",
+      "art_crop": "https://img.scryfall.com/cards/art_crop/front/6/7/678ce3bf-152d-45ca-87ae-ad46c921328b.jpg?1555741331",
+      "border_crop": "https://img.scryfall.com/cards/border_crop/front/6/7/678ce3bf-152d-45ca-87ae-ad46c921328b.jpg?1555741331"
+    },
+    "mana_cost": "{2}{U}{R}",
+    "cmc": 4.0,
+    "type_line": "Legendary Planeswalker — Ral",
+    "oracle_text": "Whenever you cast or copy an instant or sorcery spell, Ral, Storm Conduit deals 1 damage to target opponent or planeswalker.\n+2: Scry 1.\n−2: When you cast your next instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.",
+    "loyalty": "4",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "color_identity": [
+      "R",
+      "U"
+    ],
+    "legalities": {
+      "standard": "legal",
+      "future": "legal",
+      "frontier": "legal",
+      "modern": "legal",
+      "legacy": "legal",
+      "pauper": "not_legal",
+      "vintage": "legal",
+      "penny": "not_legal",
+      "commander": "legal",
+      "duel": "legal",
+      "oldschool": "not_legal"
+    },
+    "games": [
+      "arena",
+      "mtgo",
+      "paper"
+    ],
+    "reserved": false,
+    "foil": true,
+    "nonfoil": true,
+    "oversized": false,
+    "promo": false,
+    "reprint": false,
+    "set": "war",
+    "set_name": "War of the Spark",
+    "set_uri": "https://api.scryfall.com/sets/ee044f0b-e101-4ead-8d0e-aa510aad4277",
+    "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Awar&unique=prints",
+    "scryfall_set_uri": "https://scryfall.com/sets/war?utm_source=api",
+    "rulings_uri": "https://api.scryfall.com/cards/678ce3bf-152d-45ca-87ae-ad46c921328b/rulings",
+    "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab7da26c9-78a6-41c5-a5ef-6555e8274d7a&unique=prints",
+    "collector_number": "211",
+    "digital": false,
+    "rarity": "rare",
+    "illustration_id": "619ce89a-5deb-4864-b32c-a938538d2433",
+    "artist": "Wesley Burt",
+    "border_color": "black",
+    "frame": "2015",
+    "full_art": false,
+    "story_spotlight": false,
+    "edhrec_rank": 829,
+    "usd": "4.14",
+    "eur": "2.21",
+    "tix": "1.11",
+    "prices": {
+      "usd": "4.14",
+      "usd_foil": "13.61",
+      "eur": "2.21",
+      "tix": "1.11"
+    },
+    "related_uris": {
+      "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=461138",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Ral%2C+Storm+Conduit&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "edhrec": "http://edhrec.com/route/?cc=Ral%2C+Storm+Conduit",
+      "mtgtop8": "http://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Ral%2C+Storm+Conduit"
+    },
+    "purchase_uris": {
+      "tcgplayer": "https://shop.tcgplayer.com/magic/war-of-the-spark/ral-storm-conduit?partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "cardmarket": "https://www.cardmarket.com/en/Magic/Products/Singles/War-of-the-Spark/Ral-Storm-Conduit?referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+      "cardhoarder": "https://www.cardhoarder.com/cards/72028?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    }
+  }

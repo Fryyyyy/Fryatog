@@ -1,13 +1,9 @@
 package main
 
 import (
-	"bufio"
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -19,7 +15,6 @@ import (
 	cache "github.com/patrickmn/go-cache"
 	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 	hbot "github.com/whyrusleeping/hellabot"
-	charmap "golang.org/x/text/encoding/charmap"
 	log "gopkg.in/inconshreveable/log15.v2"
 )
 
@@ -55,6 +50,9 @@ var (
 
 	// Store people who we know of as Ops
 	chanops = make(map[string]struct{})
+
+	// How often to dump the card cache
+	cacheDumpTimer = 10 * time.Minute
 )
 
 // Is there a stable URL that always points to a text version of the most up to date CR ?
@@ -70,6 +68,14 @@ type CardGetter func(cardname string) (Card, error)
 
 // RandomCardGetter defines a function that retrieves a random card's text.
 type RandomCardGetter func() (Card, error)
+
+// fryatogParams contains the common things passed to and from functions.
+type fryatogParams struct {
+	m                     *hbot.Message
+	message               string
+	cardGetFunction       CardGetter
+	randomCardGetFunction RandomCardGetter
+}
 
 func recovery() {
 	if r := recover(); r != nil {
@@ -89,18 +95,6 @@ func recovery() {
 		}
 		// Else recover
 	}
-}
-
-func readConfig() configuration {
-	file, _ := os.Open(configFile)
-	defer file.Close()
-	decoder := json.NewDecoder(file)
-	conf := configuration{}
-	err := decoder.Decode(&conf)
-	if err != nil {
-		panic(err)
-	}
-	return conf
 }
 
 func printHelp() string {
@@ -157,125 +151,6 @@ func getWho() {
 	}
 }
 
-func fetchRulesFile() error {
-	// Fetch it
-	out, err := os.Create(crFile)
-	if err != nil {
-		return err
-	}
-
-	resp, err := http.Get(crURL)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return err
-	}
-	out.Close()
-	return nil
-}
-
-func importRules(forceFetch bool) error {
-	log.Debug("In importRules", "Force?", forceFetch)
-	if forceFetch {
-		if err := fetchRulesFile(); err != nil {
-			log.Warn("Error fetching rules file", "Error", err)
-			return err
-		}
-	}
-
-	if _, err := os.Stat(crFile); err != nil {
-		if err := fetchRulesFile(); err != nil {
-			log.Warn("Error fetching rules file", "Error", err)
-			return err
-		}
-	}
-
-	// Parse it.
-	f, err := os.Open(crFile)
-	defer f.Close()
-	if err != nil {
-		return err
-	}
-	// WOTC doesn't serve UTF-8. 😒
-	r := charmap.Windows1252.NewDecoder().Reader(f)
-	scanner := bufio.NewScanner(r)
-	var (
-		metGlossary  bool
-		metCredits   bool
-		lastRule     string
-		lastGlossary string
-		rulesMode    = true
-	)
-
-	// Clear rules map
-	rules = make(map[string][]string)
-
-	// Begin rules parsing
-	for scanner.Scan() {
-		line := scanner.Text()
-		if rulesMode && line == "" {
-			continue
-		}
-		// Clean up line
-		line = strings.Replace(line, "“", `"`, -1)
-		line = strings.Replace(line, "”", `"`, -1)
-		line = strings.Replace(line, "’", `'`, -1)
-		// "Glossary" in the T.O.C
-		if line == "Glossary" {
-			if !metGlossary {
-				metGlossary = true
-			} else {
-				// Done with the rules, let's start Glossary mode.
-				rulesMode = false
-			}
-		} else if line == "Credits" {
-			if !metCredits {
-				metCredits = true
-			} else {
-				// Done!
-				for key := range rules {
-					rulesKeys = append(rulesKeys, key)
-				}
-				return nil
-			}
-		} else if rulesMode {
-			if ruleParseRegex.MatchString(line) {
-				rm := ruleParseRegex.FindAllStringSubmatch(line, -1)
-				// log.Debug("In scanner. Rules Mode: found rule", "Rule number", rm[0][0], "Rule name", rm[0][1])
-				if _, ok := rules[rm[0][1]]; ok {
-					log.Warn("In scanner", "Already had a rule!", line, "Existing rule", rules[rm[0][1]])
-				}
-				rules[rm[0][1]] = append(rules[rm[0][1]], rm[0][2])
-				lastRule = rm[0][1]
-			} else if strings.HasPrefix(line, "Example: ") {
-				if lastRule != "" {
-					rules["ex"+lastRule] = append(rules["ex"+lastRule], line)
-				} else {
-					log.Warn("In scanner", "Got example without rule", line)
-				}
-			} else {
-				// log.Debug("In scanner", "Rules mode: Ignored line", line)
-			}
-		} else {
-			if line == "" {
-				lastGlossary = ""
-			} else if lastGlossary != "" {
-				rules[lastGlossary] = append(rules[lastGlossary], fmt.Sprintf("\x02%s\x0F: %s", lastGlossary, line))
-			} else {
-				lastGlossary = line
-			}
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, "reading standard input:", err)
-	}
-	return nil
-}
-
 // tokeniseAndDispatchInput splits the given user-supplied string into a number of commands
 // and does some pre-processing to sort out real commands from just normal chat
 // Any real commands are handed to the handleCommand function
@@ -295,7 +170,8 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter, rando
 	// Special case the Operator Commands
 	switch {
 	case input == "!quitquitquit" && isSenderAnOp(m):
-		panic("quitquitquit")
+		p, _ := os.FindProcess(os.Getpid())
+		p.Signal(syscall.SIGQUIT)
 	case input == "!updaterules" && isSenderAnOp(m):
 		if err := importRules(true); err != nil {
 			log.Warn("Error importing Rules", "Error", err)
@@ -323,7 +199,7 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter, rando
 		ret = append(ret, "Done!")
 		return ret
 	case input == "!dumpcardcache" && isSenderAnOp(m):
-		if err := dumpCardCache(); err != nil {
+		if err := dumpCardCache(&conf, nameToCardCache); err != nil {
 			raven.CaptureErrorAndWait(err, nil)
 		}
 		return []string{"Done!"}
@@ -374,7 +250,8 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter, rando
 		}
 
 		log.Debug("Dispatching", "index", commands)
-		go handleCommand(message, c, cardGetFunction, randomCardGetFunction)
+		params := fryatogParams{message: message, cardGetFunction: cardGetFunction, randomCardGetFunction: randomCardGetFunction}
+		go handleCommand(&params, c)
 		commands++
 	}
 	var ret []string
@@ -387,7 +264,8 @@ func tokeniseAndDispatchInput(m *hbot.Message, cardGetFunction CardGetter, rando
 
 // handleCommand takes in a message, splits it into words
 // and attempts to dispatch it to the correct handler.
-func handleCommand(message string, c chan string, cardGetFunction CardGetter, randomCardGetFunction RandomCardGetter) {
+func handleCommand(params *fryatogParams, c chan string) {
+	message := params.message
 	log.Debug("In handleCommand", "Message", message)
 	cardTokens := strings.Fields(message)
 	log.Debug("Done tokenising", "Tokens", cardTokens)
@@ -408,19 +286,19 @@ func handleCommand(message string, c chan string, cardGetFunction CardGetter, ra
 
 	case cardMetadataRegex.MatchString(message):
 		log.Debug("Metadata query")
-		c <- handleCardMetadataQuery(cardTokens[0], message, cardGetFunction)
+		c <- handleCardMetadataQuery(params, cardTokens[0])
 		return
 
 	case message == "random":
 		log.Debug("Asked for random card")
-		if card, err := getRandomCard(randomCardGetFunction); err == nil {
+		if card, err := getRandomCard(params.randomCardGetFunction); err == nil {
 			c <- card.formatCard()
 			return
 		}
 
 	default:
 		log.Debug("I think it's a card")
-		if card, err := findCard(cardTokens, cardGetFunction); err == nil {
+		if card, err := findCard(cardTokens, params.cardGetFunction); err == nil {
 			c <- card.formatCard()
 			return
 		}
@@ -430,35 +308,35 @@ func handleCommand(message string, c chan string, cardGetFunction CardGetter, ra
 	return
 }
 
-func handleCardMetadataQuery(command string, input string, cardGetFunction CardGetter) string {
+func handleCardMetadataQuery(params *fryatogParams, command string) string {
 	var (
 		err          error
 		rulingNumber int
 	)
 	if command == "reminder" {
-		c, err := findCard(strings.Fields(input)[1:], cardGetFunction)
+		c, err := findCard(strings.Fields(params.message)[1:], params.cardGetFunction)
 		if err != nil {
 			return "Card not found"
 		}
 		return c.getReminderTexts()
 	}
 	if command == "flavor" || command == "flavour" {
-		c, err := findCard(strings.Fields(input)[1:], cardGetFunction)
+		c, err := findCard(strings.Fields(params.message)[1:], params.cardGetFunction)
 		if err != nil {
 			return "Card not found"
 		}
 		return c.getFlavourText()
 	}
-	if gathererRulingRegex.MatchString(strings.SplitN(input, " ", 2)[1]) {
+	if gathererRulingRegex.MatchString(strings.SplitN(params.message, " ", 2)[1]) {
 		var cardName string
-		fass := gathererRulingRegex.FindAllStringSubmatch(strings.SplitN(input, " ", 2)[1], -1)
+		fass := gathererRulingRegex.FindAllStringSubmatch(strings.SplitN(params.message, " ", 2)[1], -1)
 		// One of these is guaranteed to contain the name
 		cardName = fass[0][2] + fass[0][3] + fass[0][5]
 		if len(cardName) == 0 {
-			log.Debug("In a Ruling Query", "Couldn't find card name", input)
+			log.Debug("In a Ruling Query", "Couldn't find card name", params.message)
 			return ""
 		}
-		if strings.HasPrefix(input, "ruling") {
+		if strings.HasPrefix(params.message, "ruling") {
 			// If there is no number, set to 0.
 			if fass[0][1] == "" && fass[0][4] == "" {
 				rulingNumber = 0
@@ -470,14 +348,15 @@ func handleCardMetadataQuery(command string, input string, cardGetFunction CardG
 			}
 		}
 		log.Debug("In a Ruling Query - Valid command detected", "Command", command, "Card Name", cardName, "Ruling No.", rulingNumber)
-		c, err := findCard(strings.Split(cardName, " "), cardGetFunction)
+		c, err := findCard(strings.Split(cardName, " "), params.cardGetFunction)
 		if err != nil {
 			return "Unable to find card"
 		}
 		return c.getRulings(rulingNumber)
 	}
 
-	return "RULING/FLAVOUR"
+	log.Warn("handleCardMetadataQuery - didn't know what to do", "command", command, "input", params.message)
+	return ""
 }
 
 func handleRulesQuery(input string) string {
@@ -559,69 +438,12 @@ func handleRulesQuery(input string) string {
 	return ""
 }
 
-func tryFindSeeMoreRule(input string) string {
-	if strings.Contains(input, "See rule") && !strings.Contains(input, "See rules") && !strings.Contains(input, "and rule") {
-		matches := seeRuleRegexp.FindAllStringSubmatch(input, -1)
-		if len(matches) > 0 {
-			return "\n" + handleRulesQuery(matches[0][1])
-		}
-	}
-	return ""
-}
-
-func tryFindBetterAbilityRule(ruleText, ruleNumber string) (string, string) {
-	var forceB bool
-	// 0) Exceptions: Landwalk, Forecast, Vigilance, Banding
-	switch ruleText {
-	case "Banding":
-		fallthrough
-	case "Landwalk":
-		subRuleCLabel := ruleNumber + "c"
-		subRuleC, ok := rules[subRuleCLabel]
-		if !ok {
-			log.Debug("In tryFindBetterAbilityRule", "There is no subrule C")
-			return ruleText, ruleNumber
-		}
-		subRuleCText := strings.Join(subRuleC, "")
-		return subRuleCText, subRuleCLabel
-	case "Forecast":
-		fallthrough
-	case "Vigilance":
-		forceB = true
-	}
-	// 1) If subrule a contains means and ends in Step."), take subrule a. This covers Rampage and Bushido.
-	subRuleALabel := ruleNumber + "a"
-	subRuleBLabel := ruleNumber + "b"
-	subRuleA, ok := rules[subRuleALabel]
-	if !ok {
-		log.Debug("In tryFindBetterAbilityRule", "There is no subrule A")
-		return ruleText, ruleNumber
-	}
-	subRuleAText := strings.Join(subRuleA, "")
-	if !forceB && strings.Contains(subRuleAText, "means") && strings.HasSuffix(subRuleAText, `Step.")`) {
-		return subRuleAText, subRuleALabel
-	}
-
-	// 2) If subrule a ends in ability. we should take subrule b. This covers the majority of your static and evasion abilities, except Landwalk, which has a useless a and mentions being a static ability in b.
-	if forceB || strings.HasSuffix(subRuleAText, "ability.") || strings.HasSuffix(subRuleAText, `Step.")`) {
-		subRuleB, ok := rules[subRuleBLabel]
-		if !ok {
-			log.Debug("In tryFindBetterAbilityRule", "There is no subrule B")
-			return subRuleAText, subRuleALabel
-		}
-		subRuleBText := strings.Join(subRuleB, "")
-		return subRuleBText, subRuleBLabel
-	}
-	// 3) Otherwise, just take subrule a
-	return subRuleAText, subRuleALabel
-}
-
 func findCard(cardTokens []string, cardGetFunction CardGetter) (Card, error) {
 	for _, rc := range reduceCardSentence(cardTokens) {
 		card, err := cardGetFunction(rc)
-		log.Debug("Card Func gave us", "CardID", card.ID, "Card", card, "Err", err)
+		log.Debug("Card Func gave us", "CardID", card.ID, "Err", err)
 		if err == nil {
-			log.Debug("Found card!", "Token", rc, "CardID", card.ID, "Object", card)
+			log.Debug("Found card!", "Token", rc, "CardID", card.ID)
 			return card, nil
 		}
 	}
@@ -631,7 +453,7 @@ func findCard(cardTokens []string, cardGetFunction CardGetter) (Card, error) {
 func getRandomCard(randomCardGetFunction RandomCardGetter) (Card, error) {
 	card, err := randomCardGetFunction()
 	if err == nil {
-		log.Debug("Found card!", "CardID", card.ID, "Object", card)
+		log.Debug("Found card!", "CardID", card.ID)
 		return card, nil
 	}
 	return Card{}, fmt.Errorf("Error retrieving random card")
@@ -660,6 +482,7 @@ func main() {
 	var err error
 	// Bail out of everything if we can't have the rules.
 	if err = importRules(false); err != nil {
+		log.Warn("Error importing the rules", "Err", err)
 		raven.CaptureErrorAndWait(err, nil)
 		panic(err)
 	}
@@ -667,25 +490,15 @@ func main() {
 	cardNames, err = importCardNames(false)
 	if err != nil {
 		log.Warn("Error fetching card names", "Err", err)
+		raven.CaptureErrorAndWait(err, nil)
 	}
 
 	// Initialise Cardname cache
 	nameToCardCache, err = lru.NewARC(2048)
 	if err != nil {
+		log.Warn("Error initialising the ARC", "Err", err)
 		raven.CaptureErrorAndWait(err, nil)
 		panic(err)
-	}
-	// Load existing cards if necessary
-	var cardsIn []Card
-	err = readGob(cardCacheGob, &cardsIn)
-	if err != nil {
-		log.Warn("Error importing dumped card cache", "Err", err)
-	}
-	log.Debug("Found previously cached cards", "Number", len(cardsIn))
-	for _, c := range cardsIn {
-		log.Debug("Adding card", "Name", c.Name)
-		nameToCardCache.Add(c.Name, c)
-		nameToCardCache.Add(normaliseCardName(c.Name), c)
 	}
 
 	hijackSession := func(bot *hbot.Bot) {
@@ -715,6 +528,8 @@ func main() {
 	}
 	if conf.DevMode {
 		log.Debug("DEBUG MODE")
+		// Make cache small in Debug mode, just for Volo
+		nameToCardCache, err = lru.NewARC(2)
 		whichChans = conf.DevChannels
 		whichNick = conf.DevNick
 		nonSSLServ := flag.String("server", "irc.freenode.net:6667", "hostname and port for irc server to connect to")
@@ -732,9 +547,23 @@ func main() {
 		panic(err)
 	}
 
+	// Load existing cards if necessary
+	var cardsIn []Card
+	err = readGob(cardCacheGob, &cardsIn)
+	if err != nil {
+		log.Warn("Error importing dumped card cache", "Err", err)
+		raven.CaptureErrorAndWait(err, nil)
+	}
+	log.Debug("Found previously cached cards", "Number", len(cardsIn))
+	for _, c := range cardsIn {
+		log.Debug("Adding card", "Name", c.Name)
+		nameToCardCache.Add(normaliseCardName(c.Name), c)
+	}
+
 	// Initialise per-channel recent cache
 	for _, channelName := range whichChans {
 		log.Debug("Initialising cache", "Channel name", channelName)
+		// Expires in 30 seconds, checks every 1 second
 		recentCacheMap[channelName] = cache.New(30*time.Second, 1*time.Second)
 	}
 
@@ -744,10 +573,12 @@ func main() {
 	bot.AddTrigger(greetingTrigger)
 	bot.Logger.SetHandler(log.StdoutHandler)
 
+	go dumpCardCacheTimer(&conf, nameToCardCache)
+
 	exitChan := getExitChannel()
 	go func() {
 		<-exitChan
-		dumpCardCache()
+		dumpCardCache(&conf, nameToCardCache)
 		// close(bot.Incoming) // This has a tendency to panic when messages are received on a closed channel
 		os.Exit(0) // Exit cleanly so we don't get autorestarted by supervisord. Also note https://github.com/golang/go/issues/24284
 	}()
