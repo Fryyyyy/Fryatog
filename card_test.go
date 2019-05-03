@@ -137,7 +137,7 @@ func TestPrintCard(t *testing.T) {
 		if err := json.NewDecoder(fi).Decode(&c); err != nil {
 			t.Errorf("Something went wrong parsing the card: %s", err)
 		}
-		fc := c.formatCard()
+		fc := c.formatCardForIRC()
 		if fc != table.output {
 			t.Errorf("Incorrect output -- got %s -- want %s", fc, table.output)
 		}
@@ -278,7 +278,7 @@ func TestGetPrintings(t *testing.T) {
 		if err = c.fakeGetMetadata(); err != nil {
 			t.Errorf("Unexpected error: %v", err)
 		}
-		fc := c.formatCard()
+		fc := c.formatCardForIRC()
 		if fc != table.output {
 			t.Errorf("Incorrect output -- got %s -- want %s", fc, table.output)
 		}
@@ -328,5 +328,21 @@ func TestCardCache(t *testing.T) {
 	cc, err = checkCacheForCard("faithless")
 	if diff := cmp.Diff(cc, faithlessLooting); diff != "" {
 		t.Errorf("Incorrect card (-want +got):\n%s", diff)
+	}
+}
+
+func TestReplaceManaCostForSlack(t *testing.T) {
+	tables := []struct {
+		inputmana  string
+		outputmana string
+	}{
+		{"{R}", ":mana-R:"},
+		{"{1}{B/P}{B/P}", ":mana-1::mana-BP::mana-BP:"},
+	}
+	for _, table := range tables {
+		got := replaceManaCostForSlack(table.inputmana)
+		if got != table.outputmana {
+			t.Errorf("Incorrect output -- got %s -- want %s", got, table.outputmana)
+		}
 	}
 }
