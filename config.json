@@ -1,0 +1,15 @@
+{
+    "DSN": "https://sentry.io",
+    "Password": "",
+    "DevMode": true,
+    "ProdChannels": [
+        "#magicjudges-rules",
+        "#magicjudges",
+        "##mtg"
+    ],
+    "DevChannels": [
+        "#frybottest"
+    ],
+    "ProdNick": "Fryatog",
+    "DevNick": "Fryatog-Dev"
+}
