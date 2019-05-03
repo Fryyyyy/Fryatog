@@ -672,7 +672,7 @@ var endOfWhoTrigger = hbot.Trigger{
 
 var greetingTrigger = hbot.Trigger{
 	Condition: func(bot *hbot.Bot, m *hbot.Message) bool {
-		return (m.Command == "PRIVMSG") && (greetingRegexp.MatchString(m.Content))
+		return (m.Command == "PRIVMSG") && (greetingRegexp.MatchString(m.Content)) && (strings.Contains(m.To, "-rules"))
 	},
 	Action: func(irc *hbot.Bot, m *hbot.Message) bool {
 		log.Debug("Got a greeting!", "From", m.From, "To", m.To, "Content", m.Content)
