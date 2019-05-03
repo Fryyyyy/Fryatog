@@ -114,7 +114,6 @@ func readGob(filePath string, object interface{}) error {
 }
 
 func dumpCardCache(conf *configuration, cache *lru.ARCCache) error {
-	// c = &cache
 	// Dump cache keys
 	log.Debug("Dumping card cache", "len", cache.Len())
 	var outCards []Card
@@ -186,16 +185,16 @@ func fetchRulesFile() error {
 
 func dumpCardCacheTimer(conf *configuration, cache *lru.ARCCache) {
 	for {
-		if err := dumpCardCache(conf, cache); err != nil {
-			log.Warn("Dump card cache timer", "Error", err)
-		}
 		// Override for Dev
 		if conf.DevMode {
-			log.Debug("Cache dumped, sleeping (short)")
+			log.Debug("Dumping cache, sleeping (short)")
 			time.Sleep(30 * time.Second)
 		} else {
-			log.Debug("Cache dumped, sleeping (long)")
+			log.Debug("Dumping cache, sleeping (long)")
 			time.Sleep(cacheDumpTimer)
+		}
+		if err := dumpCardCache(conf, cache); err != nil {
+			log.Warn("Dump card cache timer", "Error", err)
 		}
 	}
 }
