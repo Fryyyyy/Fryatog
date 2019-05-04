@@ -626,11 +626,7 @@ func main() {
 	go runSlack(rtm, slackClient)
 
 	// Start up bot (this blocks until we disconnect)
-	//bot.Run()
-	for {
-		time.Sleep(10 * time.Second)
-		log.Debug("Waking")
-	}
+	bot.Run()
 	fmt.Println("Bot shutting down.")
 }
 

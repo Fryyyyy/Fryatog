@@ -102,6 +102,11 @@ func importRules(forceFetch bool) error {
 				} else {
 					log.Warn("In scanner", "Got example without rule", line)
 				}
+			} else if strings.HasPrefix(line, "     ") {
+				log.Debug("In scanner", "Follow on rule?", line)
+				if lastRule != "" {
+					rules[lastRule] = append(rules[lastRule], " "+strings.TrimSpace(line))
+				}
 			} else {
 				// log.Debug("In scanner", "Rules mode: Ignored line", line)
 			}

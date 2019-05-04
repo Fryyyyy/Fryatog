@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	hbot "github.com/whyrusleeping/hellabot"
 )
 
@@ -125,11 +126,14 @@ func TestRules(t *testing.T) {
 		{"100.1a", []string{"A two-player game is a game that begins with only two players."}},
 		{"Absorb", []string{"\x02Absorb\x0F: A keyword ability that prevents damage. See rule 702.63, \"Absorb.\""}},
 		{"ex101.2", []string{`Example: If one effect reads "You may play an additional land this turn" and another reads "You can't play lands this turn," the effect that precludes you from playing lands wins.`}},
+		{"205.3i", []string{`Lands have their own unique set of subtypes; these subtypes are called land types. The land types are Desert, Forest, Gate, Island, Lair, Locus, Mine, Mountain, Plains, Power-Plant, Swamp, Tower, and Urza's.`, ` Of that list, Forest, Island, Mountain, Plains, and Swamp are the basic land types. See rule 305.6.`}},
+		{"205.4c", []string{`Any land with the supertype "basic" is a basic land. Any land that doesn't have this supertype is a nonbasic land, even if it has a basic land type.`, ` Cards printed in sets prior to the Eighth Edition core set didn't use the word "basic" to indicate a basic land. Cards from those sets with the following names are basic lands and have received errata in the Oracle card reference accordingly: Forest, Island, Mountain, Plains, Swamp, Snow-Covered Forest, Snow-Covered Island, Snow-Covered Mountain, Snow-Covered Plains, and Snow-Covered Swamp.`}},
+		{"509.1b", []string{`The defending player checks each creature they control to see whether it's affected by any restrictions (effects that say a creature can't block, or that it can't block unless some condition is met). If any restrictions are being disobeyed, the declaration of blockers is illegal.`, ` A restriction may be created by an evasion ability (a static ability an attacking creature has that restricts what can block it). If an attacking creature gains or loses an evasion ability after a legal block has been declared, it doesn't affect that block. Different evasion abilities are cumulative.`}},
 	}
 	for _, table := range tables {
 		got := rules[table.input]
-		if !reflect.DeepEqual(got, table.output) {
-			t.Errorf("Incorrect output -- got %s - want %s", got, table.output)
+		if diff := cmp.Diff(got, table.output); diff != "" {
+			t.Errorf("Incorrect output (-want +got):\n%s", diff)
 		}
 	}
 }
@@ -152,6 +156,7 @@ func TestGetRule(t *testing.T) {
 		{"rule 701.28", "\x02701.28a.\x0F Certain spells and abilities can detain a permanent. Until the next turn of the controller of that spell or ability, that permanent can't attack or block and its activated abilities can't be activated."},
 		{"702.21a", "\x02702.21a.\x0F Banding is a static ability that modifies the rules for combat."},
 		{"702.21", "\x02702.21c.\x0F As a player declares attackers, they may declare that one or more attacking creatures with banding and up to one attacking creature without banding (even if it has \"bands with other\") are all in a \"band.\" They may also declare that one or more attacking [quality] creatures with \"bands with other [quality]\" and any number of other attacking [quality] creatures are all in a band. A player may declare as many attacking bands as they want, but each creature may be a member of only one of them. (Defending players can't declare bands but may use banding in a different way; see rule 702.21j.)"},
+		{"509.1b", "\x02509.1b.\x0F The defending player checks each creature they control to see whether it's affected by any restrictions (effects that say a creature can't block, or that it can't block unless some condition is met). If any restrictions are being disobeyed, the declaration of blockers is illegal. A restriction may be created by an evasion ability (a static ability an attacking creature has that restricts what can block it). If an attacking creature gains or loses an evasion ability after a legal block has been declared, it doesn't affect that block. Different evasion abilities are cumulative."},
 		{"def Absorb", "\x02Absorb\x0F: A keyword ability that prevents damage. See rule 702.63, \"Absorb.\"\n\x02702.63a.\x0F Absorb is a static ability. \"Absorb N\" means \"If a source would deal damage to this creature, prevent N of that damage.\""},
 		{"define Absorb", "\x02Absorb\x0F: A keyword ability that prevents damage. See rule 702.63, \"Absorb.\"\n\x02702.63a.\x0F Absorb is a static ability. \"Absorb N\" means \"If a source would deal damage to this creature, prevent N of that damage.\""},
 		{"rule Absorb", "\x02Absorb\x0F: A keyword ability that prevents damage. See rule 702.63, \"Absorb.\"\n\x02702.63a.\x0F Absorb is a static ability. \"Absorb N\" means \"If a source would deal damage to this creature, prevent N of that damage.\""},
