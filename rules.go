@@ -3,10 +3,10 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
-	charmap "golang.org/x/text/encoding/charmap"
 	log "gopkg.in/inconshreveable/log15.v2"
 )
 
@@ -33,8 +33,11 @@ func importRules(forceFetch bool) error {
 		return err
 	}
 	// WOTC doesn't serve UTF-8. 😒
-	r := charmap.Windows1252.NewDecoder().Reader(f)
-	scanner := bufio.NewScanner(r)
+	//r := charmap.Windows1252.NewDecoder().Reader(f)
+	//scanner := bufio.NewScanner(f)
+
+	// OR DOES IT
+	reader := bufio.NewReader(f)
 	var (
 		metGlossary  bool
 		metCredits   bool
@@ -47,8 +50,16 @@ func importRules(forceFetch bool) error {
 	rules = make(map[string][]string)
 
 	// Begin rules parsing
-	for scanner.Scan() {
-		line := scanner.Text()
+	for {
+		line, err := reader.ReadString('\r')
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "reading standard input:", err)
+		}
+		line = strings.Replace(line, "\r", "", -1)
+		line = strings.Replace(line, "\n", "", -1)
 		if rulesMode && line == "" {
 			continue
 		}
@@ -58,6 +69,7 @@ func importRules(forceFetch bool) error {
 		line = strings.Replace(line, "’", `'`, -1)
 		// "Glossary" in the T.O.C
 		if line == "Glossary" {
+			// log.Debug("Glossary")
 			if !metGlossary {
 				metGlossary = true
 			} else {
@@ -65,6 +77,7 @@ func importRules(forceFetch bool) error {
 				rulesMode = false
 			}
 		} else if line == "Credits" {
+			// log.Debug("Credits")
 			if !metCredits {
 				metCredits = true
 			} else {
@@ -93,6 +106,7 @@ func importRules(forceFetch bool) error {
 				// log.Debug("In scanner", "Rules mode: Ignored line", line)
 			}
 		} else {
+			// log.Debug("In scanner", "Glossary mode:", line)
 			if line == "" {
 				lastGlossary = ""
 			} else if lastGlossary != "" {
@@ -101,9 +115,6 @@ func importRules(forceFetch bool) error {
 				lastGlossary = line
 			}
 		}
-	}
-	if err := scanner.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, "reading standard input:", err)
 	}
 	return nil
 }
