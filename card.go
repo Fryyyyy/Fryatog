@@ -366,6 +366,8 @@ func (card *Card) formatCardForSlack() string {
 				r = append(r, fmt.Sprintf("[%s]", cf.Loyalty))
 			}
 			modifiedOracleText := strings.Replace(replaceManaCostForSlack(cf.OracleText), "\n", " \\ ", -1)
+			modifiedOracleText = strings.Replace(modifiedOracleText, "(", "_(", -1)
+			modifiedOracleText = strings.Replace(modifiedOracleText, ")", ")_", -1)
 			r = append(r, modifiedOracleText)
 			s = append(s, strings.Join(r, " "))
 		}
@@ -387,6 +389,9 @@ func (card *Card) formatCardForSlack() string {
 		s = append(s, fmt.Sprintf("[%s]", card.Loyalty))
 	}
 	modifiedOracleText := strings.Replace(replaceManaCostForSlack(card.OracleText), "\n", " \\ ", -1)
+	// Change the open/closing parens of reminder text to also start and end italics
+	modifiedOracleText = strings.Replace(modifiedOracleText, "(", "_(", -1)
+	modifiedOracleText = strings.Replace(modifiedOracleText, ")", ")_", -1)
 	s = append(s, modifiedOracleText)
 	return strings.Join(s, " ")
 }

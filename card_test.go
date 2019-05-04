@@ -111,7 +111,7 @@ func (card *Card) fakeGetRulings(rulingNumber int) string {
 	return strings.Join(ret, "\n")
 }
 
-func TestPrintCard(t *testing.T) {
+func TestPrintCardForIRC(t *testing.T) {
 	tables := []struct {
 		cardname string
 		output   string
@@ -138,6 +138,39 @@ func TestPrintCard(t *testing.T) {
 			t.Errorf("Something went wrong parsing the card: %s", err)
 		}
 		fc := c.formatCardForIRC()
+		if fc != table.output {
+			t.Errorf("Incorrect output -- got %s -- want %s", fc, table.output)
+		}
+	}
+}
+
+func TestPrintCardForSlack(t *testing.T) {
+	tables := []struct {
+		cardname string
+		output   string
+	}{
+		{"Ponder", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=451051|Ponder>* :mana-U: · Sorcery · Look at the top three cards of your library, then put them back in any order. You may shuffle your library. \\ Draw a card."},
+		{"Shahrazad", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=980|Shahrazad>* :mana-W::mana-W: · Sorcery · Players play a Magic subgame, using their libraries as their decks. Each player who doesn't win the subgame loses half their life, rounded up."},
+		{"Jace, the Mind Sculptor", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=442051|Jace, the Mind Sculptor>* :mana-2::mana-U::mana-U: · Legendary Planeswalker — Jace · [3] +2: Look at the top card of target player's library. You may put that card on the bottom of that player's library. \\ 0: Draw three cards, then put two cards from your hand on top of your library in any order. \\ −1: Return target creature to its owner's hand. \\ −12: Exile all cards from target player's library, then that player shuffles their hand into their library."},
+		{"Expansion", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=452974|Expansion>* :mana-UR::mana-UR: · Instant · Copy target instant or sorcery spell with converted mana cost 4 or less. You may choose new targets for the copy.\n*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=452974|Explosion>* :mana-X::mana-U::mana-U::mana-R::mana-R: · Instant · Explosion deals X damage to any target. Target player draws X cards."},
+		{"Bushi Tenderfoot", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=78600|Bushi Tenderfoot>* :mana-W: · Creature — Human Soldier · 1/1 · When a creature dealt damage by Bushi Tenderfoot this turn dies, flip Bushi Tenderfoot.\n*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=78600|Kenzo the Hardhearted>* · Legendary Creature — Human Samurai · 3/4 · Double strike; bushido 2 _(Whenever this creature blocks or becomes blocked, it gets +2/+2 until end of turn.)_"},
+		{"Fleetwheel Cruiser", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=417787|Fleetwheel Cruiser>* :mana-4: · Artifact — Vehicle · 5/3 · Trample, haste \\ When Fleetwheel Cruiser enters the battlefield, it becomes an artifact creature until end of turn. \\ Crew 2 _(Tap any number of creatures you control with total power 2 or more: This Vehicle becomes an artifact creature until end of turn.)_"},
+		{"Nicol Bolas, the Arisen", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=447354|Nicol Bolas, the Ravager>* :mana-1::mana-U::mana-B::mana-R: · Legendary Creature — Elder Dragon · 4/4 · Flying \\ When Nicol Bolas, the Ravager enters the battlefield, each opponent discards a card. \\ :mana-4::mana-U::mana-B::mana-R:: Exile Nicol Bolas, the Ravager, then return him to the battlefield transformed under his owner's control. Activate this ability only any time you could cast a sorcery.\n*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=447354|Nicol Bolas, the Arisen>* · Legendary Planeswalker — Bolas · [Blue/Black/Red] · [7] +2: Draw two cards. \\ −3: Nicol Bolas, the Arisen deals 10 damage to target creature or planeswalker. \\ −4: Put target creature or planeswalker card from a graveyard onto the battlefield under your control. \\ −12: Exile all but the bottom card of target player's library."},
+		{"Dryad Arbor", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=136196|Dryad Arbor>* · Land Creature — Forest Dryad · 1/1 · [Green] · _(Dryad Arbor isn't a spell, it's affected by summoning sickness, and it has \":mana-T:: Add :mana-G:.\")_"},
+		{"Arlinn Kord", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=410007|Arlinn Kord>* :mana-2::mana-R::mana-G: · Legendary Planeswalker — Arlinn · [3] +1: Until end of turn, up to one target creature gets +2/+2 and gains vigilance and haste. \\ 0: Create a 2/2 green Wolf creature token. Transform Arlinn Kord.\n*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=410007|Arlinn, Embraced by the Moon>* · Legendary Planeswalker — Arlinn · [Red/Green] · +1: Creatures you control get +1/+1 and gain trample until end of turn. \\ −1: Arlinn, Embraced by the Moon deals 3 damage to any target. Transform Arlinn, Embraced by the Moon. \\ −6: You get an emblem with \"Creatures you control have haste and ':mana-T:: This creature deals damage equal to its power to any target.'\""},
+		{"Consign", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=430838|Consign>* :mana-1::mana-U: · Instant · Return target nonland permanent to its owner's hand.\n*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=430838|Oblivion>* :mana-4::mana-B: · Sorcery · Aftermath _(Cast this spell only from your graveyard. Then exile it.)_ \\ Target opponent discards two cards."},
+		{"Jace, Vryn's Prodigy", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=398434|Jace, Vryn's Prodigy>* :mana-1::mana-U: · Legendary Creature — Human Wizard · 0/2 · :mana-T:: Draw a card, then discard a card. If there are five or more cards in your graveyard, exile Jace, Vryn's Prodigy, then return him to the battlefield transformed under his owner's control.\n*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=398434|Jace, Telepath Unbound>* · Legendary Planeswalker — Jace · [Blue] · [5] +1: Up to one target creature gets -2/-0 until your next turn. \\ −3: You may cast target instant or sorcery card from your graveyard this turn. If that card would be put into your graveyard this turn, exile it instead. \\ −9: You get an emblem with \"Whenever you cast a spell, target opponent puts the top five cards of their library into their graveyard.\""},
+	}
+	for _, table := range tables {
+		fi, err := os.Open(RealCards[table.cardname])
+		if err != nil {
+			t.Errorf("Unable to open %v", RealCards[table.cardname])
+		}
+		var c Card
+		if err := json.NewDecoder(fi).Decode(&c); err != nil {
+			t.Errorf("Something went wrong parsing the card: %s", err)
+		}
+		fc := c.formatCardForSlack()
 		if fc != table.output {
 			t.Errorf("Incorrect output -- got %s -- want %s", fc, table.output)
 		}
