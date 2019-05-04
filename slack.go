@@ -9,7 +9,6 @@ import (
 
 func runSlack(rtm *slack.RTM, api *slack.Client) {
 	for msg := range rtm.IncomingEvents {
-		fmt.Print("Event Received: ")
 		switch ev := msg.Data.(type) {
 		case *slack.HelloEvent:
 			// Ignore hello
@@ -36,7 +35,9 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 			// rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("Got %v from %v", text, user.Name), ev.Msg.Channel))
 			toPrint := tokeniseAndDispatchInput(&fryatogParams{slackm: text}, getScryfallCard, getRandomScryfallCard)
 			for _, s := range sliceUniqMap(toPrint) {
-				rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("<@%v>: %v", user.ID, s), ev.Msg.Channel))
+				if s != "" {
+					rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("<@%v>: %v", user.ID, s), ev.Msg.Channel))
+				}
 			}
 
 		case *slack.PresenceChangeEvent:
