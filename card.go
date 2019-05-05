@@ -356,7 +356,7 @@ func (card *Card) formatCardForSlack() string {
 			}
 			r = append(r, fmt.Sprintf("· %s ·", cf.TypeLine))
 			if cf.Power != "" {
-				r = append(r, fmt.Sprintf("%s/%s ·", cf.Power, cf.Toughness))
+				r = append(r, fmt.Sprintf("%s/%s ·", strings.Replace(cf.Power, "*", "\xC2\xAD*", -1), strings.Replace(cf.Toughness, "*", "\xC2\xAD*", -1)))
 			}
 			if len(cf.ColorIndicators) > 0 {
 				formattedColorIndicator := standardiseColorIndicator(cf.ColorIndicators)
@@ -368,6 +368,7 @@ func (card *Card) formatCardForSlack() string {
 			modifiedOracleText := strings.Replace(replaceManaCostForSlack(cf.OracleText), "\n", " \\ ", -1)
 			modifiedOracleText = strings.Replace(modifiedOracleText, "(", "_(", -1)
 			modifiedOracleText = strings.Replace(modifiedOracleText, ")", ")_", -1)
+			modifiedOracleText = strings.Replace(modifiedOracleText, "*", "\xC2\xAD*", -1)
 			r = append(r, modifiedOracleText)
 			s = append(s, strings.Join(r, " "))
 		}
@@ -379,7 +380,7 @@ func (card *Card) formatCardForSlack() string {
 	}
 	s = append(s, fmt.Sprintf("· %s ·", card.TypeLine))
 	if card.Power != "" {
-		s = append(s, fmt.Sprintf("%s/%s ·", card.Power, card.Toughness))
+		s = append(s, fmt.Sprintf("%s/%s ·", strings.Replace(card.Power, "*", "\xC2\xAD*", -1), strings.Replace(card.Toughness, "*", "\xC2\xAD*", -1)))
 	}
 	if len(card.ColorIndicators) > 0 {
 		formattedColorIndicator := standardiseColorIndicator(card.ColorIndicators)
@@ -392,6 +393,7 @@ func (card *Card) formatCardForSlack() string {
 	// Change the open/closing parens of reminder text to also start and end italics
 	modifiedOracleText = strings.Replace(modifiedOracleText, "(", "_(", -1)
 	modifiedOracleText = strings.Replace(modifiedOracleText, ")", ")_", -1)
+	modifiedOracleText = strings.Replace(modifiedOracleText, "*", "\xC2\xAD*", -1)
 	s = append(s, modifiedOracleText)
 	return strings.Join(s, " ")
 }

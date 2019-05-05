@@ -1,0 +1,99 @@
+{
+    "object": "card",
+    "id": "42e56220-81c3-4440-9f97-8616d630a8ee",
+    "oracle_id": "45900b2f-f6a9-4c42-9642-008f3c1cf6dd",
+    "multiverse_ids": [
+      456783
+    ],
+    "mtgo_id": 70447,
+    "mtgo_foil_id": 70448,
+    "tcgplayer_id": 179491,
+    "name": "Tarmogoyf",
+    "lang": "en",
+    "released_at": "2018-12-07",
+    "uri": "https://api.scryfall.com/cards/42e56220-81c3-4440-9f97-8616d630a8ee",
+    "scryfall_uri": "https://scryfall.com/card/uma/187/tarmogoyf?utm_source=api",
+    "layout": "normal",
+    "highres_image": true,
+    "image_uris": {
+      "small": "https://img.scryfall.com/cards/small/front/4/2/42e56220-81c3-4440-9f97-8616d630a8ee.jpg?1547517874",
+      "normal": "https://img.scryfall.com/cards/normal/front/4/2/42e56220-81c3-4440-9f97-8616d630a8ee.jpg?1547517874",
+      "large": "https://img.scryfall.com/cards/large/front/4/2/42e56220-81c3-4440-9f97-8616d630a8ee.jpg?1547517874",
+      "png": "https://img.scryfall.com/cards/png/front/4/2/42e56220-81c3-4440-9f97-8616d630a8ee.png?1547517874",
+      "art_crop": "https://img.scryfall.com/cards/art_crop/front/4/2/42e56220-81c3-4440-9f97-8616d630a8ee.jpg?1547517874",
+      "border_crop": "https://img.scryfall.com/cards/border_crop/front/4/2/42e56220-81c3-4440-9f97-8616d630a8ee.jpg?1547517874"
+    },
+    "mana_cost": "{1}{G}",
+    "cmc": 2.0,
+    "type_line": "Creature — Lhurgoyf",
+    "oracle_text": "Tarmogoyf's power is equal to the number of card types among cards in all graveyards and its toughness is equal to that number plus 1.",
+    "power": "*",
+    "toughness": "1+*",
+    "colors": [
+      "G"
+    ],
+    "color_identity": [
+      "G"
+    ],
+    "legalities": {
+      "standard": "not_legal",
+      "future": "not_legal",
+      "frontier": "not_legal",
+      "modern": "legal",
+      "legacy": "legal",
+      "pauper": "not_legal",
+      "vintage": "legal",
+      "penny": "not_legal",
+      "commander": "legal",
+      "duel": "legal",
+      "oldschool": "not_legal"
+    },
+    "games": [
+      "mtgo",
+      "paper"
+    ],
+    "reserved": false,
+    "foil": true,
+    "nonfoil": true,
+    "oversized": false,
+    "promo": false,
+    "reprint": true,
+    "set": "uma",
+    "set_name": "Ultimate Masters",
+    "set_uri": "https://api.scryfall.com/sets/2ec77b94-6d47-4891-a480-5d0b4e5c9372",
+    "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Auma&unique=prints",
+    "scryfall_set_uri": "https://scryfall.com/sets/uma?utm_source=api",
+    "rulings_uri": "https://api.scryfall.com/cards/42e56220-81c3-4440-9f97-8616d630a8ee/rulings",
+    "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A45900b2f-f6a9-4c42-9642-008f3c1cf6dd&unique=prints",
+    "collector_number": "187",
+    "digital": false,
+    "rarity": "mythic",
+    "flavor_text": "What doesn't grow, dies. And what dies grows the tarmogoyf.",
+    "illustration_id": "c32c2488-d604-46ad-b8bc-62782ff1f222",
+    "artist": "Filip Burburan",
+    "border_color": "black",
+    "frame": "2015",
+    "full_art": false,
+    "story_spotlight": false,
+    "edhrec_rank": 7849,
+    "usd": "43.70",
+    "eur": "41.19",
+    "tix": "12.27",
+    "prices": {
+      "usd": "43.70",
+      "usd_foil": "71.15",
+      "eur": "41.19",
+      "tix": "12.27"
+    },
+    "related_uris": {
+      "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=456783",
+      "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Tarmogoyf&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "edhrec": "http://edhrec.com/route/?cc=Tarmogoyf",
+      "mtgtop8": "http://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Tarmogoyf"
+    },
+    "purchase_uris": {
+      "tcgplayer": "https://shop.tcgplayer.com/magic/ultimate-masters/tarmogoyf?partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+      "cardmarket": "https://www.cardmarket.com/en/Magic/Products/Singles/Ultimate-Masters/Tarmogoyf?referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+      "cardhoarder": "https://www.cardhoarder.com/cards/70447?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    }
+  }

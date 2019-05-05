@@ -39,6 +39,7 @@ var (
 		"Jace, Vryn's Prodigy":    "test_data/jacevrynsprodigy.json",
 		"Mairsil, the Pretender":  "test_data/mairsil.json",
 		"Ral, Storm Conduit":      "test_data/ralstormconduit.json",
+		"Tarmogoyf":               "test_data/tarmogoyf.json",
 	}
 )
 
@@ -160,6 +161,7 @@ func TestPrintCardForSlack(t *testing.T) {
 		{"Arlinn Kord", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=410007|Arlinn Kord>* :mana-2::mana-R::mana-G: · Legendary Planeswalker — Arlinn · [3] +1: Until end of turn, up to one target creature gets +2/+2 and gains vigilance and haste. \\ 0: Create a 2/2 green Wolf creature token. Transform Arlinn Kord.\n*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=410007|Arlinn, Embraced by the Moon>* · Legendary Planeswalker — Arlinn · [Red/Green] · +1: Creatures you control get +1/+1 and gain trample until end of turn. \\ −1: Arlinn, Embraced by the Moon deals 3 damage to any target. Transform Arlinn, Embraced by the Moon. \\ −6: You get an emblem with \"Creatures you control have haste and ':mana-T:: This creature deals damage equal to its power to any target.'\""},
 		{"Consign", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=430838|Consign>* :mana-1::mana-U: · Instant · Return target nonland permanent to its owner's hand.\n*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=430838|Oblivion>* :mana-4::mana-B: · Sorcery · Aftermath _(Cast this spell only from your graveyard. Then exile it.)_ \\ Target opponent discards two cards."},
 		{"Jace, Vryn's Prodigy", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=398434|Jace, Vryn's Prodigy>* :mana-1::mana-U: · Legendary Creature — Human Wizard · 0/2 · :mana-T:: Draw a card, then discard a card. If there are five or more cards in your graveyard, exile Jace, Vryn's Prodigy, then return him to the battlefield transformed under his owner's control.\n*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=398434|Jace, Telepath Unbound>* · Legendary Planeswalker — Jace · [Blue] · [5] +1: Up to one target creature gets -2/-0 until your next turn. \\ −3: You may cast target instant or sorcery card from your graveyard this turn. If that card would be put into your graveyard this turn, exile it instead. \\ −9: You get an emblem with \"Whenever you cast a spell, target opponent puts the top five cards of their library into their graveyard.\""},
+		{"Tarmogoyf", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=456783|Tarmogoyf>* :mana-1::mana-G: · Creature — Lhurgoyf · \xC2\xAD*/1+\xC2\xAD* · Tarmogoyf's power is equal to the number of card types among cards in all graveyards and its toughness is equal to that number plus 1."},
 	}
 	for _, table := range tables {
 		fi, err := os.Open(RealCards[table.cardname])
