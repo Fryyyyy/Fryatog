@@ -11,5 +11,7 @@
         "#frybottest"
     ],
     "ProdNick": "Fryatog",
-    "DevNick": "Fryatog-Dev"
+    "DevNick": "Fryatog-Dev",
+    "SlackTokens": [
+     ]
 }

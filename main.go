@@ -28,13 +28,13 @@ type configuration struct {
 	DevChannels  []string `json:"DevChannels"`
 	ProdNick     string   `json:"ProdNick"`
 	DevNick      string   `json:"DevNick"`
-	SlackToken   string   `json:"SlackToken"`
+	SlackTokens  []string `json:"SlackTokens"`
 }
 
 var (
-	bot         *hbot.Bot
-	conf        configuration
-	slackClient *slack.Client
+	bot          *hbot.Bot
+	conf         configuration
+	slackClients []*slack.Client
 
 	// Caches
 	nameToCardCache      *lru.ARCCache
@@ -562,7 +562,9 @@ func main() {
 		nick := flag.String("nick", conf.DevNick, "nickname for the bot")
 		bot, err = hbot.NewBot(*nonSSLServ, *nick, hijackSession, devChannels, noSSLOptions, timeOut)
 
-		slackClient = slack.New(conf.SlackToken, slack.OptionDebug(true))
+		for _, sc := range conf.SlackTokens {
+			slackClients = append(slackClients, slack.New(sc, slack.OptionDebug(true)))
+		}
 	} else {
 		whichChans = conf.ProdChannels
 		whichNick = conf.ProdNick
@@ -570,7 +572,10 @@ func main() {
 		nick := flag.String("nick", conf.ProdNick, "nickname for the bot")
 		bot, err = hbot.NewBot(*sslServ, *nick, noHijackSession, prodChannels, yesSSLOptions, saslOptions, timeOut)
 
-		slackClient = slack.New(conf.SlackToken)
+		for _, sc := range conf.SlackTokens {
+			slackClients = append(slackClients, slack.New(sc))
+		}
+
 	}
 	if err != nil {
 		raven.CaptureErrorAndWait(err, nil)
@@ -621,12 +626,17 @@ func main() {
 	}()
 
 	// Start Slack stuff
-	rtm := slackClient.NewRTM()
-	go rtm.ManageConnection()
-	go runSlack(rtm, slackClient)
+	for _, scs := range slackClients {
+		rtm := scs.NewRTM()
+		go rtm.ManageConnection()
+		go runSlack(rtm, scs)
+	}
 
+	for {
+		time.Sleep(30 * time.Second)
+	}
 	// Start up bot (this blocks until we disconnect)
-	bot.Run()
+	//bot.Run()
 	fmt.Println("Bot shutting down.")
 }
 
