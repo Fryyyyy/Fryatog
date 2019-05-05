@@ -108,7 +108,7 @@ func readGob(filePath string, object interface{}) error {
 	if err == nil {
 		decoder := gob.NewDecoder(file)
 		err = decoder.Decode(object)
-		log.Debug("readGOB", "Object", object)
+		// log.Debug("readGOB", "Object", object)
 	}
 	file.Close()
 	return err

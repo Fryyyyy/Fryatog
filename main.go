@@ -591,7 +591,7 @@ func main() {
 	}
 	log.Debug("Found previously cached cards", "Number", len(cardsIn))
 	for _, c := range cardsIn {
-		log.Debug("Adding card", "Name", c.Name)
+		// log.Debug("Adding card", "Name", c.Name)
 		nameToCardCache.Add(normaliseCardName(c.Name), c)
 	}
 
@@ -632,11 +632,8 @@ func main() {
 		go runSlack(rtm, scs)
 	}
 
-	for {
-		time.Sleep(30 * time.Second)
-	}
 	// Start up bot (this blocks until we disconnect)
-	//bot.Run()
+	bot.Run()
 	fmt.Println("Bot shutting down.")
 }
 
