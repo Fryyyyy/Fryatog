@@ -58,10 +58,8 @@ type CardRulingResult struct {
 	Data    []CardRuling `json:"data"`
 }
 
-// CardFace represents the individual information for each face of a DFC
-type CardFace struct {
-	Object          string   `json:"object"`
-	Name            string   `json:"name"`
+// CommonCard stores the things common to both Card and CardFaces
+type CommonCard struct {
 	ManaCost        string   `json:"mana_cost"`
 	TypeLine        string   `json:"type_line"`
 	ColorIndicators []string `json:"color_indicator"`
@@ -69,13 +67,21 @@ type CardFace struct {
 	Power           string   `json:"power"`
 	Toughness       string   `json:"toughness"`
 	Loyalty         string   `json:"loyalty"`
-	Watermark       string   `json:"watermark"`
-	Artist          string   `json:"artist"`
-	IllustrationID  string   `json:"illustration_id,omitempty"`
+}
+
+// CardFace represents the individual information for each face of a DFC
+type CardFace struct {
+	CommonCard
+	Object         string `json:"object"`
+	Name           string `json:"name"`
+	Watermark      string `json:"watermark"`
+	Artist         string `json:"artist"`
+	IllustrationID string `json:"illustration_id,omitempty"`
 }
 
 // Card represents the JSON returned by the /cards Scryfall API
 type Card struct {
+	CommonCard
 	Object        string `json:"object"`
 	ID            string `json:"id"`
 	OracleID      string `json:"oracle_id"`
@@ -98,18 +104,11 @@ type Card struct {
 		ArtCrop    string `json:"art_crop"`
 		BorderCrop string `json:"border_crop"`
 	} `json:"image_uris"`
-	ManaCost        string     `json:"mana_cost"`
-	Cmc             float32    `json:"cmc"`
-	TypeLine        string     `json:"type_line"`
-	OracleText      string     `json:"oracle_text"`
-	Power           string     `json:"power"`
-	Toughness       string     `json:"toughness"`
-	Loyalty         string     `json:"loyalty"`
-	Colors          []string   `json:"colors"`
-	ColorIndicators []string   `json:"color_indicator"`
-	ColorIdentity   []string   `json:"color_identity"`
-	CardFaces       []CardFace `json:"card_faces"`
-	Legalities      struct {
+	Cmc           float32    `json:"cmc"`
+	Colors        []string   `json:"colors"`
+	ColorIdentity []string   `json:"color_identity"`
+	CardFaces     []CardFace `json:"card_faces"`
+	Legalities    struct {
 		Standard  string `json:"standard"`
 		Future    string `json:"future"`
 		Frontier  string `json:"frontier"`
@@ -345,6 +344,59 @@ func (card *Card) formatLegalities() string {
 	return strings.Join(ret, ",")
 }
 
+func (cc CommonCard) getCardOrFaceAsString(mode string) []string {
+	slack := (mode == "slack")
+	irc := (mode == "irc")
+	if !slack && !irc {
+		log.Warn("In GCOFAS -- Unknown mode", "Mode", mode)
+		return []string{"UNKNOWN MODE"}
+	}
+	var r []string
+	// Mana Cost
+	if cc.ManaCost != "" {
+		if slack {
+			r = append(r, replaceManaCostForSlack(cc.ManaCost))
+		} else if irc {
+			r = append(r, formatManaCost(cc.ManaCost))
+		}
+	}
+	// Type Line
+	r = append(r, fmt.Sprintf("· %s ·", cc.TypeLine))
+	// P/T
+	if cc.Power != "" {
+		if slack {
+			r = append(r, fmt.Sprintf("%s/%s ·", strings.Replace(cc.Power, "*", "\xC2\xAD*", -1), strings.Replace(cc.Toughness, "*", "\xC2\xAD*", -1)))
+		} else if irc {
+			r = append(r, fmt.Sprintf("%s/%s ·", cc.Power, cc.Toughness))
+		}
+	}
+	// CIs
+	if len(cc.ColorIndicators) > 0 {
+		r = append(r, fmt.Sprintf("%s ·", standardiseColorIndicator(cc.ColorIndicators)))
+	}
+	// Loyalty
+	if cc.Loyalty != "" {
+		r = append(r, fmt.Sprintf("[%s]", cc.Loyalty))
+	}
+	// OracleText
+	if cc.OracleText != "" {
+		var modifiedOracleText string
+		if slack {
+			modifiedOracleText = strings.Replace(replaceManaCostForSlack(cc.OracleText), "\n", " \\ ", -1)
+			modifiedOracleText = strings.Replace(modifiedOracleText, "(", "_(", -1)
+			modifiedOracleText = strings.Replace(modifiedOracleText, ")", ")_", -1)
+			modifiedOracleText = strings.Replace(modifiedOracleText, "*", "\xC2\xAD*", -1)
+		} else if irc {
+			modifiedOracleText = strings.Replace(cc.OracleText, "\n", " \\ ", -1)
+			// Change the open/closing parens of reminder text to also start and end italics
+			modifiedOracleText = strings.Replace(modifiedOracleText, "(", "\x1D(", -1)
+			modifiedOracleText = strings.Replace(modifiedOracleText, ")", ")\x0F", -1)
+		}
+		r = append(r, modifiedOracleText)
+	}
+	return r
+}
+
 func (card *Card) formatCardForSlack() string {
 	var s []string
 	if len(card.CardFaces) > 0 {
@@ -355,25 +407,7 @@ func (card *Card) formatCardForSlack() string {
 			} else {
 				r = append(r, fmt.Sprintf("*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=%v|%v>*", card.MultiverseIds[0], cf.Name))
 			}
-			if cf.ManaCost != "" {
-				r = append(r, replaceManaCostForSlack(cf.ManaCost))
-			}
-			r = append(r, fmt.Sprintf("· %s ·", cf.TypeLine))
-			if cf.Power != "" {
-				r = append(r, fmt.Sprintf("%s/%s ·", strings.Replace(cf.Power, "*", "\xC2\xAD*", -1), strings.Replace(cf.Toughness, "*", "\xC2\xAD*", -1)))
-			}
-			if len(cf.ColorIndicators) > 0 {
-				formattedColorIndicator := standardiseColorIndicator(cf.ColorIndicators)
-				r = append(r, fmt.Sprintf("%s ·", formattedColorIndicator))
-			}
-			if cf.Loyalty != "" {
-				r = append(r, fmt.Sprintf("[%s]", cf.Loyalty))
-			}
-			modifiedOracleText := strings.Replace(replaceManaCostForSlack(cf.OracleText), "\n", " \\ ", -1)
-			modifiedOracleText = strings.Replace(modifiedOracleText, "(", "_(", -1)
-			modifiedOracleText = strings.Replace(modifiedOracleText, ")", ")_", -1)
-			modifiedOracleText = strings.Replace(modifiedOracleText, "*", "\xC2\xAD*", -1)
-			r = append(r, modifiedOracleText)
+			r = append(r, cf.CommonCard.getCardOrFaceAsString("slack")...)
 			s = append(s, strings.Join(r, " "))
 		}
 		return strings.Join(s, "\n")
@@ -384,27 +418,7 @@ func (card *Card) formatCardForSlack() string {
 	} else {
 		s = append(s, fmt.Sprintf("*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=%v|%v>*", card.MultiverseIds[0], card.Name))
 	}
-
-	if card.ManaCost != "" {
-		s = append(s, replaceManaCostForSlack(card.ManaCost))
-	}
-	s = append(s, fmt.Sprintf("· %s ·", card.TypeLine))
-	if card.Power != "" {
-		s = append(s, fmt.Sprintf("%s/%s ·", strings.Replace(card.Power, "*", "\xC2\xAD*", -1), strings.Replace(card.Toughness, "*", "\xC2\xAD*", -1)))
-	}
-	if len(card.ColorIndicators) > 0 {
-		formattedColorIndicator := standardiseColorIndicator(card.ColorIndicators)
-		s = append(s, fmt.Sprintf("%s ·", formattedColorIndicator))
-	}
-	if strings.Contains(card.TypeLine, "Planeswalker") {
-		s = append(s, fmt.Sprintf("[%s]", card.Loyalty))
-	}
-	modifiedOracleText := strings.Replace(replaceManaCostForSlack(card.OracleText), "\n", " \\ ", -1)
-	// Change the open/closing parens of reminder text to also start and end italics
-	modifiedOracleText = strings.Replace(modifiedOracleText, "(", "_(", -1)
-	modifiedOracleText = strings.Replace(modifiedOracleText, ")", ")_", -1)
-	modifiedOracleText = strings.Replace(modifiedOracleText, "*", "\xC2\xAD*", -1)
-	s = append(s, modifiedOracleText)
+	s = append(s, card.CommonCard.getCardOrFaceAsString("slack")...)
 	return strings.Join(s, " ")
 }
 
@@ -416,61 +430,19 @@ func (card *Card) formatCardForIRC() string {
 			var r []string
 			// Bold card name
 			r = append(r, fmt.Sprintf("\x02%s\x0F", cf.Name))
-			if cf.ManaCost != "" {
-				r = append(r, formatManaCost(cf.ManaCost))
-			}
-			r = append(r, fmt.Sprintf("· %s ·", cf.TypeLine))
-			if cf.Power != "" {
-				r = append(r, fmt.Sprintf("%s/%s ·", cf.Power, cf.Toughness))
-			}
-			if len(cf.ColorIndicators) > 0 {
-				formattedColorIndicator := standardiseColorIndicator(cf.ColorIndicators)
-				r = append(r, fmt.Sprintf("%s ·", formattedColorIndicator))
-			}
-			if cf.Loyalty != "" {
-				r = append(r, fmt.Sprintf("[%s]", cf.Loyalty))
-			}
-
-			modifiedOracleText := strings.Replace(cf.OracleText, "\n", " \\ ", -1)
-			// Change the open/closing parens of reminder text to also start and end italics
-			modifiedOracleText = strings.Replace(modifiedOracleText, "(", "\x1D(", -1)
-			modifiedOracleText = strings.Replace(modifiedOracleText, ")", ")\x0F", -1)
-
-			r = append(r, modifiedOracleText)
+			r = append(r, cf.CommonCard.getCardOrFaceAsString("irc")...)
 			if cf.ManaCost != "" {
 				r = append(r, fmt.Sprintf("· %s ·", card.formatExpansions()))
 				r = append(r, card.formatLegalities())
 			}
-
 			s = append(s, strings.Join(r, " "))
 		}
 		return strings.Join(s, "\n")
 	}
+
 	// Normal card
 	s = append(s, fmt.Sprintf("\x02%s\x0F", card.Name))
-	if card.ManaCost != "" {
-		s = append(s, formatManaCost(card.ManaCost))
-	}
-	s = append(s, fmt.Sprintf("· %s ·", card.TypeLine))
-	// P/T or Loyalty or Nothing
-	if card.Power != "" {
-		s = append(s, fmt.Sprintf("%s/%s ·", card.Power, card.Toughness))
-	}
-	if len(card.ColorIndicators) > 0 {
-		formattedColorIndicator := standardiseColorIndicator(card.ColorIndicators)
-		s = append(s, fmt.Sprintf("%s ·", formattedColorIndicator))
-	}
-	if strings.Contains(card.TypeLine, "Planeswalker") {
-		s = append(s, fmt.Sprintf("[%s]", card.Loyalty))
-	}
-
-	// Change linebreaks to \\
-	modifiedOracleText := strings.Replace(card.OracleText, "\n", " \\ ", -1)
-	// Change the open/closing parens of reminder text to also start and end italics
-	modifiedOracleText = strings.Replace(modifiedOracleText, "(", "\x1D(", -1)
-	modifiedOracleText = strings.Replace(modifiedOracleText, ")", ")\x0F", -1)
-
-	s = append(s, modifiedOracleText)
+	s = append(s, card.CommonCard.getCardOrFaceAsString("irc")...)
 	s = append(s, fmt.Sprintf("· %s ·", card.formatExpansions()))
 	s = append(s, card.formatLegalities())
 

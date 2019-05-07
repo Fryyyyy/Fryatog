@@ -68,8 +68,8 @@ func TestTokens(t *testing.T) {
 		t.Errorf("Didn't expect an error -- got %v", err)
 	}
 	var emptyStringSlice []string
-	var testCardExpected = "\x02CARD\x0F ·  ·  · TESTSET-T · "
-	var testRandomCardExpected = "\x02RANDOMCARD\x0F ·  ·  · RANDOMTESTSET-R · "
+	var testCardExpected = "\x02CARD\x0F ·  · · TESTSET-T · "
+	var testRandomCardExpected = "\x02RANDOMCARD\x0F ·  · · RANDOMTESTSET-R · "
 	tables := []struct {
 		input  string
 		output []string
