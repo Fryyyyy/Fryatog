@@ -374,7 +374,13 @@ func (card *Card) formatCardForSlack() string {
 		}
 		return strings.Join(s, "\n")
 	}
-	s = append(s, fmt.Sprintf("*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=%v|%v>*", card.MultiverseIds[0], card.Name))
+
+	if len(card.MultiverseIds) == 0 {
+		s = append(s, fmt.Sprintf("*%s*", card.Name))
+	} else {
+		s = append(s, fmt.Sprintf("*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=%v|%v>*", card.MultiverseIds[0], card.Name))
+	}
+
 	if card.ManaCost != "" {
 		s = append(s, replaceManaCostForSlack(card.ManaCost))
 	}
