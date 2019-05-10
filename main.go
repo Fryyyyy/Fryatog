@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/algolia/algoliasearch-client-go/algolia/search"
 	raven "github.com/getsentry/raven-go"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/nlopes/slack"
@@ -29,6 +30,13 @@ type configuration struct {
 	ProdNick     string   `json:"ProdNick"`
 	DevNick      string   `json:"DevNick"`
 	SlackTokens  []string `json:"SlackTokens"`
+	Hearthstone  struct {
+		AppID     string `json:"AppID"`
+		APIToken  string `json:"APIToken"`
+		IndexName string `json:"IndexName"`
+	} `json:"Hearthstone"`
+	IRC   bool `json:"IRC"`
+	Slack bool `json:"Slack"`
 }
 
 var (
@@ -57,6 +65,10 @@ var (
 
 	// How often to dump the card cache
 	cacheDumpTimer = 10 * time.Minute
+
+	// Hearthstone clients
+	hsClient *search.Client
+	hsIndex  *search.Index
 )
 
 // Is there a stable URL that always points to a text version of the most up to date CR ?
@@ -294,6 +306,11 @@ func handleCommand(params *fryatogParams, c chan string) {
 		c <- printHelp()
 		return
 
+	case cardTokens[0] == "hs" && !params.isIRC:
+		log.Debug("Slack-based Hearthstone Query", "Input", message)
+		c <- handleHearthstoneQuery(cardTokens[1:])
+		return
+
 	case ruleRegexp.MatchString(message),
 		strings.HasPrefix(message, "def "),
 		strings.HasPrefix(message, "define "):
@@ -320,7 +337,6 @@ func handleCommand(params *fryatogParams, c chan string) {
 	default:
 		log.Debug("I think it's a card")
 		if card, err := findCard(cardTokens, params.cardGetFunction); err == nil {
-			log.Debug("Got ye card", "IRC?", params.isIRC)
 			if params.isIRC {
 				c <- card.formatCardForIRC()
 			} else {
@@ -608,6 +624,10 @@ func main() {
 		}
 	}
 
+	// Initialise Hearthstone card search engine
+	hsClient = search.NewClient(conf.Hearthstone.AppID, conf.Hearthstone.APIToken)
+	hsIndex = hsClient.InitIndex(conf.Hearthstone.IndexName)
+
 	bot.AddTrigger(mainTrigger)
 	bot.AddTrigger(whoTrigger)
 	bot.AddTrigger(endOfWhoTrigger)
@@ -626,14 +646,23 @@ func main() {
 	}()
 
 	// Start Slack stuff
-	for _, scs := range slackClients {
-		rtm := scs.NewRTM()
-		go rtm.ManageConnection()
-		go runSlack(rtm, scs)
+	if conf.Slack {
+		for _, scs := range slackClients {
+			rtm := scs.NewRTM()
+			go rtm.ManageConnection()
+			go runSlack(rtm, scs)
+		}
 	}
 
 	// Start up bot (this blocks until we disconnect)
-	bot.Run()
+	if conf.IRC {
+		bot.Run()
+	} else {
+		// Gotta main loop
+		for {
+			time.Sleep(1 * time.Minute)
+		}
+	}
 	fmt.Println("Bot shutting down.")
 }
 
