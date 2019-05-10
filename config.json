@@ -13,5 +13,10 @@
     "ProdNick": "Fryatog",
     "DevNick": "Fryatog-Dev",
     "SlackTokens": [
-     ]
+     ],
+    "Hearthstone": {
+        "AppID": "",
+        "APIToken": "",
+        "IndexName": ""
+    }
 }

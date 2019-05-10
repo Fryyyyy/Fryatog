@@ -29,6 +29,11 @@ type configuration struct {
 	ProdNick     string   `json:"ProdNick"`
 	DevNick      string   `json:"DevNick"`
 	SlackTokens  []string `json:"SlackTokens"`
+	Hearthstone  struct {
+		AppID     string `json:"AppID"`
+		APIToken  string `json:"APIToken"`
+		IndexName string `json:"IndexName"`
+	} `json:"Hearthstone"`
 }
 
 var (
