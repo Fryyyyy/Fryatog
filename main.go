@@ -35,6 +35,8 @@ type configuration struct {
 		APIToken  string `json:"APIToken"`
 		IndexName string `json:"IndexName"`
 	} `json:"Hearthstone"`
+	IRC   bool `json:"IRC"`
+	Slack bool `json:"Slack"`
 }
 
 var (
@@ -644,14 +646,23 @@ func main() {
 	}()
 
 	// Start Slack stuff
-	for _, scs := range slackClients {
-		rtm := scs.NewRTM()
-		go rtm.ManageConnection()
-		go runSlack(rtm, scs)
+	if conf.Slack {
+		for _, scs := range slackClients {
+			rtm := scs.NewRTM()
+			go rtm.ManageConnection()
+			go runSlack(rtm, scs)
+		}
 	}
 
 	// Start up bot (this blocks until we disconnect)
-	bot.Run()
+	if conf.IRC {
+		bot.Run()
+	} else {
+		// Gotta main loop
+		for {
+			time.Sleep(1 * time.Minute)
+		}
+	}
 	fmt.Println("Bot shutting down.")
 }
 
