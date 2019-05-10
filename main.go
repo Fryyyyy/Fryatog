@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/algolia/algoliasearch-client-go/algolia/search"
 	raven "github.com/getsentry/raven-go"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/nlopes/slack"
@@ -62,6 +63,10 @@ var (
 
 	// How often to dump the card cache
 	cacheDumpTimer = 10 * time.Minute
+
+	// Hearthstone clients
+	hsClient *search.Client
+	hsIndex  *search.Index
 )
 
 // Is there a stable URL that always points to a text version of the most up to date CR ?
@@ -299,6 +304,11 @@ func handleCommand(params *fryatogParams, c chan string) {
 		c <- printHelp()
 		return
 
+	case cardTokens[0] == "hs" && !params.isIRC:
+		log.Debug("Slack-based Hearthstone Query", "Input", message)
+		c <- handleHearthstoneQuery(cardTokens[1:])
+		return
+
 	case ruleRegexp.MatchString(message),
 		strings.HasPrefix(message, "def "),
 		strings.HasPrefix(message, "define "):
@@ -325,7 +335,6 @@ func handleCommand(params *fryatogParams, c chan string) {
 	default:
 		log.Debug("I think it's a card")
 		if card, err := findCard(cardTokens, params.cardGetFunction); err == nil {
-			log.Debug("Got ye card", "IRC?", params.isIRC)
 			if params.isIRC {
 				c <- card.formatCardForIRC()
 			} else {
@@ -612,6 +621,10 @@ func main() {
 			recentPeopleCacheMap[channelName] = cache.New(30*time.Second, 1*time.Second)
 		}
 	}
+
+	// Initialise Hearthstone card search engine
+	hsClient = search.NewClient(conf.Hearthstone.AppID, conf.Hearthstone.APIToken)
+	hsIndex = hsClient.InitIndex(conf.Hearthstone.IndexName)
 
 	bot.AddTrigger(mainTrigger)
 	bot.AddTrigger(whoTrigger)

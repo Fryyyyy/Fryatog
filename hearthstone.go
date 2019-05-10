@@ -4,8 +4,19 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/algolia/algoliasearch-client-go/algolia/search"
+	log "gopkg.in/inconshreveable/log15.v2"
 )
+
+func handleHearthstoneQuery(cardTokens []string) string {
+	for _, rc := range reduceCardSentence(cardTokens) {
+		card, err := searchHSCard(rc)
+		log.Debug("HS Card Func gave us", "CardID", card, "Err", err)
+		if err == nil {
+			return card
+		}
+	}
+	return ""
+}
 
 func formatHSCard(i map[string]interface{}) string {
 	var r []string
@@ -38,9 +49,7 @@ func formatHSCard(i map[string]interface{}) string {
 }
 
 func searchHSCard(input string) (string, error) {
-	client := search.NewClient(conf.Hearthstone.AppID, conf.Hearthstone.APIToken)
-	index := client.InitIndex(conf.Hearthstone.IndexName)
-	res, err := index.Search(input, nil)
+	res, err := hsIndex.Search(input, nil)
 	if err != nil {
 		return "", err
 	}
