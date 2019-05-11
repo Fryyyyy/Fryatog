@@ -19,6 +19,7 @@ const namesFile = "names.json"
 const scryfallNamesAPIURL = "https://api.scryfall.com/catalog/card-names"
 const scryfallFuzzyAPIURL = "https://api.scryfall.com/cards/named?fuzzy=%s"
 const scryfallRandomAPIURL = "https://api.scryfall.com/cards/random"
+const scryfallSearchAPIURL = "https://api.scryfall.com/cards/search"
 
 // TODO: Also CardFaces
 func (card *Card) getExtraMetadata(inputURL string) {
@@ -387,16 +388,17 @@ func checkCacheForCard(ncn string) (Card, error) {
 	return emptyCard, fmt.Errorf("Card not found in cache")
 }
 
-func getCachedOrStoreCard(card Card, ncn string, cNcn string) (Card, error) {
-	log.Debug("In GCOSC")
+func getCachedOrStoreCard(card *Card, ncn string) (Card, error) {
+	log.Debug("In GCOSC", "Card Name", card.Name, "ncn", ncn)
+	cNcn := normaliseCardName(card.Name)
 
 	card.getExtraMetadata("")
 	// Remember what they typed
-	nameToCardCache.Add(ncn, card)
+	nameToCardCache.Add(ncn, *card)
 
 	// What they typed was the real card name, so we're done.
 	if ncn == cNcn {
-		return card, nil
+		return *card, nil
 	}
 
 	// Else, check to see if we have the real card
@@ -409,8 +411,8 @@ func getCachedOrStoreCard(card Card, ncn string, cNcn string) (Card, error) {
 
 	// We didn't, so store the canonical object
 	log.Debug("Storing new Canonical object")
-	nameToCardCache.Add(cNcn, card)
-	return card, nil
+	nameToCardCache.Add(cNcn, *card)
+	return *card, nil
 }
 
 func getScryfallCard(input string) (Card, error) {
@@ -428,14 +430,14 @@ func getScryfallCard(input string) (Card, error) {
 	// Try fuzzily matching the name
 	card, err = fetchScryfallCardByFuzzyName(input)
 	if err == nil {
-		return getCachedOrStoreCard(card, ncn, normaliseCardName(card.Name))
+		return getCachedOrStoreCard(&card, ncn)
 	}
 	// No luck - try unique prefix
 	cardName := lookupUniqueNamePrefix(input)
 	if cardName != "" {
 		card, err = fetchScryfallCardByFuzzyName(cardName)
 		if err == nil {
-			return getCachedOrStoreCard(card, ncn, normaliseCardName(card.Name))
+			return getCachedOrStoreCard(&card, ncn)
 		}
 	}
 	// Store the empty result
@@ -449,8 +451,8 @@ func getRandomScryfallCard() (Card, error) {
 	resp, err := http.Get(scryfallRandomAPIURL)
 	if err != nil {
 		raven.CaptureError(err, nil)
-		log.Warn("FetchCardNames: The HTTP request failed", "Error", err)
-		return card, fmt.Errorf("Something went wrong fetching the cardname catalog")
+		log.Error("getRandomScryfallCard: The HTTP request failed", "Error", err)
+		return card, fmt.Errorf("Something went wrong fetching a random card")
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
@@ -462,8 +464,59 @@ func getRandomScryfallCard() (Card, error) {
 		nameToCardCache.Add(normaliseCardName(card.Name), card)
 		return card, nil
 	}
-	log.Info("fetchScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
+	log.Error("fetchRandomScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
 	return card, fmt.Errorf("Card not found by Scryfall")
+}
+
+func searchScryfallCard(cardTokens []string) ([]Card, error) {
+	// TODO: Validate Search Parameters
+	u, _ := url.Parse(scryfallSearchAPIURL)
+	q := u.Query()
+	q.Add("q", strings.Join(cardTokens, " "))
+	u.RawQuery = q.Encode()
+	log.Debug("searchScryfallCard: Attempting to fetch", "URL", u)
+	resp, err := http.Get(u.String())
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Warn("searchScryfallCard: The HTTP request failed", "Error", err)
+		return []Card{}, fmt.Errorf("Something went wrong fetching card search results")
+	}
+	defer resp.Body.Close()
+	var csr CardSearchResult
+	if resp.StatusCode == 200 {
+		if err := json.NewDecoder(resp.Body).Decode(&csr); err != nil {
+			raven.CaptureError(err, nil)
+			return []Card{}, fmt.Errorf("Something went wrong parsing the card search results")
+		}
+		log.Debug("searchScryfallCard", "Total cards found", csr.TotalCards)
+		for _, c := range csr.Data {
+			x := c
+			cNcn := normaliseCardName(c.Name)
+			// Sneakily add all these to the Cache
+			if _, ok := nameToCardCache.Peek(cNcn); !ok {
+				go func(cp *Card, cNcn string) {
+					getCachedOrStoreCard(cp, cNcn)
+				}(&x, cNcn)
+			}
+		}
+		switch {
+		case csr.TotalCards == 0:
+			return []Card{}, fmt.Errorf("No cards found")
+		case csr.TotalCards <= 2:
+			return csr.Data[0:2], nil
+		case csr.TotalCards > 5:
+			return []Card{}, fmt.Errorf("Too many cards returned (%v > 5)", csr.TotalCards)
+		default:
+			// Between 3 and 5 cards
+			var names []string
+			for _, c := range csr.Data {
+				names = append(names, c.Name)
+			}
+			return []Card{}, fmt.Errorf("[" + strings.Join(names, "], [") + "]")
+		}
+	}
+	log.Error("searchScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
+	return []Card{}, fmt.Errorf("Card not found by Scryfall")
 }
 
 func fetchCardNames() error {

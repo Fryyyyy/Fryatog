@@ -164,6 +164,15 @@ type CardCatalog struct {
 	Data        []string `json:"data"`
 }
 
+// CardSearchResult stores the result of an advanced Card search API call
+type CardSearchResult struct {
+	Object     string `json:"object"`
+	TotalCards int    `json:"total_cards"`
+	HasMore    bool   `json:"has_more"`
+	NextPage   string `json:"next_page"`
+	Data       []Card `json:"data"`
+}
+
 func standardiseColorIndicator(ColorIndicators []string) string {
 	expandedColors := map[string]string{"W": "White",
 		"U": "Blue",

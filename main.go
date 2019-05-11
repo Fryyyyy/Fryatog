@@ -84,6 +84,9 @@ type CardGetter func(cardname string) (Card, error)
 // RandomCardGetter defines a function that retrieves a random card's text.
 type RandomCardGetter func() (Card, error)
 
+// MultipleCardGetter defines a function that retrieves a bunch of cards.
+type MultipleCardGetter func(searchTokens []string) ([]Card, error)
+
 // fryatogParams contains the common things passed to and from functions.
 type fryatogParams struct {
 	m                     *hbot.Message
@@ -92,6 +95,7 @@ type fryatogParams struct {
 	message               string
 	cardGetFunction       CardGetter
 	randomCardGetFunction RandomCardGetter
+	cardFindFunction      MultipleCardGetter
 }
 
 func recovery() {
@@ -171,7 +175,7 @@ func getWho() {
 // tokeniseAndDispatchInput splits the given user-supplied string into a number of commands
 // and does some pre-processing to sort out real commands from just normal chat
 // Any real commands are handed to the handleCommand function
-func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, randomCardGetFunction RandomCardGetter) []string {
+func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, randomCardGetFunction RandomCardGetter, cardFindFunction MultipleCardGetter) []string {
 	var input string
 	isIRC := (fp.m != nil)
 	if isIRC {
@@ -187,6 +191,10 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, ran
 	if !strings.Contains(input, "!") && !strings.Contains(input, "[[") {
 		input = "!" + input
 	}
+
+	// Undo HTML encoding of operators
+	input = strings.Replace(input, "&gt;", ">", -1)
+	input = strings.Replace(input, "&lt;", "<", -1)
 
 	commandList := botCommandRegex.FindAllString(input, -1)
 	// log.Debug("Beginning T.I", "CommandList", commandList)
@@ -278,7 +286,7 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, ran
 		}
 
 		log.Debug("Dispatching", "index", commands)
-		params := fryatogParams{message: message, isIRC: isIRC, cardGetFunction: cardGetFunction, randomCardGetFunction: randomCardGetFunction}
+		params := fryatogParams{message: message, isIRC: isIRC, cardGetFunction: cardGetFunction, randomCardGetFunction: randomCardGetFunction, cardFindFunction: cardFindFunction}
 		go handleCommand(&params, c)
 		commands++
 	}
@@ -322,6 +330,11 @@ func handleCommand(params *fryatogParams, c chan string) {
 		c <- handleCardMetadataQuery(params, cardTokens[0])
 		return
 
+	case cardTokens[0] == "search":
+		log.Debug("Advanced search query", "Input", message)
+		c <- strings.Join(handleAdvancedSearchQuery(params, cardTokens[1:]), "\n")
+		return
+
 	case message == "random":
 		log.Debug("Asked for random card")
 		if card, err := getRandomCard(params.randomCardGetFunction); err == nil {
@@ -347,6 +360,22 @@ func handleCommand(params *fryatogParams, c chan string) {
 	// If we got here, no cards found.
 	c <- ""
 	return
+}
+
+func handleAdvancedSearchQuery(params *fryatogParams, cardTokens []string) []string {
+	var ret []string
+	cs, err := params.cardFindFunction(cardTokens)
+	if err != nil {
+		return []string{err.Error()}
+	}
+	for _, c := range cs {
+		if params.isIRC {
+			ret = append(ret, c.formatCardForIRC())
+		} else {
+			ret = append(ret, c.formatCardForSlack())
+		}
+	}
+	return ret
 }
 
 func handleCardMetadataQuery(params *fryatogParams, command string) string {
@@ -587,7 +616,7 @@ var mainTrigger = hbot.Trigger{
 		if m.From == whichNick {
 			log.Debug("Ignoring message from myself", "Input", m.Content)
 		}
-		toPrint := tokeniseAndDispatchInput(&fryatogParams{m: m}, getScryfallCard, getRandomScryfallCard)
+		toPrint := tokeniseAndDispatchInput(&fryatogParams{m: m}, getScryfallCard, getRandomScryfallCard, searchScryfallCard)
 		for _, s := range sliceUniqMap(toPrint) {
 			var prefix string
 			isPublic := strings.Contains(m.To, "#")
