@@ -228,6 +228,113 @@ func (card *Card) formatCardForIRC() string {
 	return strings.Join(s, " ")
 }
 
+func (card *Card) getRulings(rulingNumber int) string {
+	// Do we already have the Rulings?
+	if card.Rulings == nil {
+		// If we don't, fetch them
+		err := (card).fetchRulings()
+		if err != nil {
+			return "Problem fetching the rulings"
+		}
+		// Update the Cache ???? Necessary ?
+		nameToCardCache.Add(normaliseCardName(card.Name), *card)
+	}
+	// Now we have them
+	var ret []string
+	i := 0
+	for _, r := range card.Rulings {
+		if r.Source == "wotc" {
+			i++
+			// Do we want a specific ruling?
+			if rulingNumber > 0 && i == rulingNumber {
+				return r.formatRuling()
+			}
+			ret = append(ret, r.formatRuling())
+		}
+	}
+	if rulingNumber > 0 || len(ret) == 0 {
+		return "Ruling not found"
+	}
+	if len(ret) > 3 {
+		return "Too many rulings, please request a specific one"
+	}
+	return strings.Join(ret, "\n")
+}
+
+func (card *Card) fetchRulings() error {
+	log.Debug("FetchRulings: Attempting to fetch", "URL", card.RulingsURI)
+	resp, err := http.Get(card.RulingsURI)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Warn("FetchRulings: The HTTP request failed", "Error", err)
+		return fmt.Errorf("Something went wrong fetching the rulings")
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == 200 {
+		var crr CardRulingResult
+		if err := json.NewDecoder(resp.Body).Decode(&crr); err != nil {
+			raven.CaptureError(err, nil)
+			return fmt.Errorf("Something went wrong parsing the rulings")
+		}
+
+		card.Rulings = crr.Data
+		err = card.sortRulings()
+		if err != nil {
+			return fmt.Errorf("Error sorting rules")
+		}
+		return nil
+	}
+
+	log.Info("FetchRulings: Scryfall returned a non-200", "Status Code", resp.StatusCode)
+	return fmt.Errorf("Unable to fetch rulings from Scryfall")
+}
+
+func (card *Card) sortRulings() error {
+	if len(card.Rulings) == 0 {
+		return nil
+	}
+	var sortedRulings []CardRuling
+	var rulingsChunk []CardRuling
+
+	currentGroupedDate, err := time.Parse("2006-01-02", card.Rulings[0].PublishedAt)
+	if err != nil {
+		log.Error("Failed to parse date")
+		return err
+	}
+
+	// Special case for Mairsil, the Pretender
+	// Scryfall doesn't acknowledge Gatherer ruling order as canonical,
+	// so their "ruling 11" is Gatherer's "ruling 1." Yes, I hate this.
+	if card.Name == "Mairsil, the Pretender" {
+		// Since append requires a slice as its first arg, so we can't just do card.Rulings[11]
+		// We can't use negative indices in Go like we can in Python, so we get a slice that's
+		// just the last object in the list.
+		card.Rulings = append(card.Rulings[len(card.Rulings)-1:], card.Rulings...)
+		// Get a slice that drops the last ruling, since we just moved it to the front of the list
+		// and we don't want it duplicated.
+		card.Rulings = card.Rulings[:len(card.Rulings)-1]
+		return nil
+	}
+
+	for _, ruling := range card.Rulings {
+		rulingDate, err := time.Parse("2006-01-02", ruling.PublishedAt)
+		if err != nil {
+			log.Error("Failed to parse date")
+			return err
+		}
+		if rulingDate.Before(currentGroupedDate) {
+			currentGroupedDate = rulingDate
+			sortedRulings = append(rulingsChunk, sortedRulings...)
+			rulingsChunk = nil
+		}
+
+		rulingsChunk = append(rulingsChunk, ruling)
+	}
+	sortedRulings = append(rulingsChunk, sortedRulings...)
+	card.Rulings = sortedRulings
+	return nil
+}
+
 func fetchScryfallCardByFuzzyName(input string) (Card, error) {
 	url := fmt.Sprintf(scryfallFuzzyAPIURL, url.QueryEscape(input))
 	log.Debug("fetchScryfallCard: Attempting to fetch", "URL", url)
@@ -415,111 +522,4 @@ func importCardNames(forceFetch bool) ([]string, error) {
 	}
 	log.Debug("Finished importing", "Length", len(catalog.Data))
 	return catalog.Data, nil
-}
-
-func (card *Card) getRulings(rulingNumber int) string {
-	// Do we already have the Rulings?
-	if card.Rulings == nil {
-		// If we don't, fetch them
-		err := (card).fetchRulings()
-		if err != nil {
-			return "Problem fetching the rulings"
-		}
-		// Update the Cache ???? Necessary ?
-		nameToCardCache.Add(normaliseCardName(card.Name), *card)
-	}
-	// Now we have them
-	var ret []string
-	i := 0
-	for _, r := range card.Rulings {
-		if r.Source == "wotc" {
-			i++
-			// Do we want a specific ruling?
-			if rulingNumber > 0 && i == rulingNumber {
-				return r.formatRuling()
-			}
-			ret = append(ret, r.formatRuling())
-		}
-	}
-	if rulingNumber > 0 || len(ret) == 0 {
-		return "Ruling not found"
-	}
-	if len(ret) > 3 {
-		return "Too many rulings, please request a specific one"
-	}
-	return strings.Join(ret, "\n")
-}
-
-func (card *Card) fetchRulings() error {
-	log.Debug("FetchRulings: Attempting to fetch", "URL", card.RulingsURI)
-	resp, err := http.Get(card.RulingsURI)
-	if err != nil {
-		raven.CaptureError(err, nil)
-		log.Warn("FetchRulings: The HTTP request failed", "Error", err)
-		return fmt.Errorf("Something went wrong fetching the rulings")
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode == 200 {
-		var crr CardRulingResult
-		if err := json.NewDecoder(resp.Body).Decode(&crr); err != nil {
-			raven.CaptureError(err, nil)
-			return fmt.Errorf("Something went wrong parsing the rulings")
-		}
-
-		card.Rulings = crr.Data
-		err = card.sortRulings()
-		if err != nil {
-			return fmt.Errorf("Error sorting rules")
-		}
-		return nil
-	}
-
-	log.Info("FetchRulings: Scryfall returned a non-200", "Status Code", resp.StatusCode)
-	return fmt.Errorf("Unable to fetch rulings from Scryfall")
-}
-
-func (card *Card) sortRulings() error {
-	if len(card.Rulings) == 0 {
-		return nil
-	}
-	var sortedRulings []CardRuling
-	var rulingsChunk []CardRuling
-
-	currentGroupedDate, err := time.Parse("2006-01-02", card.Rulings[0].PublishedAt)
-	if err != nil {
-		log.Error("Failed to parse date")
-		return err
-	}
-
-	// Special case for Mairsil, the Pretender
-	// Scryfall doesn't acknowledge Gatherer ruling order as canonical,
-	// so their "ruling 11" is Gatherer's "ruling 1." Yes, I hate this.
-	if card.Name == "Mairsil, the Pretender" {
-		// Since append requires a slice as its first arg, so we can't just do card.Rulings[11]
-		// We can't use negative indices in Go like we can in Python, so we get a slice that's
-		// just the last object in the list.
-		card.Rulings = append(card.Rulings[len(card.Rulings)-1:], card.Rulings...)
-		// Get a slice that drops the last ruling, since we just moved it to the front of the list
-		// and we don't want it duplicated.
-		card.Rulings = card.Rulings[:len(card.Rulings)-1]
-		return nil
-	}
-
-	for _, ruling := range card.Rulings {
-		rulingDate, err := time.Parse("2006-01-02", ruling.PublishedAt)
-		if err != nil {
-			log.Error("Failed to parse date")
-			return err
-		}
-		if rulingDate.Before(currentGroupedDate) {
-			currentGroupedDate = rulingDate
-			sortedRulings = append(rulingsChunk, sortedRulings...)
-			rulingsChunk = nil
-		}
-
-		rulingsChunk = append(rulingsChunk, ruling)
-	}
-	sortedRulings = append(rulingsChunk, sortedRulings...)
-	card.Rulings = sortedRulings
-	return nil
 }
