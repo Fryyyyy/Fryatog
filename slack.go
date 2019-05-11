@@ -19,7 +19,7 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 
 		case *slack.MessageEvent:
 			log.Debug("New Slack MessageEvent", "Event", ev)
-			text := ev.Msg.Text
+			text := strings.Replace(ev.Msg.Text, "\n", " ", -1)
 			if !(strings.Contains(text, "!") || strings.Contains(text, "[[")) {
 				continue
 			}
