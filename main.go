@@ -15,7 +15,6 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/nlopes/slack"
 	cache "github.com/patrickmn/go-cache"
-	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 	hbot "github.com/whyrusleeping/hellabot"
 	log "gopkg.in/inconshreveable/log15.v2"
 )
@@ -398,85 +397,6 @@ func handleCardMetadataQuery(params *fryatogParams, command string) string {
 	}
 
 	log.Warn("handleCardMetadataQuery - didn't know what to do", "command", command, "input", params.message)
-	return ""
-}
-
-func handleRulesQuery(input string) string {
-	log.Debug("In handleRulesQuery", "Input", input)
-	// Match example first, for !ex101.a and !example 101.1a so the rule regexp doesn't eat it as a normal rule
-	if (strings.HasPrefix(input, "ex") || strings.HasPrefix(input, "example ")) && ruleRegexp.MatchString(input) {
-		foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
-		log.Debug("In handleRulesQuery", "Example matched on", foundRuleNum)
-		if _, ok := rules["ex"+foundRuleNum]; !ok {
-			return "Example not found"
-		}
-		exampleNumber := []string{"\x02[", foundRuleNum, "] Example:\x0F "}
-		exampleText := strings.Join(rules["ex"+foundRuleNum], "")[9:]
-		formattedExample := append(exampleNumber, exampleText, "\n")
-		return strings.TrimSpace(strings.Join(formattedExample, ""))
-	}
-	// Then try normal rules
-	if ruleRegexp.MatchString(input) {
-		foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
-		log.Debug("In handleRulesQuery", "Rules matched on", foundRuleNum)
-
-		if _, ok := rules[foundRuleNum]; !ok {
-			return "Rule not found"
-		}
-
-		ruleText := strings.Join(rules[foundRuleNum], "")
-
-		// keyword abilities can just tag subrule a
-		if foundKeywordAbilityRegexp.MatchString(input) {
-			subRuleALabel := foundRuleNum + "a"
-			subRuleA, ok := rules[subRuleALabel]
-			if !ok {
-				log.Debug("In 701 handler", "There is no subrule A")
-			} else {
-				foundRuleNum = subRuleALabel
-				ruleText = strings.Join(subRuleA, "")
-			}
-
-		}
-
-		// keyword actions need a little bit more work
-		if foundKeywordActionRegexp.MatchString(input) {
-			ruleText, foundRuleNum = tryFindBetterAbilityRule(ruleText, foundRuleNum)
-		}
-		ruleNumber := []string{"\x02", foundRuleNum, ".\x0F "}
-		ruleWithNumber := append(ruleNumber, ruleText, "\n")
-		return strings.TrimSpace(strings.Join(ruleWithNumber, ""))
-	}
-	// Finally try Glossary entries, people might do "!rule Deathtouch" rather than the proper "!define Deathtouch"
-	if strings.HasPrefix(input, "def ") || strings.HasPrefix(input, "define ") || strings.HasPrefix(input, "rule ") || strings.HasPrefix(input, "r ") || strings.HasPrefix(input, "cr ") {
-		log.Debug("In handleRulesQuery", "Define matched on", strings.SplitN(input, " ", 2))
-		query := strings.SplitN(input, " ", 2)[1]
-		var defineText string
-		v, ok := rules[query]
-		if ok {
-			log.Debug("Exact match")
-			defineText = strings.Join(v, "\n")
-		} else {
-			// Special case, otherwise it matches "Planar Die" better
-			if query == "die" {
-				query = "dies"
-			}
-			if bestGuess, err := fuzzy.ExtractOne(query, rulesKeys); err != nil {
-				log.Info("InExact match", "Error", err)
-			} else {
-				log.Debug("InExact match", "Guess", bestGuess)
-				if bestGuess.Score > 80 {
-					defineText = strings.Join(rules[bestGuess.Match], "\n")
-				}
-			}
-		}
-		// Some crappy workaround/s
-		if !strings.HasPrefix(defineText, "\x02Dies\x0F:") {
-			defineText += tryFindSeeMoreRule(defineText)
-		}
-		return strings.TrimSpace(defineText)
-	}
-	// Didn't match ??
 	return ""
 }
 
