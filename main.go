@@ -421,21 +421,6 @@ func getRandomCard(randomCardGetFunction RandomCardGetter) (Card, error) {
 	return Card{}, fmt.Errorf("Error retrieving random card")
 }
 
-func reduceCardSentence(tokens []string) []string {
-	log.Debug("In ReduceCard -- Tokens were", "Tokens", tokens, "Length", len(tokens))
-	var ret []string
-	for i := len(tokens); i >= 1; i-- {
-		msg := strings.Join(tokens[0:i], " ")
-		msg = noPunctuationRegex.ReplaceAllString(msg, "")
-		// Eliminate short names which are not valid and would match too much
-		if len(msg) > 2 {
-			log.Debug("Reverse descent", "i", i, "msg", msg)
-			ret = append(ret, msg)
-		}
-	}
-	return ret
-}
-
 func main() {
 	flag.Parse()
 	conf := readConfig()
