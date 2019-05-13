@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,9 +19,11 @@ import (
 )
 
 const namesFile = "names.json"
+const pointsFile = "points.txt"
 const scryfallNamesAPIURL = "https://api.scryfall.com/catalog/card-names"
 const scryfallFuzzyAPIURL = "https://api.scryfall.com/cards/named?fuzzy=%s"
 const scryfallRandomAPIURL = "https://api.scryfall.com/cards/random"
+const highlanderPointsURL = "http://decklist.mtgpairings.info/js/cards/highlander.txt"
 
 // CardList represents the Scryfall List API when retrieving multiple cards
 type CardList struct {
@@ -419,6 +423,9 @@ func (card *Card) formatCardForSlack() string {
 		s = append(s, fmt.Sprintf("*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=%v|%v>*", card.MultiverseIds[0], card.Name))
 	}
 	s = append(s, card.CommonCard.getCardOrFaceAsString("slack")...)
+	if points, ok := highlanderPoints[normaliseCardName(card.Name)]; ok {
+		s = append(s, fmt.Sprintf("[:point_right: %d :point_left:]", points))
+	}
 	return strings.Join(s, " ")
 }
 
@@ -660,6 +667,7 @@ func fetchCardNames() error {
 	// Fetch it
 	out, err := os.Create(namesFile)
 	if err != nil {
+		raven.CaptureError(err, nil)
 		return err
 	}
 	log.Debug("FetchCardNames: Attempting to fetch", "URL", scryfallNamesAPIURL)
@@ -701,12 +709,13 @@ func importCardNames(forceFetch bool) ([]string, error) {
 	f, err := os.Open(namesFile)
 	defer f.Close()
 	if err != nil {
+		raven.CaptureError(err, nil)
 		log.Warn("Error opening cardNames file", "Error", err)
 		return []string{}, err
 	}
 	var catalog CardCatalog
 	if err := json.NewDecoder(f).Decode(&catalog); err != nil {
-		// raven.CaptureError(err, nil)
+		raven.CaptureError(err, nil)
 		log.Warn("Error parsing cardnames file", "Error", err)
 		return []string{}, fmt.Errorf("Something went wrong parsing the cardname catalog")
 	}
@@ -784,6 +793,7 @@ func (card *Card) sortRulings() error {
 
 	currentGroupedDate, err := time.Parse("2006-01-02", card.Rulings[0].PublishedAt)
 	if err != nil {
+		raven.CaptureError(err, nil)
 		log.Error("Failed to parse date")
 		return err
 	}
@@ -805,6 +815,7 @@ func (card *Card) sortRulings() error {
 	for _, ruling := range card.Rulings {
 		rulingDate, err := time.Parse("2006-01-02", ruling.PublishedAt)
 		if err != nil {
+			raven.CaptureError(err, nil)
 			log.Error("Failed to parse date")
 			return err
 		}
@@ -818,5 +829,78 @@ func (card *Card) sortRulings() error {
 	}
 	sortedRulings = append(rulingsChunk, sortedRulings...)
 	card.Rulings = sortedRulings
+	return nil
+}
+
+func fetchHighlanderPoints() error {
+	out, err := os.Create(pointsFile)
+	if err != nil {
+		return err
+	}
+	log.Debug("FetchHighlanderPoints: Attempting to fetch", "URL", highlanderPointsURL)
+	resp, err := http.Get(highlanderPointsURL)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Warn("FetchHighlanderPoints: The HTTP request failed", "Error", err)
+		return fmt.Errorf("Something went wrong fetching the points")
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == 200 {
+		_, err = io.Copy(out, resp.Body)
+		if err != nil {
+			raven.CaptureError(err, nil)
+			log.Warn("FetchHighlanderPoints: Error writing to points file", "Error", err)
+			return err
+		}
+		out.Close()
+		return nil
+	}
+	log.Warn("FetchHighlanderPoints: The site returned a non-200", "Status Code", resp.StatusCode)
+	return fmt.Errorf("Points file returned a non-200")
+}
+
+func importHighlanderPoints(forceFetch bool) error {
+	log.Debug("In importHighlanderPoints", "Forced?", forceFetch)
+	if forceFetch {
+		if err := fetchHighlanderPoints(); err != nil {
+			raven.CaptureError(err, nil)
+			log.Warn("Error fetching points", "Error", err)
+			return err
+		}
+	}
+	if _, err := os.Stat(pointsFile); err != nil {
+		if err := fetchCardNames(); err != nil {
+			raven.CaptureError(err, nil)
+			log.Warn("Error fetching points", "Error", err)
+			return err
+		}
+	}
+	// Parse it.
+	f, err := os.Open(pointsFile)
+	defer f.Close()
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Warn("Error opening points file", "Error", err)
+		return err
+	}
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		lineFields := strings.Fields(scanner.Text())
+		cardName := normaliseCardName(strings.Join(lineFields[0:len(lineFields)-1], " "))
+		points, err := strconv.Atoi(lineFields[len(lineFields)-1])
+		if err != nil {
+			log.Warn("Unable to convert points line", "Error", err)
+			continue
+		}
+		if conf.DevMode {
+			log.Debug("ImportPoints", "Cardname", cardName, "Points", points)
+		}
+		highlanderPoints[cardName] = points
+	}
+	if err := scanner.Err(); err != nil {
+		raven.CaptureError(err, nil)
+		log.Warn("Error reading points file", "Error", err)
+		return err
+	}
 	return nil
 }

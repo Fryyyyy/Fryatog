@@ -58,7 +58,8 @@ var (
 	rules     = make(map[string][]string)
 	rulesKeys []string
 	// Card names catalog
-	cardNames []string
+	cardNames        []string
+	highlanderPoints = make(map[string]int)
 
 	// Store people who we know of as Ops
 	chanops = make(map[string]struct{})
@@ -541,6 +542,13 @@ func main() {
 		log.Warn("Error initialising the ARC", "Err", err)
 		raven.CaptureErrorAndWait(err, nil)
 		panic(err)
+	}
+
+	// Initialise HL points
+	err = importHighlanderPoints(false)
+	if err != nil {
+		log.Warn("Error importing Highlander points", "Err", err)
+		raven.CaptureErrorAndWait(err, nil)
 	}
 
 	hijackSession := func(bot *hbot.Bot) {
