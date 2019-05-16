@@ -2,14 +2,46 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"strings"
 
+	raven "github.com/getsentry/raven-go"
 	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 	log "gopkg.in/inconshreveable/log15.v2"
 )
+
+// AbilityWord stores a quick description of Ability Words, which have no inherent rules meaning
+type AbilityWord struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+func importAbilityWords() error {
+	log.Debug("In importAbilityWords")
+	content, err := ioutil.ReadFile(abilityWordFile)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Warn("Error opening abilityWords file", "Error", err)
+		return err
+	}
+	var tempAbilityWords []AbilityWord
+	err = json.Unmarshal(content, &tempAbilityWords)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Warn("Unable to parse abilityWords file", "Error", err)
+		return err
+	}
+	for _, aw := range tempAbilityWords {
+		abilityWords[aw.Name] = aw.Description
+		abilityWordKeys = append(abilityWordKeys, aw.Name)
+	}
+	log.Debug("Populated abilityWords", "Length", len(abilityWords))
+	return nil
+}
 
 func importRules(forceFetch bool) error {
 	log.Debug("In importRules", "Force?", forceFetch)
@@ -116,7 +148,7 @@ func importRules(forceFetch bool) error {
 			if line == "" {
 				lastGlossary = ""
 			} else if lastGlossary != "" {
-				rules[lastGlossary] = append(rules[lastGlossary], fmt.Sprintf("\x02%s\x0F: %s", lastGlossary, line))
+				rules[strings.ToLower(lastGlossary)] = append(rules[strings.ToLower(lastGlossary)], fmt.Sprintf("\x02%s\x0F: %s", lastGlossary, line))
 			} else {
 				lastGlossary = line
 			}
@@ -232,24 +264,40 @@ func handleRulesQuery(input string) string {
 	}
 	// Finally try Glossary entries, people might do "!rule Deathtouch" rather than the proper "!define Deathtouch"
 	if strings.HasPrefix(input, "def ") || strings.HasPrefix(input, "define ") || strings.HasPrefix(input, "rule ") || strings.HasPrefix(input, "r ") || strings.HasPrefix(input, "cr ") {
-		log.Debug("In handleRulesQuery", "Define matched on", strings.SplitN(input, " ", 2))
-		query := strings.SplitN(input, " ", 2)[1]
+		split := strings.SplitN(input, " ", 2)
+		log.Debug("In handleRulesQuery", "Define matched on", split)
+		query := strings.ToLower(split[1])
 		var defineText string
 		v, ok := rules[query]
 		if ok {
-			log.Debug("Exact match")
+			log.Debug("Rules exact match")
 			defineText = strings.Join(v, "\n")
 		} else {
+			a, ok := abilityWords[query]
+			if ok {
+				log.Debug("Ability word exact match")
+				return "\x02" + strings.Title(query) + "\x0F: " + a
+			}
 			// Special case, otherwise it matches "Planar Die" better
 			if query == "die" {
 				query = "dies"
 			}
 			if bestGuess, err := fuzzy.ExtractOne(query, rulesKeys); err != nil {
-				log.Info("InExact match", "Error", err)
+				log.Info("InExact rules match", "Error", err)
 			} else {
-				log.Debug("InExact match", "Guess", bestGuess)
+				log.Debug("InExact rules match", "Guess", bestGuess)
 				if bestGuess.Score > 80 {
 					defineText = strings.Join(rules[bestGuess.Match], "\n")
+				}
+			}
+			if defineText == "" {
+				if bestGuess, err := fuzzy.ExtractOne(query, abilityWordKeys); err != nil {
+					log.Info("InExact aw match", "Error", err)
+				} else {
+					log.Debug("InExact aw match", "Guess", bestGuess)
+					if bestGuess.Score > 80 {
+						return "\x02" + strings.Title(bestGuess.Match) + "\x0F: " + abilityWords[bestGuess.Match]
+					}
 				}
 			}
 		}

@@ -152,6 +152,10 @@ func TestGetRule(t *testing.T) {
 	if err != nil {
 		t.Errorf("Didn't expect an error -- got %v", err)
 	}
+	err = importAbilityWords()
+	if err != nil {
+		t.Errorf("Didn't expect an error -- got %v", err)
+	}
 	tables := []struct {
 		input  string
 		output string
@@ -183,10 +187,13 @@ func TestGetRule(t *testing.T) {
 		{"define die", "\x02Dies\x0F: A creature or planeswalker \"dies\" if it is put into a graveyard from the battlefield. See rule 700.4."},
 		{"define detain", "\x02Detain\x0F: A keyword action that temporarily stops a permanent from attacking, blocking, or having its activated abilities activated. See rule 701.28, \"Detain.\"\n\x02701.28a.\x0F Certain spells and abilities can detain a permanent. Until the next turn of the controller of that spell or ability, that permanent can't attack or block and its activated abilities can't be activated."},
 		{"ex 603.7a", "\x02[603.7a] Example:\x0F Part of an effect reads \"When this creature leaves the battlefield,\" but the creature in question leaves the battlefield before the spell or ability creating the effect resolves. In this case, the delayed ability never triggers.\n\x02[603.7a] Example:\x0F If an effect reads \"When this creature becomes untapped\" and the named creature becomes untapped before the effect resolves, the ability waits for the next time that creature untaps."},
+		{"def strive", "\x02Strive\x0F: Strive lets you pay additional mana to allow a spell to have additional targets. [Unofficial]"},
+		{"def Strive", "\x02Strive\x0F: Strive lets you pay additional mana to allow a spell to have additional targets. [Unofficial]"},
+		{"def wiLL of Athe Councel", "\x02Will Of The Council\x0F: Will of the Council lets players vote on one of two outcomes. [Unofficial]"},
 	}
 	for _, table := range tables {
 		got := handleRulesQuery(table.input)
-		if diff := cmp.Diff(got, table.output); diff != "" {
+		if diff := cmp.Diff(table.output, got); diff != "" {
 			t.Errorf("Incorrect output (-want +got):\n%s", diff)
 		}
 	}
@@ -256,5 +263,18 @@ func TestBetterGetRule(t *testing.T) {
 		if got != table.output {
 			t.Errorf("Incorrect output -- got %s - want %s", got, table.output)
 		}
+	}
+}
+
+func TestAbilityWords(t *testing.T) {
+	err := importAbilityWords()
+	if err != nil {
+		t.Errorf("Didn't expect an error -- got %v", err)
+	}
+	if len(abilityWords) < 30 {
+		t.Errorf("Too few ability words -- got %v", len(abilityWords))
+	}
+	if len(abilityWords["strive"]) < 30 {
+		t.Errorf("Length of e.g strive was too short -- got %v", len(abilityWords["strive"]))
 	}
 }

@@ -54,8 +54,10 @@ var (
 	whoChan    chan []string
 
 	// Rules & Glossary dictionary.
-	rules     = make(map[string][]string)
-	rulesKeys []string
+	rules           = make(map[string][]string)
+	rulesKeys       []string
+	abilityWords    = make(map[string]string)
+	abilityWordKeys []string
 	// Card names catalog
 	cardNames        []string
 	highlanderPoints = make(map[string]int)
@@ -77,6 +79,7 @@ const crURL = "https://chat.mtgpairings.info/cr-stable/"
 const crFile = "CR.txt"
 const cardCacheGob = "cardcache.gob"
 const configFile = "config.json"
+const abilityWordFile = "ability_words.json"
 
 // CardGetter defines a function that retrieves a card's text.
 // Defining this type allows us to override it in testing, and not hit scryfall.com a million times.
@@ -482,6 +485,13 @@ func main() {
 	err = importHighlanderPoints(false)
 	if err != nil {
 		log.Warn("Error importing Highlander points", "Err", err)
+		raven.CaptureErrorAndWait(err, nil)
+	}
+
+	// Initialise Ability Words
+	err = importAbilityWords()
+	if err != nil {
+		log.Warn("Error importing ability words", "Err", err)
 		raven.CaptureErrorAndWait(err, nil)
 	}
 
