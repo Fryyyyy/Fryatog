@@ -496,14 +496,16 @@ func searchScryfallCard(cardTokens []string) ([]Card, error) {
 			return []Card{}, fmt.Errorf("Something went wrong parsing the card search results")
 		}
 		log.Debug("searchScryfallCard", "Total cards found", csr.TotalCards)
-		for _, c := range csr.Data {
-			x := c
-			cNcn := normaliseCardName(c.Name)
-			// Sneakily add all these to the Cache
-			if _, ok := nameToCardCache.Peek(cNcn); !ok {
-				go func(cp *Card, cNcn string) {
-					getCachedOrStoreCard(cp, cNcn)
-				}(&x, cNcn)
+		if len(csr.Data) <= 5 {
+			for _, c := range csr.Data {
+				x := c
+				cNcn := normaliseCardName(c.Name)
+				// Sneakily add all these to the Cache
+				if _, ok := nameToCardCache.Peek(cNcn); !ok {
+					go func(cp *Card, cNcn string) {
+						getCachedOrStoreCard(cp, cNcn)
+					}(&x, cNcn)
+				}
 			}
 		}
 		switch {
