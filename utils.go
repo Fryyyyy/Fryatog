@@ -119,7 +119,7 @@ func dumpCardCache(conf *configuration, cache *lru.ARCCache) error {
 	log.Debug("Dumping card cache", "len", cache.Len())
 	var outCards []Card
 	for _, k := range cache.Keys() {
-		if v, ok := cache.Get(k); ok {
+		if v, ok := cache.Peek(k); ok {
 			if v != nil {
 				if conf.DevMode {
 					log.Debug("Dumping card", "Key", k, "Name", (v.(Card)).Name)
