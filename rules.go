@@ -191,9 +191,11 @@ func handleRulesQuery(input string) string {
 		if _, ok := rules["ex"+foundRuleNum]; !ok {
 			return "Example not found"
 		}
-		exampleNumber := []string{"\x02[", foundRuleNum, "] Example:\x0F "}
-		exampleText := strings.Join(rules["ex"+foundRuleNum], "")[9:]
-		formattedExample := append(exampleNumber, exampleText, "\n")
+		var formattedExample []string
+		exampleNumber := "\x02[" + foundRuleNum + "] Example:\x0F "
+		for _, e := range rules["ex"+foundRuleNum] {
+			formattedExample = append(formattedExample, exampleNumber+e[9:]+"\n")
+		}
 		return strings.TrimSpace(strings.Join(formattedExample, ""))
 	}
 	// Then try normal rules

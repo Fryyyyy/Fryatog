@@ -182,11 +182,12 @@ func TestGetRule(t *testing.T) {
 		{"define deaftouch", "\x02Deathtouch\x0F: A keyword ability that causes damage dealt by an object to be especially effective. See rule 702.2, \"Deathtouch.\"\n\x02702.2b.\x0F A creature with toughness greater than 0 that's been dealt damage by a source with deathtouch since the last time state-based actions were checked is destroyed as a state-based action. See rule 704."},
 		{"define die", "\x02Dies\x0F: A creature or planeswalker \"dies\" if it is put into a graveyard from the battlefield. See rule 700.4."},
 		{"define detain", "\x02Detain\x0F: A keyword action that temporarily stops a permanent from attacking, blocking, or having its activated abilities activated. See rule 701.28, \"Detain.\"\n\x02701.28a.\x0F Certain spells and abilities can detain a permanent. Until the next turn of the controller of that spell or ability, that permanent can't attack or block and its activated abilities can't be activated."},
+		{"ex 603.7a", "\x02[603.7a] Example:\x0F Part of an effect reads \"When this creature leaves the battlefield,\" but the creature in question leaves the battlefield before the spell or ability creating the effect resolves. In this case, the delayed ability never triggers.\n\x02[603.7a] Example:\x0F If an effect reads \"When this creature becomes untapped\" and the named creature becomes untapped before the effect resolves, the ability waits for the next time that creature untaps."},
 	}
 	for _, table := range tables {
 		got := handleRulesQuery(table.input)
-		if got != table.output {
-			t.Errorf("Incorrect output -- got %s - want %s", got, table.output)
+		if diff := cmp.Diff(got, table.output); diff != "" {
+			t.Errorf("Incorrect output (-want +got):\n%s", diff)
 		}
 	}
 }
