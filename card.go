@@ -472,7 +472,7 @@ func getRandomScryfallCard() (Card, error) {
 		return card, nil
 	}
 	log.Error("fetchRandomScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
-	return card, fmt.Errorf("Card not found by Scryfall")
+	return card, fmt.Errorf("Error retrieving card")
 }
 
 func searchScryfallCard(cardTokens []string) ([]Card, error) {
@@ -523,7 +523,7 @@ func searchScryfallCard(cardTokens []string) ([]Card, error) {
 		}
 	}
 	log.Error("searchScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
-	return []Card{}, fmt.Errorf("Card not found by Scryfall")
+	return []Card{}, fmt.Errorf("No cards found")
 }
 
 func fetchCardNames() error {
