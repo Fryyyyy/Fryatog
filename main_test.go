@@ -131,7 +131,7 @@ func TestRules(t *testing.T) {
 		output []string
 	}{
 		{"100.1a", []string{"A two-player game is a game that begins with only two players."}},
-		{"Absorb", []string{"\x02Absorb\x0F: A keyword ability that prevents damage. See rule 702.63, \"Absorb.\""}},
+		{"absorb", []string{"\x02Absorb\x0F: A keyword ability that prevents damage. See rule 702.63, \"Absorb.\""}},
 		{"ex101.2", []string{`Example: If one effect reads "You may play an additional land this turn" and another reads "You can't play lands this turn," the effect that precludes you from playing lands wins.`}},
 		{"205.3i", []string{`Lands have their own unique set of subtypes; these subtypes are called land types. The land types are Desert, Forest, Gate, Island, Lair, Locus, Mine, Mountain, Plains, Power-Plant, Swamp, Tower, and Urza's.`, ` Of that list, Forest, Island, Mountain, Plains, and Swamp are the basic land types. See rule 305.6.`}},
 		{"205.4c", []string{`Any land with the supertype "basic" is a basic land. Any land that doesn't have this supertype is a nonbasic land, even if it has a basic land type.`, ` Cards printed in sets prior to the Eighth Edition core set didn't use the word "basic" to indicate a basic land. Cards from those sets with the following names are basic lands and have received errata in the Oracle card reference accordingly: Forest, Island, Mountain, Plains, Swamp, Snow-Covered Forest, Snow-Covered Island, Snow-Covered Mountain, Snow-Covered Plains, and Snow-Covered Swamp.`}},
@@ -189,7 +189,7 @@ func TestGetRule(t *testing.T) {
 		{"ex 603.7a", "\x02[603.7a] Example:\x0F Part of an effect reads \"When this creature leaves the battlefield,\" but the creature in question leaves the battlefield before the spell or ability creating the effect resolves. In this case, the delayed ability never triggers.\n\x02[603.7a] Example:\x0F If an effect reads \"When this creature becomes untapped\" and the named creature becomes untapped before the effect resolves, the ability waits for the next time that creature untaps."},
 		{"def strive", "\x02Strive\x0F: Strive lets you pay additional mana to allow a spell to have additional targets. [Unofficial]"},
 		{"def Strive", "\x02Strive\x0F: Strive lets you pay additional mana to allow a spell to have additional targets. [Unofficial]"},
-		{"def wiLL of Athe Councel", "\x02Will Of The Council\x0F: Will of the Council lets players vote on one of two outcomes. [Unofficial]"},
+		{"def wiLL of Athe Councel", "\x02Will Of The Council\x0F: Will of the Council lets players vote on an outcome and the outcome/s with the highest number of votes happens. [Unofficial]"},
 	}
 	for _, table := range tables {
 		got := handleRulesQuery(table.input)
