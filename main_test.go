@@ -44,7 +44,9 @@ func fakeGetRandomCard() (Card, error) {
 }
 
 func fakeFindCards(tokens []string) ([]Card, error) {
-	return []Card{}, nil
+	card1, _ := fakeGetRandomCard()
+	card2, _ := fakeGetRandomCard()
+	return []Card{card1, card2}, nil
 }
 
 func TestNormaliseCardName(t *testing.T) {
@@ -106,6 +108,7 @@ func TestTokens(t *testing.T) {
 		{"random", []string{testRandomCardExpected}},
 		{"!rule of law", []string{testCardExpected}},
 		// {"Hello! I was wondering if Selvala, Explorer Returned flip triggers work. If I use Selvala and two nonlands are revealed, is that two triggers of life & mana gain", emptyStringSlice}, -- WONTFIX https://github.com/Fryyyyy/Fryatog/issues/42
+		{"!search o:test", []string{testRandomCardExpected + "\n" + testRandomCardExpected}},
 	}
 	for _, table := range tables {
 		got := tokeniseAndDispatchInput(&fryatogParams{m: &hbot.Message{Content: table.input}}, fakeGetCard, fakeGetRandomCard, fakeFindCards)
