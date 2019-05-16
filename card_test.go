@@ -385,3 +385,14 @@ func TestReplaceManaCostForSlack(t *testing.T) {
 		}
 	}
 }
+
+func TestImportPoints(t *testing.T) {
+	highlanderPoints = make(map[string]int)
+	err := importHighlanderPoints(false)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	if len(highlanderPoints) == 0 {
+		t.Errorf("Empty Highlander points after import")
+	}
+}
