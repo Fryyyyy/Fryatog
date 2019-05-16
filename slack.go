@@ -28,7 +28,7 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 				fmt.Printf("%s\n", err)
 				return
 			}
-			toPrint := tokeniseAndDispatchInput(&fryatogParams{slackm: text}, getScryfallCard, getRandomScryfallCard)
+			toPrint := tokeniseAndDispatchInput(&fryatogParams{slackm: text}, getScryfallCard, getRandomScryfallCard, searchScryfallCard)
 			for _, s := range sliceUniqMap(toPrint) {
 				if s != "" {
 					rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("<@%v>: %v", user.ID, s), ev.Msg.Channel))

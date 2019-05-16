@@ -23,155 +23,8 @@ const pointsFile = "points.txt"
 const scryfallNamesAPIURL = "https://api.scryfall.com/catalog/card-names"
 const scryfallFuzzyAPIURL = "https://api.scryfall.com/cards/named?fuzzy=%s"
 const scryfallRandomAPIURL = "https://api.scryfall.com/cards/random"
+const scryfallSearchAPIURL = "https://api.scryfall.com/cards/search"
 const highlanderPointsURL = "http://decklist.mtgpairings.info/js/cards/highlander.txt"
-
-// CardList represents the Scryfall List API when retrieving multiple cards
-type CardList struct {
-	Object     string   `json:"object"`
-	TotalCards int      `json:"total_cards"`
-	Warnings   []string `json:"warnings"`
-	HasMore    bool     `json:"has_more"`
-	NextPage   string   `json:"next_page"`
-	Data       []Card   `json:"data"`
-}
-
-// CardRuling contains an individual ruling on a card
-type CardRuling struct {
-	Object      string `json:"object"`
-	OracleID    string `json:"oracle_id"`
-	Source      string `json:"source"`
-	PublishedAt string `json:"published_at"`
-	Comment     string `json:"comment"`
-}
-
-func (ruling *CardRuling) formatRuling() string {
-	return fmt.Sprintf("%v: %v", ruling.PublishedAt, ruling.Comment)
-}
-
-// CardMetadata contains some extraneous extra information we sometimes retrieve
-type CardMetadata struct {
-	PreviousPrintings     []string
-	PreviousFlavourTexts  []string
-	PreviousReminderTexts []string
-}
-
-// CardRulingResult represents the JSON returned by the /cards/{}/rulings Scryfall API
-type CardRulingResult struct {
-	Object  string       `json:"object"`
-	HasMore bool         `json:"has_more"`
-	Data    []CardRuling `json:"data"`
-}
-
-// CommonCard stores the things common to both Card and CardFaces
-type CommonCard struct {
-	ManaCost        string   `json:"mana_cost"`
-	TypeLine        string   `json:"type_line"`
-	ColorIndicators []string `json:"color_indicator"`
-	OracleText      string   `json:"oracle_text"`
-	Power           string   `json:"power"`
-	Toughness       string   `json:"toughness"`
-	Loyalty         string   `json:"loyalty"`
-}
-
-// CardFace represents the individual information for each face of a DFC
-type CardFace struct {
-	CommonCard
-	Object         string `json:"object"`
-	Name           string `json:"name"`
-	Watermark      string `json:"watermark"`
-	Artist         string `json:"artist"`
-	IllustrationID string `json:"illustration_id,omitempty"`
-}
-
-// Card represents the JSON returned by the /cards Scryfall API
-type Card struct {
-	CommonCard
-	Object        string `json:"object"`
-	ID            string `json:"id"`
-	OracleID      string `json:"oracle_id"`
-	MultiverseIds []int  `json:"multiverse_ids"`
-	MtgoID        int    `json:"mtgo_id"`
-	MtgoFoilID    int    `json:"mtgo_foil_id"`
-	TcgplayerID   int    `json:"tcgplayer_id"`
-	Name          string `json:"name"`
-	Lang          string `json:"lang"`
-	ReleasedAt    string `json:"released_at"`
-	URI           string `json:"uri"`
-	ScryfallURI   string `json:"scryfall_uri"`
-	Layout        string `json:"layout"`
-	HighresImage  bool   `json:"highres_image"`
-	ImageUris     struct {
-		Small      string `json:"small"`
-		Normal     string `json:"normal"`
-		Large      string `json:"large"`
-		Png        string `json:"png"`
-		ArtCrop    string `json:"art_crop"`
-		BorderCrop string `json:"border_crop"`
-	} `json:"image_uris"`
-	Cmc           float32    `json:"cmc"`
-	Colors        []string   `json:"colors"`
-	ColorIdentity []string   `json:"color_identity"`
-	CardFaces     []CardFace `json:"card_faces"`
-	Legalities    struct {
-		Standard  string `json:"standard"`
-		Future    string `json:"future"`
-		Frontier  string `json:"frontier"`
-		Modern    string `json:"modern"`
-		Legacy    string `json:"legacy"`
-		Pauper    string `json:"pauper"`
-		Vintage   string `json:"vintage"`
-		Penny     string `json:"penny"`
-		Commander string `json:"commander"`
-		OneV1     string `json:"1v1"`
-		Duel      string `json:"duel"`
-		Brawl     string `json:"brawl"`
-	} `json:"legalities"`
-	Games           []string `json:"games"`
-	Reserved        bool     `json:"reserved"`
-	Foil            bool     `json:"foil"`
-	Nonfoil         bool     `json:"nonfoil"`
-	Oversized       bool     `json:"oversized"`
-	Promo           bool     `json:"promo"`
-	Reprint         bool     `json:"reprint"`
-	Set             string   `json:"set"`
-	SetName         string   `json:"set_name"`
-	SetURI          string   `json:"set_uri"`
-	SetSearchURI    string   `json:"set_search_uri"`
-	ScryfallSetURI  string   `json:"scryfall_set_uri"`
-	RulingsURI      string   `json:"rulings_uri"`
-	PrintsSearchURI string   `json:"prints_search_uri"`
-	CollectorNumber string   `json:"collector_number"`
-	Digital         bool     `json:"digital"`
-	Rarity          string   `json:"rarity"`
-	FlavourText     string   `json:"flavor_text"`
-	IllustrationID  string   `json:"illustration_id"`
-	Artist          string   `json:"artist"`
-	BorderColor     string   `json:"border_color"`
-	Frame           string   `json:"frame"`
-	FrameEffect     string   `json:"frame_effect"`
-	FullArt         bool     `json:"full_art"`
-	Timeshifted     bool     `json:"timeshifted"`
-	Colorshifted    bool     `json:"colorshifted"`
-	Futureshifted   bool     `json:"futureshifted"`
-	StorySpotlight  bool     `json:"story_spotlight"`
-	EdhrecRank      int      `json:"edhrec_rank"`
-	Usd             string   `json:"usd"`
-	Eur             string   `json:"eur"`
-	Tix             string   `json:"tix"`
-	RelatedUris     struct {
-		Gatherer       string `json:"gatherer"`
-		TcgplayerDecks string `json:"tcgplayer_decks"`
-		Edhrec         string `json:"edhrec"`
-		Mtgtop8        string `json:"mtgtop8"`
-	} `json:"related_uris"`
-	PurchaseUris struct {
-		Tcgplayer   string `json:"tcgplayer"`
-		Cardmarket  string `json:"cardmarket"`
-		Cardhoarder string `json:"cardhoarder"`
-	} `json:"purchase_uris"`
-	Rulings  []CardRuling
-	Metadata CardMetadata
-}
 
 // TODO: Also CardFaces
 func (card *Card) getExtraMetadata(inputURL string) {
@@ -238,41 +91,6 @@ func (card *Card) getExtraMetadata(inputURL string) {
 	return
 }
 
-func formatManaCost(input string) string {
-	return input
-}
-
-func replaceManaCostForSlack(input string) string {
-	manaString := strings.Replace(input, "{1000000}", ":mana-1000000-1::mana-1000000-2::mana-1000000-3::mana-1000000-4:", -1)
-	for _, match := range emojiRegex.FindAllString(manaString, -1) {
-		replacement := strings.Replace(match, "{", ":mana-", -1)
-		replacement = strings.Replace(replacement, "}", ":", -1)
-		replacement = strings.Replace(replacement, "/", "", -1)
-		manaString = strings.Replace(manaString, match, replacement, 1)
-	}
-	return manaString
-}
-
-// TODO: Have a command to see all printing information
-func (card *Card) formatExpansions() string {
-	var ret []string
-	if card.Name != "Plains" && card.Name != "Island" && card.Name != "Swamp" && card.Name != "Mountain" && card.Name != "Forest" {
-		if len(card.Metadata.PreviousPrintings) > 0 {
-			if len(card.Metadata.PreviousPrintings) < 10 {
-				// ret = fmt.Sprintf("%s,", strings.Join(card.Metadata.PreviousPrintings, ","))
-				ret = card.Metadata.PreviousPrintings
-			} else {
-				// ret = fmt.Sprintf("%s,[...],", strings.Join(card.Metadata.PreviousPrintings[:5], ","))
-				ret = card.Metadata.PreviousPrintings[:5]
-				ret = append(ret, "[...]")
-			}
-		}
-	}
-	ret = append(ret, fmt.Sprintf("%s-%s", strings.ToUpper(card.Set), strings.ToUpper(card.Rarity[0:1])))
-	return strings.Join(sliceUniqMap(ret), ",")
-	//return ret + fmt.Sprintf("%s-%s", strings.ToUpper(card.Set), strings.ToUpper(card.Rarity[0:1]))
-}
-
 // Get all possible most recent reminder texts for a card, \n separated
 // TODO/NOTE: This doesn't work, since Scryfall doesn't actually give the printed_text field for each previous printing,
 // just the current Oracle text.
@@ -309,43 +127,6 @@ func (card *Card) getFlavourText() string {
 		return card.Metadata.PreviousFlavourTexts[0]
 	}
 	return "Flavour text not found"
-}
-
-func (card *Card) formatLegalities() string {
-	var ret []string
-	switch card.Legalities.Vintage {
-	case "legal":
-		ret = append(ret, "Vin")
-	case "restricted":
-		ret = append(ret, "VinRes")
-	case "banned":
-		ret = append(ret, "VinBan")
-	}
-	switch card.Legalities.Legacy {
-	case "legal":
-		ret = append(ret, "Leg")
-	case "restricted":
-		ret = append(ret, "LegRes")
-	case "banned":
-		ret = append(ret, "LegBan")
-	}
-	switch card.Legalities.Modern {
-	case "legal":
-		ret = append(ret, "Mod")
-	case "restricted":
-		ret = append(ret, "ModRes")
-	case "banned":
-		ret = append(ret, "ModBan")
-	}
-	switch card.Legalities.Standard {
-	case "legal":
-		ret = append(ret, "Std")
-	case "restricted":
-		ret = append(ret, "StdRes")
-	case "banned":
-		ret = append(ret, "StdBan")
-	}
-	return strings.Join(ret, ",")
 }
 
 func (cc CommonCard) getCardOrFaceAsString(mode string) []string {
@@ -456,273 +237,6 @@ func (card *Card) formatCardForIRC() string {
 	return strings.Join(s, " ")
 }
 
-func standardiseColorIndicator(ColorIndicators []string) string {
-	expandedColors := map[string]string{"W": "White",
-		"U": "Blue",
-		"B": "Black",
-		"R": "Red",
-		"G": "Green"}
-	mappedColors := map[string]int{"White": 0,
-		"Blue":  1,
-		"Black": 2,
-		"Red":   3,
-		"Green": 4}
-
-	var colorWords []string
-	for _, color := range ColorIndicators {
-		colorWords = append(colorWords, expandedColors[color])
-	}
-
-	sort.Slice(colorWords, func(i, j int) bool {
-		return mappedColors[colorWords[i]] < mappedColors[colorWords[j]]
-	})
-
-	return "[" + strings.Join(colorWords, "/") + "]"
-}
-
-func normaliseCardName(input string) string {
-	ret := nonAlphaRegex.ReplaceAllString(strings.ToLower(input), "")
-	// log.Debug("Normalising", "Input", input, "Output", ret)
-	return ret
-}
-
-func lookupUniqueNamePrefix(input string) string {
-	ncn := normaliseCardName(input)
-	log.Debug("in lookupUniqueNamePrefix", "Input", input, "NCN", ncn, "Length of CN", len(cardNames))
-	var err error
-	if len(cardNames) == 0 {
-		log.Debug("In lookupUniqueNamePrefix -- Importing")
-		cardNames, err = importCardNames(false)
-		if err != nil {
-			log.Warn("Error importing card names", "Error", err)
-			return ""
-		}
-	}
-	c := cardNames[:0]
-	for _, x := range cardNames {
-		if strings.HasPrefix(normaliseCardName(x), ncn) {
-			log.Debug("In lookupUniqueNamePrefix", "Gottem", x)
-			c = append(c, x)
-		}
-	}
-	log.Debug("In lookupUniqueNamePrefix", "C", c)
-	if len(c) == 1 {
-		return c[0]
-	}
-	// Look for something legendary-ish
-	var i int
-	var j string
-	for _, x := range c {
-		if strings.Contains(x, ",") || strings.Contains(x, "the") {
-			i++
-			j = x
-		}
-	}
-	if i == 1 {
-		return j
-	}
-	return ""
-}
-
-func fetchScryfallCardByFuzzyName(input string) (Card, error) {
-	url := fmt.Sprintf(scryfallFuzzyAPIURL, url.QueryEscape(input))
-	log.Debug("fetchScryfallCard: Attempting to fetch", "URL", url)
-	resp, err := http.Get(url)
-	if err != nil {
-		raven.CaptureError(err, nil)
-		log.Warn("fetchScryfallCard: The HTTP request failed", "Error", err)
-		return Card{}, fmt.Errorf("Something went wrong fetching the card")
-	}
-	defer resp.Body.Close()
-	var card Card
-	if resp.StatusCode == 200 {
-		if err := json.NewDecoder(resp.Body).Decode(&card); err != nil {
-			raven.CaptureError(err, nil)
-			return card, fmt.Errorf("Something went wrong parsing the card")
-		}
-		return card, nil
-	}
-	log.Info("fetchScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
-	return card, fmt.Errorf("Card not found by Scryfall")
-}
-
-func checkCacheForCard(ncn string) (Card, error) {
-	log.Debug("Checking cache for card", "Name", ncn)
-	var emptyCard Card
-	if cacheCard, found := nameToCardCache.Get(ncn); found {
-		log.Debug("Card was cached")
-		if cacheCard == nil || reflect.DeepEqual(cacheCard, emptyCard) {
-			log.Debug("But cached as nothing")
-			return emptyCard, fmt.Errorf("Card not found")
-		}
-		// Check to see we're returning the canonical card object
-		c := cacheCard.(Card)
-		cNCN := normaliseCardName(c.Name)
-		// It already was the card we wanted.
-		if ncn == cNCN {
-			log.Debug("It was the Canonical Object")
-			return c, nil
-		}
-		// Do we have the canonical object?
-		if cc2, found := nameToCardCache.Get(cNCN); found {
-			log.Debug("We have the Canonical Object")
-			return cc2.(Card), nil
-		}
-		// We don't, return what we got
-		log.Debug("We don't have the Canonical Object")
-		return c, nil
-	}
-	log.Debug("Not in cache")
-	return emptyCard, fmt.Errorf("Card not found in cache")
-}
-
-func getCachedOrStoreCard(card Card, ncn string, cNcn string) (Card, error) {
-	log.Debug("In GCOSC")
-
-	card.getExtraMetadata("")
-	// Remember what they typed
-	nameToCardCache.Add(ncn, card)
-
-	// What they typed was the real card name, so we're done.
-	if ncn == cNcn {
-		return card, nil
-	}
-
-	// Else, check to see if we have the real card
-	cc, err := checkCacheForCard(cNcn)
-	if err == nil {
-		// Return the canonical cached object
-		log.Debug("Returning existing Canonical object")
-		return cc, err
-	}
-
-	// We didn't, so store the canonical object
-	log.Debug("Storing new Canonical object")
-	nameToCardCache.Add(cNcn, card)
-	return card, nil
-}
-
-func getScryfallCard(input string) (Card, error) {
-	var card Card
-	// Normalise input to match how we store in the cache:
-	// lowercase, no punctuation.
-	ncn := normaliseCardName(input)
-	log.Debug("Asked for card", "Name", ncn)
-	card, err := checkCacheForCard(ncn)
-	if err == nil || (err != nil && err.Error() == "Card not found") {
-		return card, err
-	}
-
-	log.Debug("Checking Scryfall for card", "Name", ncn)
-	// Try fuzzily matching the name
-	card, err = fetchScryfallCardByFuzzyName(input)
-	if err == nil {
-		return getCachedOrStoreCard(card, ncn, normaliseCardName(card.Name))
-	}
-	// No luck - try unique prefix
-	cardName := lookupUniqueNamePrefix(input)
-	if cardName != "" {
-		card, err = fetchScryfallCardByFuzzyName(cardName)
-		if err == nil {
-			return getCachedOrStoreCard(card, ncn, normaliseCardName(card.Name))
-		}
-	}
-	// Store the empty result
-	nameToCardCache.Add(ncn, card)
-	return card, fmt.Errorf("No card found")
-}
-
-func getRandomScryfallCard() (Card, error) {
-	var card Card
-	log.Debug("GetRandomScryfallCard: Attempting to fetch", "URL", scryfallRandomAPIURL)
-	resp, err := http.Get(scryfallRandomAPIURL)
-	if err != nil {
-		raven.CaptureError(err, nil)
-		log.Warn("FetchCardNames: The HTTP request failed", "Error", err)
-		return card, fmt.Errorf("Something went wrong fetching the cardname catalog")
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode == 200 {
-		if err := json.NewDecoder(resp.Body).Decode(&card); err != nil {
-			raven.CaptureError(err, nil)
-			return card, fmt.Errorf("Something went wrong parsing the card")
-		}
-		card.getExtraMetadata("")
-		nameToCardCache.Add(normaliseCardName(card.Name), card)
-		return card, nil
-	}
-	log.Info("fetchScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
-	return card, fmt.Errorf("Card not found by Scryfall")
-}
-
-// CardCatalog stores the result of the catalog/card-names API call
-type CardCatalog struct {
-	Object      string   `json:"object"`
-	URI         string   `json:"uri"`
-	TotalValues int      `json:"total_values"`
-	Data        []string `json:"data"`
-}
-
-func fetchCardNames() error {
-	// Fetch it
-	out, err := os.Create(namesFile)
-	if err != nil {
-		raven.CaptureError(err, nil)
-		return err
-	}
-	log.Debug("FetchCardNames: Attempting to fetch", "URL", scryfallNamesAPIURL)
-	resp, err := http.Get(scryfallNamesAPIURL)
-	if err != nil {
-		raven.CaptureError(err, nil)
-		log.Warn("FetchCardNames: The HTTP request failed", "Error", err)
-		return fmt.Errorf("Something went wrong fetching the cardname catalog")
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode == 200 {
-		_, err = io.Copy(out, resp.Body)
-		if err != nil {
-			log.Warn("FetchCardNames: Error writing to cardNames file", "Error", err)
-			return err
-		}
-		out.Close()
-		return nil
-	}
-	log.Warn("FetchCardNames: Scryfall returned a non-200", "Status Code", resp.StatusCode)
-	return fmt.Errorf("Scryfall returned a non-200")
-}
-
-func importCardNames(forceFetch bool) ([]string, error) {
-	log.Debug("In importCardNames")
-	if forceFetch {
-		if err := fetchCardNames(); err != nil {
-			log.Warn("Error fetching card names", "Error", err)
-			return []string{}, err
-		}
-	}
-	if _, err := os.Stat(namesFile); err != nil {
-		if err := fetchCardNames(); err != nil {
-			log.Warn("Error fetching card names", "Error", err)
-			return []string{}, err
-		}
-	}
-	// Parse it.
-	f, err := os.Open(namesFile)
-	defer f.Close()
-	if err != nil {
-		raven.CaptureError(err, nil)
-		log.Warn("Error opening cardNames file", "Error", err)
-		return []string{}, err
-	}
-	var catalog CardCatalog
-	if err := json.NewDecoder(f).Decode(&catalog); err != nil {
-		raven.CaptureError(err, nil)
-		log.Warn("Error parsing cardnames file", "Error", err)
-		return []string{}, fmt.Errorf("Something went wrong parsing the cardname catalog")
-	}
-	log.Debug("Finished importing", "Length", len(catalog.Data))
-	return catalog.Data, nil
-}
-
 func (card *Card) getRulings(rulingNumber int) string {
 	// Do we already have the Rulings?
 	if card.Rulings == nil {
@@ -793,7 +307,6 @@ func (card *Card) sortRulings() error {
 
 	currentGroupedDate, err := time.Parse("2006-01-02", card.Rulings[0].PublishedAt)
 	if err != nil {
-		raven.CaptureError(err, nil)
 		log.Error("Failed to parse date")
 		return err
 	}
@@ -815,7 +328,6 @@ func (card *Card) sortRulings() error {
 	for _, ruling := range card.Rulings {
 		rulingDate, err := time.Parse("2006-01-02", ruling.PublishedAt)
 		if err != nil {
-			raven.CaptureError(err, nil)
 			log.Error("Failed to parse date")
 			return err
 		}
@@ -830,6 +342,249 @@ func (card *Card) sortRulings() error {
 	sortedRulings = append(rulingsChunk, sortedRulings...)
 	card.Rulings = sortedRulings
 	return nil
+}
+
+func fetchScryfallCardByFuzzyName(input string) (Card, error) {
+	url := fmt.Sprintf(scryfallFuzzyAPIURL, url.QueryEscape(input))
+	log.Debug("fetchScryfallCard: Attempting to fetch", "URL", url)
+	resp, err := http.Get(url)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Warn("fetchScryfallCard: The HTTP request failed", "Error", err)
+		return Card{}, fmt.Errorf("Something went wrong fetching the card")
+	}
+	defer resp.Body.Close()
+	var card Card
+	if resp.StatusCode == 200 {
+		if err := json.NewDecoder(resp.Body).Decode(&card); err != nil {
+			raven.CaptureError(err, nil)
+			return card, fmt.Errorf("Something went wrong parsing the card")
+		}
+		return card, nil
+	}
+	log.Info("fetchScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
+	return card, fmt.Errorf("Card not found by Scryfall")
+}
+
+func checkCacheForCard(ncn string) (Card, error) {
+	log.Debug("Checking cache for card", "Name", ncn)
+	var emptyCard Card
+	if cacheCard, found := nameToCardCache.Get(ncn); found {
+		log.Debug("Card was cached")
+		if cacheCard == nil || reflect.DeepEqual(cacheCard, emptyCard) {
+			log.Debug("But cached as nothing")
+			return emptyCard, fmt.Errorf("Card not found")
+		}
+		// Check to see we're returning the canonical card object
+		c := cacheCard.(Card)
+		cNCN := normaliseCardName(c.Name)
+		// It already was the card we wanted.
+		if ncn == cNCN {
+			log.Debug("It was the Canonical Object")
+			return c, nil
+		}
+		// Do we have the canonical object?
+		if cc2, found := nameToCardCache.Get(cNCN); found {
+			log.Debug("We have the Canonical Object")
+			return cc2.(Card), nil
+		}
+		// We don't, return what we got
+		log.Debug("We don't have the Canonical Object")
+		return c, nil
+	}
+	log.Debug("Not in cache")
+	return emptyCard, fmt.Errorf("Card not found in cache")
+}
+
+func getCachedOrStoreCard(card *Card, ncn string) (Card, error) {
+	log.Debug("In GCOSC", "Card Name", card.Name, "ncn", ncn)
+	cNcn := normaliseCardName(card.Name)
+
+	card.getExtraMetadata("")
+	// Remember what they typed
+	nameToCardCache.Add(ncn, *card)
+
+	// What they typed was the real card name, so we're done.
+	if ncn == cNcn {
+		return *card, nil
+	}
+
+	// Else, check to see if we have the real card
+	cc, err := checkCacheForCard(cNcn)
+	if err == nil {
+		// Return the canonical cached object
+		log.Debug("Returning existing Canonical object")
+		return cc, err
+	}
+
+	// We didn't, so store the canonical object
+	log.Debug("Storing new Canonical object")
+	nameToCardCache.Add(cNcn, *card)
+	return *card, nil
+}
+
+func getScryfallCard(input string) (Card, error) {
+	var card Card
+	// Normalise input to match how we store in the cache:
+	// lowercase, no punctuation.
+	ncn := normaliseCardName(input)
+	log.Debug("Asked for card", "Name", ncn)
+	card, err := checkCacheForCard(ncn)
+	if err == nil || (err != nil && err.Error() == "Card not found") {
+		return card, err
+	}
+
+	log.Debug("Checking Scryfall for card", "Name", ncn)
+	// Try fuzzily matching the name
+	card, err = fetchScryfallCardByFuzzyName(input)
+	if err == nil {
+		return getCachedOrStoreCard(&card, ncn)
+	}
+	// No luck - try unique prefix
+	cardName := lookupUniqueNamePrefix(input)
+	if cardName != "" {
+		card, err = fetchScryfallCardByFuzzyName(cardName)
+		if err == nil {
+			return getCachedOrStoreCard(&card, ncn)
+		}
+	}
+	// Store the empty result
+	nameToCardCache.Add(ncn, card)
+	return card, fmt.Errorf("No card found")
+}
+
+func getRandomScryfallCard() (Card, error) {
+	var card Card
+	log.Debug("GetRandomScryfallCard: Attempting to fetch", "URL", scryfallRandomAPIURL)
+	resp, err := http.Get(scryfallRandomAPIURL)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Error("getRandomScryfallCard: The HTTP request failed", "Error", err)
+		return card, fmt.Errorf("Something went wrong fetching a random card")
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == 200 {
+		if err := json.NewDecoder(resp.Body).Decode(&card); err != nil {
+			raven.CaptureError(err, nil)
+			return card, fmt.Errorf("Something went wrong parsing the card")
+		}
+		card.getExtraMetadata("")
+		nameToCardCache.Add(normaliseCardName(card.Name), card)
+		return card, nil
+	}
+	log.Error("fetchRandomScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
+	return card, fmt.Errorf("Card not found by Scryfall")
+}
+
+func searchScryfallCard(cardTokens []string) ([]Card, error) {
+	// TODO: Validate Search Parameters
+	u, _ := url.Parse(scryfallSearchAPIURL)
+	q := u.Query()
+	q.Add("q", strings.Join(cardTokens, " "))
+	u.RawQuery = q.Encode()
+	log.Debug("searchScryfallCard: Attempting to fetch", "URL", u)
+	resp, err := http.Get(u.String())
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Warn("searchScryfallCard: The HTTP request failed", "Error", err)
+		return []Card{}, fmt.Errorf("Something went wrong fetching card search results")
+	}
+	defer resp.Body.Close()
+	var csr CardSearchResult
+	if resp.StatusCode == 200 {
+		if err := json.NewDecoder(resp.Body).Decode(&csr); err != nil {
+			raven.CaptureError(err, nil)
+			return []Card{}, fmt.Errorf("Something went wrong parsing the card search results")
+		}
+		log.Debug("searchScryfallCard", "Total cards found", csr.TotalCards)
+		for _, c := range csr.Data {
+			x := c
+			cNcn := normaliseCardName(c.Name)
+			// Sneakily add all these to the Cache
+			if _, ok := nameToCardCache.Peek(cNcn); !ok {
+				go func(cp *Card, cNcn string) {
+					getCachedOrStoreCard(cp, cNcn)
+				}(&x, cNcn)
+			}
+		}
+		switch {
+		case csr.TotalCards == 0:
+			return []Card{}, fmt.Errorf("No cards found")
+		case csr.TotalCards <= 2:
+			return csr.Data[0:2], nil
+		case csr.TotalCards > 5:
+			return []Card{}, fmt.Errorf("Too many cards returned (%v > 5)", csr.TotalCards)
+		default:
+			// Between 3 and 5 cards
+			var names []string
+			for _, c := range csr.Data {
+				names = append(names, c.Name)
+			}
+			return []Card{}, fmt.Errorf("[" + strings.Join(names, "], [") + "]")
+		}
+	}
+	log.Error("searchScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
+	return []Card{}, fmt.Errorf("Card not found by Scryfall")
+}
+
+func fetchCardNames() error {
+	// Fetch it
+	out, err := os.Create(namesFile)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		return err
+	}
+	log.Debug("FetchCardNames: Attempting to fetch", "URL", scryfallNamesAPIURL)
+	resp, err := http.Get(scryfallNamesAPIURL)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Warn("FetchCardNames: The HTTP request failed", "Error", err)
+		return fmt.Errorf("Something went wrong fetching the cardname catalog")
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == 200 {
+		_, err = io.Copy(out, resp.Body)
+		if err != nil {
+			log.Warn("FetchCardNames: Error writing to cardNames file", "Error", err)
+			return err
+		}
+		out.Close()
+		return nil
+	}
+	log.Warn("FetchCardNames: Scryfall returned a non-200", "Status Code", resp.StatusCode)
+	return fmt.Errorf("Scryfall returned a non-200")
+}
+
+func importCardNames(forceFetch bool) ([]string, error) {
+	log.Debug("In importCardNames")
+	if forceFetch {
+		if err := fetchCardNames(); err != nil {
+			log.Warn("Error fetching card names", "Error", err)
+			return []string{}, err
+		}
+	}
+	if _, err := os.Stat(namesFile); err != nil {
+		if err := fetchCardNames(); err != nil {
+			log.Warn("Error fetching card names", "Error", err)
+			return []string{}, err
+		}
+	}
+	// Parse it.
+	f, err := os.Open(namesFile)
+	defer f.Close()
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Warn("Error opening cardNames file", "Error", err)
+		return []string{}, err
+	}
+	var catalog CardCatalog
+	if err := json.NewDecoder(f).Decode(&catalog); err != nil {
+		raven.CaptureError(err, nil)
+		log.Warn("Error parsing cardnames file", "Error", err)
+		return []string{}, fmt.Errorf("Something went wrong parsing the cardname catalog")
+	}
+	log.Debug("Finished importing", "Length", len(catalog.Data))
+	return catalog.Data, nil
 }
 
 func fetchHighlanderPoints() error {

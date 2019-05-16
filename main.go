@@ -15,7 +15,6 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/nlopes/slack"
 	cache "github.com/patrickmn/go-cache"
-	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 	hbot "github.com/whyrusleeping/hellabot"
 	log "gopkg.in/inconshreveable/log15.v2"
 )
@@ -86,6 +85,9 @@ type CardGetter func(cardname string) (Card, error)
 // RandomCardGetter defines a function that retrieves a random card's text.
 type RandomCardGetter func() (Card, error)
 
+// MultipleCardGetter defines a function that retrieves a bunch of cards.
+type MultipleCardGetter func(searchTokens []string) ([]Card, error)
+
 // fryatogParams contains the common things passed to and from functions.
 type fryatogParams struct {
 	m                     *hbot.Message
@@ -94,6 +96,7 @@ type fryatogParams struct {
 	message               string
 	cardGetFunction       CardGetter
 	randomCardGetFunction RandomCardGetter
+	cardFindFunction      MultipleCardGetter
 }
 
 func recovery() {
@@ -173,7 +176,7 @@ func getWho() {
 // tokeniseAndDispatchInput splits the given user-supplied string into a number of commands
 // and does some pre-processing to sort out real commands from just normal chat
 // Any real commands are handed to the handleCommand function
-func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, randomCardGetFunction RandomCardGetter) []string {
+func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, randomCardGetFunction RandomCardGetter, cardFindFunction MultipleCardGetter) []string {
 	var input string
 	isIRC := (fp.m != nil)
 	if isIRC {
@@ -189,6 +192,10 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, ran
 	if !strings.Contains(input, "!") && !strings.Contains(input, "[[") {
 		input = "!" + input
 	}
+
+	// Undo HTML encoding of operators
+	input = strings.Replace(input, "&gt;", ">", -1)
+	input = strings.Replace(input, "&lt;", "<", -1)
 
 	commandList := botCommandRegex.FindAllString(input, -1)
 	// log.Debug("Beginning T.I", "CommandList", commandList)
@@ -280,7 +287,7 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, ran
 		}
 
 		log.Debug("Dispatching", "index", commands)
-		params := fryatogParams{message: message, isIRC: isIRC, cardGetFunction: cardGetFunction, randomCardGetFunction: randomCardGetFunction}
+		params := fryatogParams{message: message, isIRC: isIRC, cardGetFunction: cardGetFunction, randomCardGetFunction: randomCardGetFunction, cardFindFunction: cardFindFunction}
 		go handleCommand(&params, c)
 		commands++
 	}
@@ -324,6 +331,11 @@ func handleCommand(params *fryatogParams, c chan string) {
 		c <- handleCardMetadataQuery(params, cardTokens[0])
 		return
 
+	case cardTokens[0] == "search":
+		log.Debug("Advanced search query", "Input", message)
+		c <- strings.Join(handleAdvancedSearchQuery(params, cardTokens[1:]), "\n")
+		return
+
 	case message == "random":
 		log.Debug("Asked for random card")
 		if card, err := getRandomCard(params.randomCardGetFunction); err == nil {
@@ -349,6 +361,22 @@ func handleCommand(params *fryatogParams, c chan string) {
 	// If we got here, no cards found.
 	c <- ""
 	return
+}
+
+func handleAdvancedSearchQuery(params *fryatogParams, cardTokens []string) []string {
+	var ret []string
+	cs, err := params.cardFindFunction(cardTokens)
+	if err != nil {
+		return []string{err.Error()}
+	}
+	for _, c := range cs {
+		if params.isIRC {
+			ret = append(ret, c.formatCardForIRC())
+		} else {
+			ret = append(ret, c.formatCardForSlack())
+		}
+	}
+	return ret
 }
 
 func handleCardMetadataQuery(params *fryatogParams, command string) string {
@@ -402,85 +430,6 @@ func handleCardMetadataQuery(params *fryatogParams, command string) string {
 	return ""
 }
 
-func handleRulesQuery(input string) string {
-	log.Debug("In handleRulesQuery", "Input", input)
-	// Match example first, for !ex101.a and !example 101.1a so the rule regexp doesn't eat it as a normal rule
-	if (strings.HasPrefix(input, "ex") || strings.HasPrefix(input, "example ")) && ruleRegexp.MatchString(input) {
-		foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
-		log.Debug("In handleRulesQuery", "Example matched on", foundRuleNum)
-		if _, ok := rules["ex"+foundRuleNum]; !ok {
-			return "Example not found"
-		}
-		exampleNumber := []string{"\x02[", foundRuleNum, "] Example:\x0F "}
-		exampleText := strings.Join(rules["ex"+foundRuleNum], "")[9:]
-		formattedExample := append(exampleNumber, exampleText, "\n")
-		return strings.TrimSpace(strings.Join(formattedExample, ""))
-	}
-	// Then try normal rules
-	if ruleRegexp.MatchString(input) {
-		foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
-		log.Debug("In handleRulesQuery", "Rules matched on", foundRuleNum)
-
-		if _, ok := rules[foundRuleNum]; !ok {
-			return "Rule not found"
-		}
-
-		ruleText := strings.Join(rules[foundRuleNum], "")
-
-		// keyword abilities can just tag subrule a
-		if foundKeywordAbilityRegexp.MatchString(input) {
-			subRuleALabel := foundRuleNum + "a"
-			subRuleA, ok := rules[subRuleALabel]
-			if !ok {
-				log.Debug("In 701 handler", "There is no subrule A")
-			} else {
-				foundRuleNum = subRuleALabel
-				ruleText = strings.Join(subRuleA, "")
-			}
-
-		}
-
-		// keyword actions need a little bit more work
-		if foundKeywordActionRegexp.MatchString(input) {
-			ruleText, foundRuleNum = tryFindBetterAbilityRule(ruleText, foundRuleNum)
-		}
-		ruleNumber := []string{"\x02", foundRuleNum, ".\x0F "}
-		ruleWithNumber := append(ruleNumber, ruleText, "\n")
-		return strings.TrimSpace(strings.Join(ruleWithNumber, ""))
-	}
-	// Finally try Glossary entries, people might do "!rule Deathtouch" rather than the proper "!define Deathtouch"
-	if strings.HasPrefix(input, "def ") || strings.HasPrefix(input, "define ") || strings.HasPrefix(input, "rule ") || strings.HasPrefix(input, "r ") || strings.HasPrefix(input, "cr ") {
-		log.Debug("In handleRulesQuery", "Define matched on", strings.SplitN(input, " ", 2))
-		query := strings.SplitN(input, " ", 2)[1]
-		var defineText string
-		v, ok := rules[query]
-		if ok {
-			log.Debug("Exact match")
-			defineText = strings.Join(v, "\n")
-		} else {
-			// Special case, otherwise it matches "Planar Die" better
-			if query == "die" {
-				query = "dies"
-			}
-			if bestGuess, err := fuzzy.ExtractOne(query, rulesKeys); err != nil {
-				log.Info("InExact match", "Error", err)
-			} else {
-				log.Debug("InExact match", "Guess", bestGuess)
-				if bestGuess.Score > 80 {
-					defineText = strings.Join(rules[bestGuess.Match], "\n")
-				}
-			}
-		}
-		// Some crappy workaround/s
-		if !strings.HasPrefix(defineText, "\x02Dies\x0F:") {
-			defineText += tryFindSeeMoreRule(defineText)
-		}
-		return strings.TrimSpace(defineText)
-	}
-	// Didn't match ??
-	return ""
-}
-
 func findCard(cardTokens []string, cardGetFunction CardGetter) (Card, error) {
 	for _, rc := range reduceCardSentence(cardTokens) {
 		card, err := cardGetFunction(rc)
@@ -500,21 +449,6 @@ func getRandomCard(randomCardGetFunction RandomCardGetter) (Card, error) {
 		return card, nil
 	}
 	return Card{}, fmt.Errorf("Error retrieving random card")
-}
-
-func reduceCardSentence(tokens []string) []string {
-	log.Debug("In ReduceCard -- Tokens were", "Tokens", tokens, "Length", len(tokens))
-	var ret []string
-	for i := len(tokens); i >= 1; i-- {
-		msg := strings.Join(tokens[0:i], " ")
-		msg = noPunctuationRegex.ReplaceAllString(msg, "")
-		// Eliminate short names which are not valid and would match too much
-		if len(msg) > 2 {
-			log.Debug("Reverse descent", "i", i, "msg", msg)
-			ret = append(ret, msg)
-		}
-	}
-	return ret
 }
 
 func main() {
@@ -690,7 +624,7 @@ var mainTrigger = hbot.Trigger{
 		if m.From == whichNick {
 			log.Debug("Ignoring message from myself", "Input", m.Content)
 		}
-		toPrint := tokeniseAndDispatchInput(&fryatogParams{m: m}, getScryfallCard, getRandomScryfallCard)
+		toPrint := tokeniseAndDispatchInput(&fryatogParams{m: m}, getScryfallCard, getRandomScryfallCard, searchScryfallCard)
 		for _, s := range sliceUniqMap(toPrint) {
 			var prefix string
 			isPublic := strings.Contains(m.To, "#")
