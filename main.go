@@ -1,9 +1,11 @@
 package main
 
 import (
+	"expvar"
 	"errors"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -120,6 +122,10 @@ func recovery() {
 		}
 		// Else recover
 	}
+}
+
+func init() {
+	expvar.Publish("Goroutines", expvar.Func(goRoutines))
 }
 
 func printHelp() string {
@@ -247,6 +253,12 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, ran
 
 	for _, message := range commandList {
 		log.Debug("Processing:", "Command", message)
+		totalQueries.Add(1)
+		if isIRC {
+			ircQueries.Add(1)
+		} else {
+			slackQueries.Add(1)
+		}
 		if nonTextRegex.MatchString(message) || strings.HasPrefix(message, "  ") {
 			log.Info("Iffy skip", "Message", message)
 			continue
@@ -594,6 +606,9 @@ func main() {
 
 	go dumpCardCacheTimer(&conf, nameToCardCache)
 
+	// Start metrics server
+	go http.ListenAndServe(":8888", nil)
+
 	exitChan := getExitChannel()
 	go func() {
 		<-exitChan
@@ -635,6 +650,8 @@ var mainTrigger = hbot.Trigger{
 	},
 	Action: func(irc *hbot.Bot, m *hbot.Message) bool {
 		defer recovery()
+		totalLines.Add(1)
+		ircLines.Add(1)
 		log.Debug("Dispatching message", "From", m.From, "To", m.To, "Content", m.Content)
 		if m.From == whichNick {
 			log.Debug("Ignoring message from myself", "Input", m.Content)

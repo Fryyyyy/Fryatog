@@ -8,6 +8,7 @@ import (
 )
 
 func handleHearthstoneQuery(cardTokens []string) string {
+	hearthstoneRequests.Add(1)
 	for _, rc := range reduceCardSentence(cardTokens) {
 		card, err := searchHSCard(rc)
 		log.Debug("HS Card Func gave us", "CardID", card, "Err", err)

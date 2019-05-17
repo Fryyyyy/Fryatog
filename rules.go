@@ -218,6 +218,7 @@ func handleRulesQuery(input string) string {
 	log.Debug("In handleRulesQuery", "Input", input)
 	// Match example first, for !ex101.a and !example 101.1a so the rule regexp doesn't eat it as a normal rule
 	if (strings.HasPrefix(input, "ex") || strings.HasPrefix(input, "example ")) && ruleRegexp.MatchString(input) {
+		exampleRequests.Add(1)
 		foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
 		log.Debug("In handleRulesQuery", "Example matched on", foundRuleNum)
 		if _, ok := rules["ex"+foundRuleNum]; !ok {
@@ -232,6 +233,7 @@ func handleRulesQuery(input string) string {
 	}
 	// Then try normal rules
 	if ruleRegexp.MatchString(input) {
+		rulesRequests.Add(1)
 		foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
 		log.Debug("In handleRulesQuery", "Rules matched on", foundRuleNum)
 
@@ -264,6 +266,7 @@ func handleRulesQuery(input string) string {
 	}
 	// Finally try Glossary entries, people might do "!rule Deathtouch" rather than the proper "!define Deathtouch"
 	if strings.HasPrefix(input, "def ") || strings.HasPrefix(input, "define ") || strings.HasPrefix(input, "rule ") || strings.HasPrefix(input, "r ") || strings.HasPrefix(input, "cr ") {
+		defineRequests.Add(1)
 		split := strings.SplitN(input, " ", 2)
 		log.Debug("In handleRulesQuery", "Define matched on", split)
 		query := strings.ToLower(split[1])

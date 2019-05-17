@@ -3,11 +3,13 @@ package main
 import (
 	"encoding/gob"
 	"encoding/json"
+	"expvar"
 	"io"
 	"net/http"
 	"os"
 	"os/signal"
 	"regexp"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -47,6 +49,30 @@ var (
 	reminderRegexp = regexp.MustCompile(`\((.*?)\)`)
 	nonAlphaRegex  = regexp.MustCompile(`\W+`)
 	emojiRegex     = regexp.MustCompile(`{\d+}|{[A-Z]}|{\d\/[A-Z]}|{[A-Z]\/[A-Z]}`)
+
+	// Metrics
+	totalLines             = expvar.NewInt("bot_totalLines")
+	ircLines               = expvar.NewInt("bot_ircLines")
+	slackLines             = expvar.NewInt("bot_slackLines")
+	totalQueries           = expvar.NewInt("bot_totalQueries")
+	ircQueries             = expvar.NewInt("bot_ircQueries")
+	slackQueries           = expvar.NewInt("bot_slackQueries")
+	cardsInCache           = expvar.NewInt("bot_cardsInCache")
+	cardCacheQueries       = expvar.NewInt("bot_cardCacheQueries")
+	cardCacheHits          = expvar.NewInt("bot_cardCacheHits")
+	cardCacheHitPercentage = expvar.NewInt("bot_cardCacheHitPercentage")
+	cardUniquePrefixHits   = expvar.NewInt("bot_cardUniquePrefixHits")
+	searchRequests         = expvar.NewInt("bot_searchRequests")
+	randomRequests         = expvar.NewInt("bot_randomRequests")
+	cardRequests           = expvar.NewInt("bot_cardRequests")
+	metadataRequests       = expvar.NewInt("bot_metadataRequests")
+	reminderRequests       = expvar.NewInt("bot_reminderRequests")
+	flavourRequests        = expvar.NewInt("bot_flavourRequests")
+	rulingRequests         = expvar.NewInt("bot_rulingRequests")
+	exampleRequests        = expvar.NewInt("bot_exampleRequests")
+	rulesRequests          = expvar.NewInt("bot_rulesRequests")
+	defineRequests         = expvar.NewInt("bot_defineRequests")
+	hearthstoneRequests    = expvar.NewInt("bot_hearthstoneRequests")
 )
 
 func sliceUniqMap(s []string) []string {
@@ -117,6 +143,7 @@ func readGob(filePath string, object interface{}) error {
 func dumpCardCache(conf *configuration, cache *lru.ARCCache) error {
 	// Dump cache keys
 	log.Debug("Dumping card cache", "len", cache.Len())
+	cardsInCache.Set(int64(cache.Len()))
 	var outCards []Card
 	for _, k := range cache.Keys() {
 		if v, ok := cache.Peek(k); ok {
@@ -225,4 +252,8 @@ func formatMessageForSlack(input string) string {
 	input = strings.Replace(input, "<b>", "*", -1)
 	input = strings.Replace(input, "</b>", "*", -1)
 	return input
+}
+
+func goRoutines() interface{} {
+	return runtime.NumGoroutine()
 }

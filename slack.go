@@ -23,6 +23,8 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 			if !(strings.Contains(text, "!") || strings.Contains(text, "[[")) {
 				continue
 			}
+			totalLines.Add(1)
+			slackLines.Add(1)
 			user, err := api.GetUserInfo(ev.Msg.User)
 			if err != nil {
 				fmt.Printf("%s\n", err)

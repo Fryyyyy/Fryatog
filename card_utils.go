@@ -305,6 +305,7 @@ func lookupUniqueNamePrefix(input string) string {
 		}
 	}
 	if i == 1 {
+		cardUniquePrefixHits.Add(1)
 		return j
 	}
 	return ""

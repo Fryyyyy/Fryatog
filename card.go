@@ -46,6 +46,7 @@ func (card *Card) getExtraMetadata(inputURL string) {
 	if fetchURL == "" {
 		return
 	}
+	metadataRequests.Add(1)
 	log.Debug("GetExtraMetadata: Attempting to fetch", "URL", fetchURL)
 	resp, err := http.Get(fetchURL)
 	if err != nil {
@@ -94,6 +95,7 @@ func (card *Card) getExtraMetadata(inputURL string) {
 // TODO/NOTE: This doesn't work, since Scryfall doesn't actually give the printed_text field for each previous printing,
 // just the current Oracle text.
 func (card Card) getReminderTexts() string {
+	reminderRequests.Add(1)
 	cardText := card.OracleText
 
 	if len(card.CardFaces) > 0 {
@@ -119,6 +121,7 @@ func (card Card) getReminderTexts() string {
 
 // Get the most recent Flavour Text that exists
 func (card *Card) getFlavourText() string {
+	flavourRequests.Add(1)
 	if card.FlavourText != "" {
 		return card.FlavourText
 	}
@@ -237,6 +240,7 @@ func (card *Card) formatCardForIRC() string {
 }
 
 func (card *Card) getRulings(rulingNumber int) string {
+	rulingRequests.Add(1)
 	// Do we already have the Rulings?
 	if card.Rulings == nil {
 		// If we don't, fetch them
@@ -367,9 +371,12 @@ func fetchScryfallCardByFuzzyName(input string) (Card, error) {
 
 func checkCacheForCard(ncn string) (Card, error) {
 	log.Debug("Checking cache for card", "Name", ncn)
+	cardCacheQueries.Add(1)
 	var emptyCard Card
 	if cacheCard, found := nameToCardCache.Get(ncn); found {
 		log.Debug("Card was cached")
+		cardCacheHits.Add(1)
+		cardCacheHitPercentage.Set((cardCacheHits.Value() / cardCacheQueries.Value()) * 100)
 		if cacheCard == nil || reflect.DeepEqual(cacheCard, emptyCard) {
 			log.Debug("But cached as nothing")
 			return emptyCard, fmt.Errorf("Card not found")
@@ -391,6 +398,7 @@ func checkCacheForCard(ncn string) (Card, error) {
 		log.Debug("We don't have the Canonical Object")
 		return c, nil
 	}
+	cardCacheHitPercentage.Set((cardCacheHits.Value() / cardCacheQueries.Value()) * 100)
 	log.Debug("Not in cache")
 	return emptyCard, fmt.Errorf("Card not found in cache")
 }
@@ -423,6 +431,7 @@ func getCachedOrStoreCard(card *Card, ncn string) (Card, error) {
 }
 
 func getScryfallCard(input string) (Card, error) {
+	cardRequests.Add(1)
 	var card Card
 	// Normalise input to match how we store in the cache:
 	// lowercase, no punctuation.
@@ -453,6 +462,7 @@ func getScryfallCard(input string) (Card, error) {
 }
 
 func getRandomScryfallCard() (Card, error) {
+	randomRequests.Add(1)
 	var card Card
 	log.Debug("GetRandomScryfallCard: Attempting to fetch", "URL", scryfallRandomAPIURL)
 	resp, err := http.Get(scryfallRandomAPIURL)
@@ -476,6 +486,7 @@ func getRandomScryfallCard() (Card, error) {
 }
 
 func searchScryfallCard(cardTokens []string) ([]Card, error) {
+	searchRequests.Add(1)
 	// TODO: Validate Search Parameters
 	u, _ := url.Parse(scryfallSearchAPIURL)
 	q := u.Query()
