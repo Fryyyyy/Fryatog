@@ -326,7 +326,12 @@ func handleCommand(params *fryatogParams, c chan string) {
 		strings.HasPrefix(message, "def "),
 		strings.HasPrefix(message, "define "):
 		log.Debug("Rules query", "Input", message)
-		c <- handleRulesQuery(message)
+		r := handleRulesQuery(message)
+		if params.isIRC {
+			c <- formatMessageForIRC(r)
+		} else {
+			c <- formatMessageForSlack(r)
+		}
 		return
 
 	case cardMetadataRegex.MatchString(message):

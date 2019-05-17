@@ -148,7 +148,7 @@ func importRules(forceFetch bool) error {
 			if line == "" {
 				lastGlossary = ""
 			} else if lastGlossary != "" {
-				rules[strings.ToLower(lastGlossary)] = append(rules[strings.ToLower(lastGlossary)], fmt.Sprintf("\x02%s\x0F: %s", lastGlossary, line))
+				rules[strings.ToLower(lastGlossary)] = append(rules[strings.ToLower(lastGlossary)], fmt.Sprintf("<b>%s</b>: %s", lastGlossary, line))
 			} else {
 				lastGlossary = line
 			}
@@ -224,7 +224,7 @@ func handleRulesQuery(input string) string {
 			return "Example not found"
 		}
 		var formattedExample []string
-		exampleNumber := "\x02[" + foundRuleNum + "] Example:\x0F "
+		exampleNumber := "<b>[" + foundRuleNum + "] Example:</b> "
 		for _, e := range rules["ex"+foundRuleNum] {
 			formattedExample = append(formattedExample, exampleNumber+e[9:]+"\n")
 		}
@@ -258,7 +258,7 @@ func handleRulesQuery(input string) string {
 		if foundKeywordActionRegexp.MatchString(input) {
 			ruleText, foundRuleNum = tryFindBetterAbilityRule(ruleText, foundRuleNum)
 		}
-		ruleNumber := []string{"\x02", foundRuleNum, ".\x0F "}
+		ruleNumber := []string{"<b>", foundRuleNum, ".</b> "}
 		ruleWithNumber := append(ruleNumber, ruleText, "\n")
 		return strings.TrimSpace(strings.Join(ruleWithNumber, ""))
 	}
@@ -276,7 +276,7 @@ func handleRulesQuery(input string) string {
 			a, ok := abilityWords[query]
 			if ok {
 				log.Debug("Ability word exact match")
-				return "\x02" + strings.Title(query) + "\x0F: " + a
+				return "<b>" + strings.Title(query) + "</b>: " + a
 			}
 			// Special case, otherwise it matches "Planar Die" better
 			if query == "die" {
@@ -296,13 +296,13 @@ func handleRulesQuery(input string) string {
 				} else {
 					log.Debug("InExact aw match", "Guess", bestGuess)
 					if bestGuess.Score > 80 {
-						return "\x02" + strings.Title(bestGuess.Match) + "\x0F: " + abilityWords[bestGuess.Match]
+						return "<b>" + strings.Title(bestGuess.Match) + "</b>: " + abilityWords[bestGuess.Match]
 					}
 				}
 			}
 		}
 		// Some crappy workaround/s
-		if !strings.HasPrefix(defineText, "\x02Dies\x0F:") {
+		if !strings.HasPrefix(defineText, "<b>Dies</b>:") {
 			defineText += tryFindSeeMoreRule(defineText)
 		}
 		return strings.TrimSpace(defineText)
