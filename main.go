@@ -284,14 +284,20 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, ran
 func handleCommand(params *fryatogParams, c chan string) {
 	message := params.message
 	log.Debug("In handleCommand", "Message", message)
-	cardTokens := strings.Fields(message)
-	log.Debug("Done tokenising", "Tokens", cardTokens)
+	tokens := strings.Fields(message)
+	log.Debug("Done tokenising", "Tokens", tokens)
 
 	switch {
 
 	case message == "help":
 		log.Debug("Asked for help", "Input", message)
 		c <- printHelp()
+		return
+
+	case tokens[0] == "mtr", tokens[0] == "ipg":
+		log.Debug("Asked for a policy link")
+		policyResult := HandlePolicyQuery(tokens)
+		c <- policyResult
 		return
 
 	case ruleRegexp.MatchString(message),
@@ -303,7 +309,7 @@ func handleCommand(params *fryatogParams, c chan string) {
 
 	case cardMetadataRegex.MatchString(message):
 		log.Debug("Metadata query")
-		c <- handleCardMetadataQuery(params, cardTokens[0])
+		c <- handleCardMetadataQuery(params, tokens[0])
 		return
 
 	case message == "random":
@@ -319,7 +325,7 @@ func handleCommand(params *fryatogParams, c chan string) {
 
 	default:
 		log.Debug("I think it's a card")
-		if card, err := findCard(cardTokens, params.cardGetFunction); err == nil {
+		if card, err := findCard(tokens, params.cardGetFunction); err == nil {
 			log.Debug("Got ye card", "IRC?", params.isIRC)
 			if params.isIRC {
 				c <- card.formatCardForIRC()
@@ -353,6 +359,7 @@ func handleCardMetadataQuery(params *fryatogParams, command string) string {
 		}
 		return c.getFlavourText()
 	}
+
 	if gathererRulingRegex.MatchString(strings.SplitN(params.message, " ", 2)[1]) {
 		var cardName string
 		fass := gathererRulingRegex.FindAllStringSubmatch(strings.SplitN(params.message, " ", 2)[1], -1)
@@ -464,8 +471,8 @@ func handleRulesQuery(input string) string {
 	return ""
 }
 
-func findCard(cardTokens []string, cardGetFunction CardGetter) (Card, error) {
-	for _, rc := range reduceCardSentence(cardTokens) {
+func findCard(tokens []string, cardGetFunction CardGetter) (Card, error) {
+	for _, rc := range reduceCardSentence(tokens) {
 		card, err := cardGetFunction(rc)
 		log.Debug("Card Func gave us", "CardID", card.ID, "Err", err)
 		if err == nil {

@@ -36,6 +36,8 @@ var (
 
 	noPunctuationRegex = regexp.MustCompile(`\W$`)
 
+	policyRegex = regexp.MustCompile("[^0-9]+")
+
 	// Used in multiple functions.
 	ruleRegexp     = regexp.MustCompile(`((?:\d)+\.(?:\w{1,4}))`)
 	greetingRegexp = regexp.MustCompile(`(?i)^h(ello|i)(\!|\.|\?)*$`)
