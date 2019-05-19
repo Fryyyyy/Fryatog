@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	hbot "github.com/whyrusleeping/hellabot"
+	log "gopkg.in/inconshreveable/log15.v2"
 )
 
 func fakeGetCard(cardname string) (Card, error) {
@@ -55,6 +56,26 @@ func TestNormaliseCardName(t *testing.T) {
 		got := normaliseCardName(table.input)
 		if got != table.output {
 			t.Errorf("Incorrect output -- got %s -- want %s", got, table.output)
+		}
+	}
+}
+
+func TestPolicy(t *testing.T) {
+	tables := []struct {
+		input string
+		output string
+	}{
+		{"mtr 4.8 is probably what you want to reference", "https://blogs.magicjudges.org/rules/mtr4-8"},
+		{"ipg", "https://blogs.magicjudges.org/rules/ipg"},
+		{"ipg 4.1", "https://blogs.magicjudges.org/rules/ipg4-1"},
+	}
+
+	for _, table := range tables {
+		strArray := strings.Fields(table.input)
+		log.Debug(strArray[0])
+		got := HandlePolicyQuery(strArray)
+		if got != table.output {
+			t.Errorf("Policy Test Failed\n WANTED\n%s\nGOT\n%s", table.output, got)
 		}
 	}
 }
