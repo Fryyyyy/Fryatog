@@ -44,6 +44,7 @@ var (
 	bot          *hbot.Bot
 	conf         configuration
 	slackClients []*slack.Client
+	ims []slack.IM
 
 	// Caches
 	nameToCardCache      *lru.ARCCache

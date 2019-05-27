@@ -9,6 +9,7 @@ import (
 )
 
 func runSlack(rtm *slack.RTM, api *slack.Client) {
+	var err error
 	for msg := range rtm.IncomingEvents {
 		switch ev := msg.Data.(type) {
 		case *slack.HelloEvent:
@@ -17,10 +18,28 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 		case *slack.ConnectedEvent:
 			log.Debug("Slack ConnectedEvent", "Infos", ev.Info, "Connection counter", ev.ConnectionCount)
 
+		case *slack.IMCreatedEvent:
+			log.Debug("New Slack IMCreatedEvent")
+			im := slack.IM{Conversation: slack.Conversation{ID: ev.Channel.ID, IsIM: true, User: ev.User}}
+			ims = append(ims, im)
 		case *slack.MessageEvent:
+			//log.Debug("New Slack MessageEvent", "Event", ev)
 			log.Debug("New Slack MessageEvent", "Channel", ev.Channel, "User", ev.User, "Text", ev.Text, "Ts", ev.Timestamp, "Thread TS", ev.ThreadTimestamp)
 			text := strings.Replace(ev.Msg.Text, "\n", " ", -1)
-			if !(strings.Contains(text, "!") || strings.Contains(text, "[[")) {
+			if len(ims) == 0 {
+				ims, err = api.GetIMChannels()
+				if err != nil {
+					log.Warn("In Slack Message", "Couldn't get the IMs", err)
+				}
+			}
+			var isIM bool
+			for _, imc := range ims {
+				if ev.Channel == imc.Conversation.ID {
+					isIM = true
+					break
+				}
+			}
+			if !(strings.Contains(text, "!") || strings.Contains(text, "[[")) && !isIM {
 				continue
 			}
 			totalLines.Add(1)
