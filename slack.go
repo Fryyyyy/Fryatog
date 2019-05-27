@@ -22,6 +22,7 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 			log.Debug("New Slack IMCreatedEvent")
 			im := slack.IM{Conversation: slack.Conversation{ID: ev.Channel.ID, IsIM: true, User: ev.User}}
 			ims = append(ims, im)
+
 		case *slack.MessageEvent:
 			//log.Debug("New Slack MessageEvent", "Event", ev)
 			log.Debug("New Slack MessageEvent", "Channel", ev.Channel, "User", ev.User, "Text", ev.Text, "Ts", ev.Timestamp, "Thread TS", ev.ThreadTimestamp)
