@@ -40,7 +40,7 @@ var (
 
 	// Used in multiple functions.
 	ruleRegexp     = regexp.MustCompile(`((?:\d)+\.(?:\w{1,4}))`)
-	greetingRegexp = regexp.MustCompile(`(?i)^h(ello|i)(\!|\.|\?)*$`)
+	greetingRegexp = regexp.MustCompile(`(?i)^h(ello|i)( *)(\!|\.|\?)*( *)$`)
 
 	foundKeywordAbilityRegexp = regexp.MustCompile(`701.\d+\b`)
 	foundKeywordActionRegexp  = regexp.MustCompile(`702.\d+\b`)
