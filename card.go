@@ -190,7 +190,7 @@ func (card *Card) formatCardForSlack() string {
 		for _, cf := range card.CardFaces {
 			var r []string
 			if len(card.MultiverseIds) == 0 {
-				r = append(r, fmt.Sprintf("*%s*", cf.Name))
+				r = append(r, fmt.Sprintf("*<%s|%s>*", card.ScryfallURI, cf.Name))
 			} else {
 				r = append(r, fmt.Sprintf("*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=%v|%v>*", card.MultiverseIds[0], cf.Name))
 			}
@@ -201,7 +201,7 @@ func (card *Card) formatCardForSlack() string {
 	}
 
 	if len(card.MultiverseIds) == 0 {
-		s = append(s, fmt.Sprintf("*%s*", card.Name))
+		s = append(s, fmt.Sprintf("*<%s|%s>*", card.ScryfallURI, card.Name))
 	} else {
 		s = append(s, fmt.Sprintf("*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=%v|%v>*", card.MultiverseIds[0], card.Name))
 	}
