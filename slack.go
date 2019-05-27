@@ -18,7 +18,7 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 			log.Debug("Slack ConnectedEvent", "Infos", ev.Info, "Connection counter", ev.ConnectionCount)
 
 		case *slack.MessageEvent:
-			log.Debug("New Slack MessageEvent", "Event", ev)
+			log.Debug("New Slack MessageEvent", "Channel", ev.Channel, "User", ev.User, "Text", ev.Text, "Ts", ev.Timestamp, "Thread TS", ev.ThreadTimestamp)
 			text := strings.Replace(ev.Msg.Text, "\n", " ", -1)
 			if !(strings.Contains(text, "!") || strings.Contains(text, "[[")) {
 				continue
@@ -30,10 +30,14 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 				fmt.Printf("%s\n", err)
 				return
 			}
+			var options []slack.RTMsgOption
+			if ev.ThreadTimestamp != "" {
+				options = append(options, slack.RTMsgOptionTS(ev.ThreadTimestamp))
+			}
 			toPrint := tokeniseAndDispatchInput(&fryatogParams{slackm: text}, getScryfallCard, getRandomScryfallCard, searchScryfallCard)
 			for _, s := range sliceUniqMap(toPrint) {
 				if s != "" {
-					rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("<@%v>: %v", user.ID, s), ev.Msg.Channel))
+					rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("<@%v>: %v", user.ID, s), ev.Msg.Channel, options...))
 				}
 			}
 
