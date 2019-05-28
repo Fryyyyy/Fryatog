@@ -136,7 +136,7 @@ func importRules(forceFetch bool) error {
 					log.Warn("In scanner", "Got example without rule", line)
 				}
 			} else if strings.HasPrefix(line, "     ") {
-				log.Debug("In scanner", "Follow on rule?", line)
+				// log.Debug("In scanner", "Follow on rule?", line)
 				if lastRule != "" {
 					rules[lastRule] = append(rules[lastRule], " "+strings.TrimSpace(line))
 				}
@@ -148,7 +148,14 @@ func importRules(forceFetch bool) error {
 			if line == "" {
 				lastGlossary = ""
 			} else if lastGlossary != "" {
+				if strings.Contains(lastGlossary, ",") {
+					gl := strings.Split(lastGlossary, ",")
+					for _, g := range gl {
+						rules[strings.ToLower(g)] = append(rules[strings.ToLower(g)], fmt.Sprintf("<b>%s</b>: %s", lastGlossary, line))
+					}
+				} else {
 				rules[strings.ToLower(lastGlossary)] = append(rules[strings.ToLower(lastGlossary)], fmt.Sprintf("<b>%s</b>: %s", lastGlossary, line))
+			}
 			} else {
 				lastGlossary = line
 			}

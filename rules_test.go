@@ -100,6 +100,7 @@ func TestGetRule(t *testing.T) {
 		{"def Strive", "<b>Strive</b>: Strive lets you pay additional mana to allow a spell to have additional targets. [Unofficial]"},
 		{"def wiLL of Athe Councel", "<b>Will Of The Council</b>: Will of the Council lets players vote on an outcome and the outcome/s with the highest number of votes happens. [Unofficial]"},
 		{"def cycle", "<b>Cycling</b>: A keyword ability that lets a card be discarded and replaced with a new card. See rule 702.28, \"Cycling.\"\n<b>702.28a.</b> Cycling is an activated ability that functions only while the card with cycling is in a player's hand. \"Cycling [cost]\" means \"[Cost], Discard this card: Draw a card.\""},
+		{"def Active Player, Nonactive Player", "<b>Active Player, Nonactive Player Order</b>: A system that determines the order by which players make choices if multiple players are instructed to make choices at the same time. See rule 101.4. This rule is modified for games using the shared team turns option; see rule 805.6.\n<b>101.4.</b> If multiple players would make choices and/or take actions at the same time, the active player (the player whose turn it is) makes any choices required, then the next player in turn order (usually the player seated to the active player's left) makes any choices required, followed by the remaining nonactive players in turn order. Then the actions happen simultaneously. This rule is often referred to as the \"Active Player, Nonactive Player (APNAP) order\" rule."},
 	}
 	for _, table := range tables {
 		got := handleRulesQuery(table.input)

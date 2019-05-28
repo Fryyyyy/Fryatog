@@ -284,7 +284,8 @@ func lookupUniqueNamePrefix(input string) string {
 			return ""
 		}
 	}
-	c := cardNames[:0]
+	//c := cardNames[:0]
+	var c []string
 	for _, x := range cardNames {
 		if strings.HasPrefix(normaliseCardName(x), ncn) {
 			log.Debug("In lookupUniqueNamePrefix", "Gottem", x)
