@@ -99,6 +99,7 @@ func TestGetRule(t *testing.T) {
 		{"def strive", "<b>Strive</b>: Strive lets you pay additional mana to allow a spell to have additional targets. [Unofficial]"},
 		{"def Strive", "<b>Strive</b>: Strive lets you pay additional mana to allow a spell to have additional targets. [Unofficial]"},
 		{"def wiLL of Athe Councel", "<b>Will Of The Council</b>: Will of the Council lets players vote on an outcome and the outcome/s with the highest number of votes happens. [Unofficial]"},
+		{"def cycle", "<b>Cycling</b>: A keyword ability that lets a card be discarded and replaced with a new card. See rule 702.28, \"Cycling.\"\n<b>702.28a.</b> Cycling is an activated ability that functions only while the card with cycling is in a player's hand. \"Cycling [cost]\" means \"[Cost], Discard this card: Draw a card.\""},
 	}
 	for _, table := range tables {
 		got := handleRulesQuery(table.input)

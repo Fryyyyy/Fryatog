@@ -281,24 +281,24 @@ func handleRulesQuery(input string) string {
 				log.Debug("Ability word exact match")
 				return "<b>" + strings.Title(query) + "</b>: " + a
 			}
-			// Special case, otherwise it matches "Planar Die" better
-			if query == "die" {
-				query = "dies"
+
+			customScorer := func(s1, s2 string) int {
+				return fuzzy.Ratio(s1, s2)
 			}
-			if bestGuess, err := fuzzy.ExtractOne(query, rulesKeys); err != nil {
+			if bestGuess, err := fuzzy.ExtractOne(query, rulesKeys, customScorer); err != nil {
 				log.Info("InExact rules match", "Error", err)
 			} else {
 				log.Debug("InExact rules match", "Guess", bestGuess)
-				if bestGuess.Score > 80 {
+				if bestGuess.Score > 60 {
 					defineText = strings.Join(rules[bestGuess.Match], "\n")
 				}
 			}
 			if defineText == "" {
-				if bestGuess, err := fuzzy.ExtractOne(query, abilityWordKeys); err != nil {
+				if bestGuess, err := fuzzy.ExtractOne(query, abilityWordKeys, customScorer); err != nil {
 					log.Info("InExact aw match", "Error", err)
 				} else {
 					log.Debug("InExact aw match", "Guess", bestGuess)
-					if bestGuess.Score > 80 {
+					if bestGuess.Score > 60 {
 						return "<b>" + strings.Title(bestGuess.Match) + "</b>: " + abilityWords[bestGuess.Match]
 					}
 				}
