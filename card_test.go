@@ -42,6 +42,7 @@ var (
 		"Tarmogoyf":                   "test_data/tarmogoyf.json",
 		"Sarkhan the Masterless Plus": "test_data/sarkhanthemasterlessplus.json",
 		"Fire//Ice No Multiverse":     "test_data/fireice-nomultiverse.json",
+		"Ancestral Recall": "test_data/ancestralrecall.json",
 	}
 )
 
@@ -120,7 +121,7 @@ func TestPrintCardForIRC(t *testing.T) {
 		output   string
 	}{
 		{"Ponder", "\x02Ponder\x0F {U} · Sorcery · Look at the top three cards of your library, then put them back in any order. You may shuffle your library. \\ Draw a card. · C18-C · VinRes,Leg,ModBan"},
-		{"Shahrazad", "\x02Shahrazad\x0F {W}{W} · Sorcery · Players play a Magic subgame, using their libraries as their decks. Each player who doesn't win the subgame loses half their life, rounded up. · ARN-R · VinBan,LegBan"},
+		{"Shahrazad", "\x02Shahrazad\x0F {W}{W} · Sorcery · Players play a Magic subgame, using their libraries as their decks. Each player who doesn't win the subgame loses half their life, rounded up. · ARN-R · [RL] · VinBan,LegBan"},
 		{"Jace, the Mind Sculptor", "\x02Jace, the Mind Sculptor\x0F {2}{U}{U} · Legendary Planeswalker — Jace · [3] +2: Look at the top card of target player's library. You may put that card on the bottom of that player's library. \\ 0: Draw three cards, then put two cards from your hand on top of your library in any order. \\ −1: Return target creature to its owner's hand. \\ −12: Exile all cards from target player's library, then that player shuffles their hand into their library. · A25-M · Vin,Leg,Mod"},
 		{"Expansion", "\x02Expansion\x0F {U/R}{U/R} · Instant · Copy target instant or sorcery spell with converted mana cost 4 or less. You may choose new targets for the copy. · GRN-R · Vin,Leg,Mod,Std\n\x02Explosion\x0F {X}{U}{U}{R}{R} · Instant · Explosion deals X damage to any target. Target player draws X cards. · GRN-R · Vin,Leg,Mod,Std"},
 		{"Bushi Tenderfoot", "\x02Bushi Tenderfoot\x0F {W} · Creature — Human Soldier · 1/1 · When a creature dealt damage by Bushi Tenderfoot this turn dies, flip Bushi Tenderfoot. · CHK-U · Vin,Leg,Mod\n\x02Kenzo the Hardhearted\x0F · Legendary Creature — Human Samurai · 3/4 · Double strike; bushido 2 \x1D(Whenever this creature blocks or becomes blocked, it gets +2/+2 until end of turn.)\x0F"},
@@ -130,6 +131,7 @@ func TestPrintCardForIRC(t *testing.T) {
 		{"Arlinn Kord", "\x02Arlinn Kord\x0F {2}{R}{G} · Legendary Planeswalker — Arlinn · [3] +1: Until end of turn, up to one target creature gets +2/+2 and gains vigilance and haste. \\ 0: Create a 2/2 green Wolf creature token. Transform Arlinn Kord. · SOI-M · Vin,Leg,Mod\n\x02Arlinn, Embraced by the Moon\x0F · Legendary Planeswalker — Arlinn · [Red/Green] · +1: Creatures you control get +1/+1 and gain trample until end of turn. \\ −1: Arlinn, Embraced by the Moon deals 3 damage to any target. Transform Arlinn, Embraced by the Moon. \\ −6: You get an emblem with \"Creatures you control have haste and '{T}: This creature deals damage equal to its power to any target.'\""},
 		{"Consign", "\x02Consign\x0F {1}{U} · Instant · Return target nonland permanent to its owner's hand. · HOU-U · Vin,Leg,Mod\n\x02Oblivion\x0F {4}{B} · Sorcery · Aftermath \x1D(Cast this spell only from your graveyard. Then exile it.)\x0F \\ Target opponent discards two cards. · HOU-U · Vin,Leg,Mod"},
 		{"Jace, Vryn's Prodigy", "\x02Jace, Vryn's Prodigy\x0F {1}{U} · Legendary Creature — Human Wizard · 0/2 · {T}: Draw a card, then discard a card. If there are five or more cards in your graveyard, exile Jace, Vryn's Prodigy, then return him to the battlefield transformed under his owner's control. · ORI-M · Vin,Leg,Mod\n\x02Jace, Telepath Unbound\x0F · Legendary Planeswalker — Jace · [Blue] · [5] +1: Up to one target creature gets -2/-0 until your next turn. \\ −3: You may cast target instant or sorcery card from your graveyard this turn. If that card would be put into your graveyard this turn, exile it instead. \\ −9: You get an emblem with \"Whenever you cast a spell, target opponent puts the top five cards of their library into their graveyard.\""},
+		{"Ancestral Recall", "\x02Ancestral Recall\x0F {U} · Instant · Target player draws three cards. · VMA-M · [RL] · VinRes,LegBan"},
 	}
 	for _, table := range tables {
 		fi, err := os.Open(RealCards[table.cardname])
@@ -141,20 +143,25 @@ func TestPrintCardForIRC(t *testing.T) {
 			t.Errorf("Something went wrong parsing the card: %s", err)
 		}
 		fc := c.formatCardForIRC()
-		if fc != table.output {
-			t.Errorf("Incorrect output -- got %s -- want %s", fc, table.output)
+		if diff := cmp.Diff(fc, table.output); diff != "" {
+			t.Errorf("Incorrect card (-want +got):\n%s", diff)
 		}
 	}
 }
 
 func TestPrintCardForSlack(t *testing.T) {
+	highlanderPoints = make(map[string]int)
+	err := importHighlanderPoints(false)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
 	tables := []struct {
 		cardname string
 		output   string
 	}{
 		{"Ponder", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=451051|Ponder>* :mana-U: · Sorcery · Look at the top three cards of your library, then put them back in any order. You may shuffle your library. \\ Draw a card."},
-		{"Shahrazad", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=980|Shahrazad>* :mana-W::mana-W: · Sorcery · Players play a Magic subgame, using their libraries as their decks. Each player who doesn't win the subgame loses half their life, rounded up."},
-		{"Jace, the Mind Sculptor", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=442051|Jace, the Mind Sculptor>* :mana-2::mana-U::mana-U: · Legendary Planeswalker — Jace · [3] +2: Look at the top card of target player's library. You may put that card on the bottom of that player's library. \\ 0: Draw three cards, then put two cards from your hand on top of your library in any order. \\ −1: Return target creature to its owner's hand. \\ −12: Exile all cards from target player's library, then that player shuffles their hand into their library."},
+		{"Shahrazad", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=980|Shahrazad>* :mana-W::mana-W: · Sorcery · Players play a Magic subgame, using their libraries as their decks. Each player who doesn't win the subgame loses half their life, rounded up. · [RL] ·"},
+		{"Jace, the Mind Sculptor", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=442051|Jace, the Mind Sculptor>* :mana-2::mana-U::mana-U: · Legendary Planeswalker — Jace · [3] +2: Look at the top card of target player's library. You may put that card on the bottom of that player's library. \\ 0: Draw three cards, then put two cards from your hand on top of your library in any order. \\ −1: Return target creature to its owner's hand. \\ −12: Exile all cards from target player's library, then that player shuffles their hand into their library. [:point_right: 1 :point_left:]"},
 		{"Expansion", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=452974|Expansion>* :mana-UR::mana-UR: · Instant · Copy target instant or sorcery spell with converted mana cost 4 or less. You may choose new targets for the copy.\n*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=452974|Explosion>* :mana-X::mana-U::mana-U::mana-R::mana-R: · Instant · Explosion deals X damage to any target. Target player draws X cards."},
 		{"Bushi Tenderfoot", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=78600|Bushi Tenderfoot>* :mana-W: · Creature — Human Soldier · 1/1 · When a creature dealt damage by Bushi Tenderfoot this turn dies, flip Bushi Tenderfoot.\n*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=78600|Kenzo the Hardhearted>* · Legendary Creature — Human Samurai · 3/4 · Double strike; bushido 2 _(Whenever this creature blocks or becomes blocked, it gets +2/+2 until end of turn.)_"},
 		{"Fleetwheel Cruiser", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=417787|Fleetwheel Cruiser>* :mana-4: · Artifact — Vehicle · 5/3 · Trample, haste \\ When Fleetwheel Cruiser enters the battlefield, it becomes an artifact creature until end of turn. \\ Crew 2 _(Tap any number of creatures you control with total power 2 or more: This Vehicle becomes an artifact creature until end of turn.)_"},
@@ -166,6 +173,7 @@ func TestPrintCardForSlack(t *testing.T) {
 		{"Tarmogoyf", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=456783|Tarmogoyf>* :mana-1::mana-G: · Creature — Lhurgoyf · \xC2\xAD*/1+\xC2\xAD* · Tarmogoyf's power is equal to the number of card types among cards in all graveyards and its toughness is equal to that number plus 1."},
 		{"Sarkhan the Masterless Plus", "*<https://scryfall.com/card/war/143%E2%98%85/ja/sarkhan-the-masterless?utm_source=api|Sarkhan the Masterless>* :mana-3::mana-R::mana-R: · Legendary Planeswalker — Sarkhan · [5] Whenever a creature attacks you or a planeswalker you control, each Dragon you control deals 1 damage to that creature. \\ +1: Until end of turn, each planeswalker you control becomes a 4/4 red Dragon creature and gains flying. \\ −3: Create a 4/4 red Dragon creature token with flying."},
 		{"Fire//Ice No Multiverse", "*<https://scryfall.com/card/wc01/ar128/fire-ice?utm_source=api|Fire>* :mana-1::mana-R: · Instant · Fire deals 2 damage divided as you choose among one or two targets.\n*<https://scryfall.com/card/wc01/ar128/fire-ice?utm_source=api|Ice>* :mana-1::mana-U: · Instant · Tap target permanent. \\ Draw a card."},
+		{"Ancestral Recall", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=382841|Ancestral Recall>* :mana-U: · Instant · Target player draws three cards. · [RL] · [:point_right: 4 :point_left:]"},
 	}
 	for _, table := range tables {
 		fi, err := os.Open(RealCards[table.cardname])
@@ -177,8 +185,8 @@ func TestPrintCardForSlack(t *testing.T) {
 			t.Errorf("Something went wrong parsing the card: %s", err)
 		}
 		fc := c.formatCardForSlack()
-		if fc != table.output {
-			t.Errorf("Incorrect output -- got %s -- want %s", fc, table.output)
+		if diff := cmp.Diff(fc, table.output); diff != "" {
+			t.Errorf("Incorrect card (-want +got):\n%s", diff)
 		}
 	}
 }

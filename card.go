@@ -206,6 +206,9 @@ func (card *Card) formatCardForSlack() string {
 		s = append(s, fmt.Sprintf("*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=%v|%v>*", card.MultiverseIds[0], card.Name))
 	}
 	s = append(s, card.CommonCard.getCardOrFaceAsString("slack")...)
+	if card.Reserved == true {
+		s = append(s, "· [RL] ·")
+	}
 	if points, ok := highlanderPoints[normaliseCardName(card.Name)]; ok {
 		s = append(s, fmt.Sprintf("[:point_right: %d :point_left:]", points))
 	}
@@ -234,6 +237,9 @@ func (card *Card) formatCardForIRC() string {
 	s = append(s, fmt.Sprintf("\x02%s\x0F", card.Name))
 	s = append(s, card.CommonCard.getCardOrFaceAsString("irc")...)
 	s = append(s, fmt.Sprintf("· %s ·", card.formatExpansions()))
+	if card.Reserved == true {
+		s = append(s, "[RL] ·")
+	}
 	s = append(s, card.formatLegalities())
 
 	return strings.Join(s, " ")
