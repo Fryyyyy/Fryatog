@@ -372,7 +372,7 @@ func fetchScryfallCardByFuzzyName(input string) (Card, error) {
 			return card, fmt.Errorf("Something went wrong parsing the card")
 		}
 		// Quick hack to exclude Planes/Vanguards/UnCards (TODO : Add a command to get them specifically)
-		if card.BorderColor != "black" || card.Oversized == true {
+		if card.BorderColor != "black" || card.Oversized == true || card.Layout == "Token" {
 			return EmptyCard, fmt.Errorf("Dumb card returned, keep trying")
 		}
 		return card, nil
