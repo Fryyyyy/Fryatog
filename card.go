@@ -355,13 +355,14 @@ func (card *Card) sortRulings() error {
 }
 
 func fetchScryfallCardByFuzzyName(input string) (Card, error) {
+	var EmptyCard Card
 	url := fmt.Sprintf(scryfallFuzzyAPIURL, url.QueryEscape(input))
 	log.Debug("fetchScryfallCard: Attempting to fetch", "URL", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("fetchScryfallCard: The HTTP request failed", "Error", err)
-		return Card{}, fmt.Errorf("Something went wrong fetching the card")
+		return EmptyCard, fmt.Errorf("Something went wrong fetching the card")
 	}
 	defer resp.Body.Close()
 	var card Card
@@ -369,6 +370,10 @@ func fetchScryfallCardByFuzzyName(input string) (Card, error) {
 		if err := json.NewDecoder(resp.Body).Decode(&card); err != nil {
 			raven.CaptureError(err, nil)
 			return card, fmt.Errorf("Something went wrong parsing the card")
+		}
+		// Quick hack to exclude Planes/Vanguards/UnCards (TODO : Add a command to get them specifically)
+		if card.BorderColor != "black" || card.Oversized == true {
+			return EmptyCard, fmt.Errorf("Dumb card returned, keep trying")
 		}
 		return card, nil
 	}
