@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -382,7 +383,7 @@ func checkCacheForCard(ncn string) (Card, error) {
 	if cacheCard, found := nameToCardCache.Get(ncn); found {
 		log.Debug("Card was cached")
 		cardCacheHits.Add(1)
-		cardCacheHitPercentage.Set((cardCacheHits.Value() / cardCacheQueries.Value()) * 100)
+		cardCacheHitPercentage.Set(int64(math.Round((float64(cardCacheHits.Value())/float64(cardCacheQueries.Value())) * 100)))
 		if cacheCard == nil || reflect.DeepEqual(cacheCard, emptyCard) {
 			log.Debug("But cached as nothing")
 			return emptyCard, fmt.Errorf("Card not found")
