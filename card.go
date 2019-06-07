@@ -529,7 +529,8 @@ func searchScryfallCard(cardTokens []string) ([]Card, error) {
 		case csr.TotalCards == 0:
 			return []Card{}, fmt.Errorf("No cards found")
 		case csr.TotalCards <= 2:
-			return csr.Data[0:2], nil
+			minLen := min(2, len(csr.Data))
+			return csr.Data[0:minLen], nil
 		case csr.TotalCards > 5:
 			return []Card{}, fmt.Errorf("Too many cards returned (%v > 5)", csr.TotalCards)
 		default:

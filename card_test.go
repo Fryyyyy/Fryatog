@@ -42,7 +42,7 @@ var (
 		"Tarmogoyf":                   "test_data/tarmogoyf.json",
 		"Sarkhan the Masterless Plus": "test_data/sarkhanthemasterlessplus.json",
 		"Fire//Ice No Multiverse":     "test_data/fireice-nomultiverse.json",
-		"Ancestral Recall": "test_data/ancestralrecall.json",
+		"Ancestral Recall":            "test_data/ancestralrecall.json",
 	}
 )
 

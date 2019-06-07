@@ -231,6 +231,7 @@ func (card *Card) formatExpansions() string {
 			}
 		}
 	}
+	log.Warn("FE", "card", card)
 	ret = append(ret, fmt.Sprintf("%s-%s", strings.ToUpper(card.Set), strings.ToUpper(card.Rarity[0:1])))
 	return strings.Join(sliceUniqMap(ret), ",")
 }

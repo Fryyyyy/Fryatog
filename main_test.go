@@ -48,6 +48,23 @@ func fakeFindCards(tokens []string) ([]Card, error) {
 	return []Card{card1, card2}, nil
 }
 
+func fakeFindRealCard(tokens []string) ([]string, error) {
+	var csr CardSearchResult
+	var ret []string
+	fi, err := os.Open("test_data/" + normaliseCardName(strings.Join(tokens, " ")) + "-searchresult.json")
+	if err != nil {
+		return []string{}, fmt.Errorf("Unable to open card JSON: %s", err)
+	}
+	if err := json.NewDecoder(fi).Decode(&csr); err != nil {
+		return nil, fmt.Errorf("Something went wrong parsing the card search results")
+	}
+	minLen := min(2, len(csr.Data))
+	for _, c := range csr.Data[0:minLen] {
+		ret = append(ret, c.formatCardForIRC())
+	}
+	return ret, nil
+}
+
 func TestNormaliseCardName(t *testing.T) {
 	tables := []struct {
 		input  string
@@ -146,5 +163,22 @@ func TestHelp(t *testing.T) {
 	got := printHelp()
 	if !strings.Contains(got, "!cardname") {
 		t.Errorf("Incorrect output -- got %s - want %s", got, "!cardname")
+	}
+}
+
+func TestCardSearchRealResults(t *testing.T) {
+	tables := []struct {
+		input  []string
+		output []string
+	}{
+		{[]string{"Search for Azcanta"}, []string{"\x02Search for Azcanta\x0F {1}{U} · Legendary Enchantment · At the beginning of your upkeep, look at the top card of your library. You may put it into your graveyard. Then if you have seven or more cards in your graveyard, you may transform Search for Azcanta. · XLN-R · Vin,Leg,Mod,Std\n\x02Azcanta, the Sunken Ruin\x0F · Legendary Land · (Transforms from Search for Azcanta.) \\ {T}: Add {U}. \\ {2}{U}, {T}: Look at the top four cards of your library. You may reveal a noncreature, nonland card from among them and put it into your hand. Put the rest on the bottom of your library in any order."}},
+	}
+	for _, table := range tables {
+		got, err := fakeFindRealCard(table.input)
+		if err != nil {
+			t.Errorf("Unexpected error: %v", err)
+		} else if !reflect.DeepEqual(got, table.output) {
+			t.Errorf("Incorrect output -- got %s - want %s", got, table.output)
+		}
 	}
 }
