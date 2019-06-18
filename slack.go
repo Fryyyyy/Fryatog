@@ -54,7 +54,7 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 			if ev.ThreadTimestamp != "" {
 				options = append(options, slack.RTMsgOptionTS(ev.ThreadTimestamp))
 			}
-			toPrint := tokeniseAndDispatchInput(&fryatogParams{slackm: text}, getScryfallCard, getRandomScryfallCard, searchScryfallCard)
+			toPrint := tokeniseAndDispatchInput(&fryatogParams{slackm: text}, getScryfallCard, getDumbScryfallCard, getRandomScryfallCard, searchScryfallCard)
 			for _, s := range sliceUniqMap(toPrint) {
 				if s != "" {
 					rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("<@%v>: %v", user.ID, s), ev.Msg.Channel, options...))

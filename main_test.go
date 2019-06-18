@@ -129,7 +129,7 @@ func TestTokens(t *testing.T) {
 		{"Trying to bring = up a !Planeswalker =card", []string{testCardExpected}},
 	}
 	for _, table := range tables {
-		got := tokeniseAndDispatchInput(&fryatogParams{m: &hbot.Message{Content: table.input}}, fakeGetCard, fakeGetRandomCard, fakeFindCards)
+		got := tokeniseAndDispatchInput(&fryatogParams{m: &hbot.Message{Content: table.input}}, fakeGetCard, fakeGetCard, fakeGetRandomCard, fakeFindCards)
 		if !reflect.DeepEqual(got, table.output) {
 			t.Errorf("Incorrect output for [%v] -- got %s -- want %s", table.input, got, table.output)
 		}

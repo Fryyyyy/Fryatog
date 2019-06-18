@@ -1,8 +1,8 @@
 package main
 
 import (
-	"expvar"
 	"errors"
+	"expvar"
 	"flag"
 	"fmt"
 	"net/http"
@@ -44,7 +44,7 @@ var (
 	bot          *hbot.Bot
 	conf         configuration
 	slackClients []*slack.Client
-	ims []slack.IM
+	ims          []slack.IM
 
 	// Caches
 	nameToCardCache      *lru.ARCCache
@@ -101,6 +101,7 @@ type fryatogParams struct {
 	isIRC                 bool
 	message               string
 	cardGetFunction       CardGetter
+	dumbCardGetFunction   CardGetter
 	randomCardGetFunction RandomCardGetter
 	cardFindFunction      MultipleCardGetter
 }
@@ -186,7 +187,7 @@ func getWho() {
 // tokeniseAndDispatchInput splits the given user-supplied string into a number of commands
 // and does some pre-processing to sort out real commands from just normal chat
 // Any real commands are handed to the handleCommand function
-func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, randomCardGetFunction RandomCardGetter, cardFindFunction MultipleCardGetter) []string {
+func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dumbCardGetFunction CardGetter, randomCardGetFunction RandomCardGetter, cardFindFunction MultipleCardGetter) []string {
 	var input string
 	isIRC := (fp.m != nil)
 	if isIRC {
@@ -303,7 +304,7 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, ran
 		}
 
 		log.Debug("Dispatching", "index", commands)
-		params := fryatogParams{message: message, isIRC: isIRC, cardGetFunction: cardGetFunction, randomCardGetFunction: randomCardGetFunction, cardFindFunction: cardFindFunction}
+		params := fryatogParams{message: message, isIRC: isIRC, cardGetFunction: cardGetFunction, dumbCardGetFunction: dumbCardGetFunction, randomCardGetFunction: randomCardGetFunction, cardFindFunction: cardFindFunction}
 		go handleCommand(&params, c)
 		commands++
 	}
@@ -355,6 +356,17 @@ func handleCommand(params *fryatogParams, c chan string) {
 	case cardTokens[0] == "search":
 		log.Debug("Advanced search query", "Input", message)
 		c <- strings.Join(handleAdvancedSearchQuery(params, cardTokens[1:]), "\n")
+		return
+
+	case cardTokens[0] == "uncard", cardTokens[0] == "vanguard", cardTokens[0] == "plane":
+		log.Debug("Special card query", "Input", message)
+		if card, err := findCard(cardTokens[1:], params.dumbCardGetFunction); err == nil {
+			if params.isIRC {
+				c <- card.formatCardForIRC()
+			} else {
+				c <- card.formatCardForSlack()
+			}
+		}
 		return
 
 	case message == "random":
@@ -657,7 +669,7 @@ var mainTrigger = hbot.Trigger{
 		if m.From == whichNick {
 			log.Debug("Ignoring message from myself", "Input", m.Content)
 		}
-		toPrint := tokeniseAndDispatchInput(&fryatogParams{m: m}, getScryfallCard, getRandomScryfallCard, searchScryfallCard)
+		toPrint := tokeniseAndDispatchInput(&fryatogParams{m: m}, getScryfallCard, getDumbScryfallCard, getRandomScryfallCard, searchScryfallCard)
 		for _, s := range sliceUniqMap(toPrint) {
 			var prefix string
 			isPublic := strings.Contains(m.To, "#")

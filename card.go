@@ -355,14 +355,14 @@ func (card *Card) sortRulings() error {
 }
 
 func fetchScryfallCardByFuzzyName(input string) (Card, error) {
-	var EmptyCard Card
+	var emptyCard Card
 	url := fmt.Sprintf(scryfallFuzzyAPIURL, url.QueryEscape(input))
 	log.Debug("fetchScryfallCard: Attempting to fetch", "URL", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("fetchScryfallCard: The HTTP request failed", "Error", err)
-		return EmptyCard, fmt.Errorf("Something went wrong fetching the card")
+		return emptyCard, fmt.Errorf("Something went wrong fetching the card")
 	}
 	defer resp.Body.Close()
 	var card Card
@@ -371,14 +371,45 @@ func fetchScryfallCardByFuzzyName(input string) (Card, error) {
 			raven.CaptureError(err, nil)
 			return card, fmt.Errorf("Something went wrong parsing the card")
 		}
-		// Quick hack to exclude Planes/Vanguards/UnCards (TODO : Add a command to get them specifically)
 		if card.BorderColor != "black" || card.Oversized == true || card.Layout == "Token" {
-			return EmptyCard, fmt.Errorf("Dumb card returned, keep trying")
+			return emptyCard, fmt.Errorf("Dumb card returned, keep trying")
 		}
 		return card, nil
 	}
 	log.Info("fetchScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
 	return card, fmt.Errorf("Card not found by Scryfall")
+}
+
+func fetchDumbScryfallCardByName(input string) (Card, error) {
+	var emptyCard Card
+	u, _ := url.Parse(scryfallSearchAPIURL)
+	q := u.Query()
+	q.Add("include_extras", "true")
+	queryString := "(border:silver or is:funny or t:scheme or t:vanguard or t:plane or t:phenomenon) " + input
+	q.Add("q", queryString)
+	u.RawQuery = q.Encode()
+	log.Debug("searchScryfallCard: Attempting to fetch", "URL", u)
+	resp, err := http.Get(u.String())
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Warn("searchDumbScryfallCard: The HTTP request failed", "Error", err)
+		return emptyCard, fmt.Errorf("Something went wrong fetching card search results")
+	}
+	defer resp.Body.Close()
+	var csr CardSearchResult
+	if resp.StatusCode == 200 {
+		if err := json.NewDecoder(resp.Body).Decode(&csr); err != nil {
+			raven.CaptureError(err, nil)
+			return emptyCard, fmt.Errorf("Something went wrong parsing the card search results")
+		}
+		log.Debug("searchDumbScryfallCard", "Total cards found", csr.TotalCards)
+		if csr.TotalCards != 1 {
+			return emptyCard, fmt.Errorf("Too many cards returned (%v > 5)", csr.TotalCards)
+		}
+		return csr.Data[0], nil
+	}
+	log.Error("searchDumbScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
+	return emptyCard, fmt.Errorf("No cards found")
 }
 
 func checkCacheForCard(ncn string) (Card, error) {
@@ -388,7 +419,7 @@ func checkCacheForCard(ncn string) (Card, error) {
 	if cacheCard, found := nameToCardCache.Get(ncn); found {
 		log.Debug("Card was cached")
 		cardCacheHits.Add(1)
-		cardCacheHitPercentage.Set(int64(math.Round((float64(cardCacheHits.Value())/float64(cardCacheQueries.Value())) * 100)))
+		cardCacheHitPercentage.Set(int64(math.Round((float64(cardCacheHits.Value()) / float64(cardCacheQueries.Value())) * 100)))
 		if cacheCard == nil || reflect.DeepEqual(cacheCard, emptyCard) {
 			log.Debug("But cached as nothing")
 			return emptyCard, fmt.Errorf("Card not found")
@@ -470,6 +501,25 @@ func getScryfallCard(input string) (Card, error) {
 	}
 	// Store the empty result
 	nameToCardCache.Add(ncn, card)
+	return card, fmt.Errorf("No card found")
+}
+
+func getDumbScryfallCard(input string) (Card, error) {
+	dumbCardRequests.Add(1)
+	var card Card
+	ncn := normaliseCardName(input)
+	log.Debug("Asked for dumb card", "Name", ncn)
+
+	card, err := checkCacheForCard(ncn)
+	if err == nil {
+		return card, err
+	}
+
+	log.Debug("Checking Scryfall for card", "Name", ncn)
+	card, err = fetchDumbScryfallCardByName(input)
+	if err == nil {
+		return card, nil
+	}
 	return card, fmt.Errorf("No card found")
 }
 

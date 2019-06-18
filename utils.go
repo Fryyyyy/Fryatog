@@ -65,6 +65,7 @@ var (
 	searchRequests         = expvar.NewInt("bot_searchRequests")
 	randomRequests         = expvar.NewInt("bot_randomRequests")
 	cardRequests           = expvar.NewInt("bot_cardRequests")
+	dumbCardRequests       = expvar.NewInt("bot_dumbCardRequests")
 	metadataRequests       = expvar.NewInt("bot_metadataRequests")
 	reminderRequests       = expvar.NewInt("bot_reminderRequests")
 	flavourRequests        = expvar.NewInt("bot_flavourRequests")
