@@ -14,7 +14,7 @@ require (
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/mudler/sendfd v0.0.0-20150620134918-f0fc74c13877 // indirect
-	github.com/nlopes/slack v0.5.0
+	github.com/nlopes/slack v0.5.1-0.20190614143800-445280bcb9c1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/paul-mannino/go-fuzzywuzzy v0.0.0-20190505212647-144c032ebff6
 	github.com/pkg/errors v0.8.1 // indirect
