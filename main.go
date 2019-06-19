@@ -505,7 +505,7 @@ func main() {
 	}
 
 	// Initialise Cardname cache
-	nameToCardCache, err = lru.NewARC(2048)
+	nameToCardCache, err = lru.NewARC(50)
 	if err != nil {
 		log.Warn("Error initialising the ARC", "Err", err)
 		raven.CaptureErrorAndWait(err, nil)
