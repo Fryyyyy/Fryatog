@@ -1,0 +1,99 @@
+{
+    "object": "card",
+    "id": "095d77fd-c1d1-49e6-89f8-a272522e09fe",
+    "oracle_id": "d599a38c-7719-443e-bb59-55bd43a8fee6",
+    "multiverse_ids": [
+        83037
+    ],
+    "mtgo_id": 22427,
+    "mtgo_foil_id": 22428,
+    "tcgplayer_id": 12604,
+    "name": "Confiscate",
+    "lang": "en",
+    "released_at": "2005-07-29",
+    "uri": "https://api.scryfall.com/cards/095d77fd-c1d1-49e6-89f8-a272522e09fe",
+    "scryfall_uri": "https://scryfall.com/card/9ed/68/confiscate?utm_source=api",
+    "layout": "normal",
+    "highres_image": true,
+    "image_uris": {
+        "small": "https://img.scryfall.com/cards/small/en/9ed/68.jpg?1517813031",
+        "normal": "https://img.scryfall.com/cards/normal/en/9ed/68.jpg?1517813031",
+        "large": "https://img.scryfall.com/cards/large/en/9ed/68.jpg?1517813031",
+        "png": "https://img.scryfall.com/cards/png/en/9ed/68.png?1517813031",
+        "art_crop": "https://img.scryfall.com/cards/art_crop/en/9ed/68.jpg?1517813031",
+        "border_crop": "https://img.scryfall.com/cards/border_crop/en/9ed/68.jpg?1517813031"
+    },
+    "mana_cost": "{4}{U}{U}",
+    "cmc": 6.0,
+    "type_line": "Enchantment — Aura",
+    "oracle_text": "Enchant permanent (Target a permanent as you cast this. This card enters the battlefield attached to that permanent.)\nYou control enchanted permanent.",
+    "colors": [
+        "U"
+    ],
+    "color_identity": [
+        "U"
+    ],
+    "legalities": {
+        "standard": "not_legal",
+        "future": "not_legal",
+        "frontier": "not_legal",
+        "modern": "legal",
+        "legacy": "legal",
+        "pauper": "not_legal",
+        "vintage": "legal",
+        "penny": "legal",
+        "commander": "legal",
+        "duel": "legal",
+        "oldschool": "not_legal"
+    },
+    "games": [
+        "mtgo",
+        "paper"
+    ],
+    "reserved": false,
+    "foil": true,
+    "nonfoil": true,
+    "oversized": false,
+    "promo": false,
+    "reprint": true,
+    "variation": false,
+    "set": "9ed",
+    "set_name": "Ninth Edition",
+    "set_type": "core",
+    "set_uri": "https://api.scryfall.com/sets/e70c8572-4732-4e92-a140-b4e3c1c84c93",
+    "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3A9ed&unique=prints",
+    "scryfall_set_uri": "https://scryfall.com/sets/9ed?utm_source=api",
+    "rulings_uri": "https://api.scryfall.com/cards/095d77fd-c1d1-49e6-89f8-a272522e09fe/rulings",
+    "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad599a38c-7719-443e-bb59-55bd43a8fee6&unique=prints",
+    "collector_number": "68",
+    "digital": false,
+    "rarity": "uncommon",
+    "illustration_id": "8c157a4a-c543-4f3c-85f3-db734cbb0385",
+    "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+    "artist": "Adam Rex",
+    "border_color": "white",
+    "frame": "2003",
+    "full_art": false,
+    "textless": false,
+    "booster": true,
+    "story_spotlight": false,
+    "promo_types": [],
+    "edhrec_rank": 4670,
+    "prices": {
+        "usd": "0.22",
+        "usd_foil": "2.97",
+        "eur": "0.17",
+        "tix": "0.01"
+    },
+    "related_uris": {
+        "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=83037",
+        "tcgplayer_decks": "https://decks.tcgplayer.com/magic/deck/search?contains=Confiscate&page=1&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+        "edhrec": "http://edhrec.com/route/?cc=Confiscate",
+        "mtgtop8": "http://mtgtop8.com/search?MD_check=1&SB_check=1&cards=Confiscate"
+    },
+    "purchase_uris": {
+        "tcgplayer": "https://shop.tcgplayer.com/product/productsearch?id=12604&partner=Scryfall&utm_campaign=affiliate&utm_medium=scryfall&utm_source=scryfall",
+        "cardmarket": "https://www.cardmarket.com/en/Magic/Products/Singles/Ninth-Edition/Confiscate?referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+        "cardhoarder": "https://www.cardhoarder.com/cards/22427?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    }
+}

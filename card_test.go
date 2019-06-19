@@ -44,6 +44,7 @@ var (
 		"Fire//Ice No Multiverse":     "test_data/fireice-nomultiverse.json",
 		"Ancestral Recall":            "test_data/ancestralrecall.json",
 		"Crashing Footfalls":          "test_data/crashingfootfalls.json",
+		"Confiscate":                  "test_data/confiscate.json",
 	}
 )
 
@@ -134,6 +135,7 @@ func TestPrintCardForIRC(t *testing.T) {
 		{"Jace, Vryn's Prodigy", "\x02Jace, Vryn's Prodigy\x0F {1}{U} · Legendary Creature — Human Wizard · 0/2 · {T}: Draw a card, then discard a card. If there are five or more cards in your graveyard, exile Jace, Vryn's Prodigy, then return him to the battlefield transformed under his owner's control. · ORI-M · Vin,Leg,Mod\n\x02Jace, Telepath Unbound\x0F · Legendary Planeswalker — Jace · [Blue] · [5] +1: Up to one target creature gets -2/-0 until your next turn. \\ −3: You may cast target instant or sorcery card from your graveyard this turn. If that card would be put into your graveyard this turn, exile it instead. \\ −9: You get an emblem with \"Whenever you cast a spell, target opponent puts the top five cards of their library into their graveyard.\""},
 		{"Ancestral Recall", "\x02Ancestral Recall\x0F {U} · Instant · Target player draws three cards. · VMA-M · [RL] · VinRes,LegBan"},
 		{"Crashing Footfalls", "\x02Crashing Footfalls\x0F · Sorcery · [Green] · Suspend 4—{G} \x1D(Rather than cast this card from your hand, pay {G} and exile it with four time counters on it. At the beginning of your upkeep, remove a time counter. When the last is removed, cast it without paying its mana cost.)\x0F \\ Create two 4/4 green Rhino creature tokens with trample. · MH1-R · "},
+		{"Confiscate", "\x02Confiscate\x0F {4}{U}{U} · Enchantment — Aura · Enchant permanent \x1D(Target a permanent as you cast this. This card enters the battlefield attached to that permanent.)\x0F \\ You control enchanted permanent. · 9ED-U · Vin,Leg,Mod"},
 	}
 	for _, table := range tables {
 		fi, err := os.Open(RealCards[table.cardname])
