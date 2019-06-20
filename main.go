@@ -28,6 +28,7 @@ type configuration struct {
 	DevMode      bool     `json:"DevMode"`
 	ProdChannels []string `json:"ProdChannels"`
 	DevChannels  []string `json:"DevChannels"`
+	Ops          []string `json:"Ops"`
 	ProdNick     string   `json:"ProdNick"`
 	DevNick      string   `json:"DevNick"`
 	SlackTokens  []string `json:"SlackTokens"`
@@ -142,16 +143,21 @@ func printHelp() string {
 }
 
 func isSenderAnOp(m *hbot.Message) bool {
-	log.Debug("In isSenderAnOp", "Chanops", chanops)
-	whoChan = make(chan []string)
+	conf = readConfig()
+	/*whoChan = make(chan []string)
 	getWho()
 	var whoMessages [][]string
 	for op := range whoChan {
 		whoMessages = append(whoMessages, op)
 	}
 	handleWhoMessages(whoMessages)
-	_, ok := chanops[m.From]
-	return ok
+	_, ok := chanops[m.From]*/
+	for _, name := range conf.Ops {
+		if m.From == name {
+			return true
+		}
+	}
+	return false
 }
 
 func handleWhoMessages(inputs [][]string) {
@@ -213,6 +219,7 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 	// log.Debug("Beginning T.I", "CommandList", commandList)
 	c := make(chan string)
 	var commands int
+	var err error
 
 	if isIRC {
 		// Special case the Operator Commands
@@ -220,6 +227,11 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 		case input == "!quitquitquit" && isSenderAnOp(fp.m):
 			p, _ := os.FindProcess(os.Getpid())
 			p.Signal(syscall.SIGQUIT)
+		case strings.HasPrefix(input, "!cachedelete") && isSenderAnOp(fp.m):
+			if err := deleteItemFromCache(normaliseCardName(input[12:])); err != nil {
+				return []string{err.Error()}
+			}
+			return []string{"Done!"}
 		case input == "!updaterules" && isSenderAnOp(fp.m):
 			if err := importRules(true); err != nil {
 				log.Warn("Error importing Rules", "Error", err)
@@ -227,7 +239,6 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 			}
 			return []string{"Done!"}
 		case input == "!updatecardnames" && isSenderAnOp(fp.m):
-			var err error
 			cardNames, err = importCardNames(true)
 			if err != nil {
 				log.Warn("Error importing card names", "Error", err)
@@ -236,7 +247,6 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 			return []string{"Done!"}
 		case input == "!startup" && isSenderAnOp(fp.m):
 			var ret []string
-			var err error
 			if err = importRules(false); err != nil {
 				ret = append(ret, "Problem fetching rules")
 			}

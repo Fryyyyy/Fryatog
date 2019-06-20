@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"expvar"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -241,6 +242,14 @@ func reduceCardSentence(tokens []string) []string {
 		}
 	}
 	return ret
+}
+
+func deleteItemFromCache(key string) error {
+	if nameToCardCache.Contains(key) {
+		nameToCardCache.Remove(key)
+		return nil
+	}
+	return fmt.Errorf("Key not found")
 }
 
 func formatMessageForIRC(input string) string {
