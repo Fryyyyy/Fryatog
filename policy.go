@@ -1,40 +1,39 @@
 package main
 
-//These *should* be permanent link locations.
-const MtrUrl   = "https://blogs.magicjudges.org/rules/mtr"
-const IpgUrl   = "https://blogs.magicjudges.org/rules/ipg"
-const RulesUrl = "cr.mtgipg.com"
-const JarUrl   = "jar.mtgipg.com"
+const mtrURL = "https://blogs.magicjudges.org/rules/mtr"
+const ipgURL = "https://blogs.magicjudges.org/rules/ipg"
+const rulesURL = "http://cr.mtgipg.com"
+const jarURL = "http://jar.mtgipg.com"
 
-func HandlePolicyQuery(input []string) (string) {
+func handlePolicyQuery(input []string) string {
 	if input[0] == "url" {
-		return HandlePolicyQuery(input[1:])
+		return handlePolicyQuery(input[1:])
 	}
 
 	if input[0] == "jar" {
-		return JarUrl
+		return jarURL
 	}
 
 	if input[0] == "cr" {
-		return RulesUrl
+		return rulesURL
 	}
 
 	if input[0] == "mtr" {
 		if len(input) == 1 {
-			return MtrUrl
+			return rulesURL
 		}
 		replaced := policyRegex.ReplaceAllString(input[1], "-")
-		wellFormedMtrUrl := MtrUrl + replaced
-		return wellFormedMtrUrl
+		wellFormedMtrURL := mtrURL + replaced
+		return wellFormedMtrURL
 	}
 
 	if input[0] == "ipg" {
 		if len(input) == 1 {
-			return IpgUrl
+			return ipgURL
 		}
 		replaced := policyRegex.ReplaceAllString(input[1], "-")
-		wellFormedIpgUrl := IpgUrl + replaced
-		return wellFormedIpgUrl
+		wellFormedIpgURL := ipgURL + replaced
+		return wellFormedIpgURL
 	}
 	return ""
 }

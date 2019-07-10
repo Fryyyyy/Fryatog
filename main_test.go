@@ -83,19 +83,19 @@ func TestNormaliseCardName(t *testing.T) {
 
 func TestPolicy(t *testing.T) {
 	tables := []struct {
-		input string
+		input  string
 		output string
 	}{
 		{"mtr 4.8 is probably what you'll want to look at", "https://blogs.magicjudges.org/rules/mtr4-8"},
 		{"ipg", "https://blogs.magicjudges.org/rules/ipg"},
 		{"ipg 3.2", "https://blogs.magicjudges.org/rules/ipg3-2"},
-		{"url jar", "jar.mtgipg.com"},
-		{"url cr", "cr.mtgipg.com"},
+		{"url jar", "http://jar.mtgipg.com"},
+		{"url cr", "http://cr.mtgipg.com"},
 	}
 
 	for _, table := range tables {
 		strArray := strings.Fields(table.input)
-		got := HandlePolicyQuery(strArray)
+		got := handlePolicyQuery(strArray)
 		if got != table.output {
 			t.Errorf("Policy test fail\nWANTED\n%s\nGOT\n%s", table.output, got)
 		}

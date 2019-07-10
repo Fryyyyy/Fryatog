@@ -349,7 +349,7 @@ func handleCommand(params *fryatogParams, c chan string) {
 
 	case cardTokens[0] == "mtr", cardTokens[0] == "ipg", cardTokens[0] == "url":
 		log.Debug("Policy Query")
-		c <- HandlePolicyQuery(cardTokens)
+		c <- handlePolicyQuery(cardTokens)
 		return
 
 	case ruleRegexp.MatchString(message),
