@@ -51,6 +51,9 @@ var (
 	nonAlphaRegex  = regexp.MustCompile(`\W+`)
 	emojiRegex     = regexp.MustCompile(`{\d+}|{[A-Z]}|{\d\/[A-Z]}|{[A-Z]\/[A-Z]}`)
 
+	//Super rudimentary policy regex to parse e.g '4.8' into 4-8 for link generation
+	policyRegex = regexp.MustCompile(`[^0-9]+`)
+
 	// Metrics
 	totalLines             = expvar.NewInt("bot_totalLines")
 	ircLines               = expvar.NewInt("bot_ircLines")

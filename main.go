@@ -347,6 +347,11 @@ func handleCommand(params *fryatogParams, c chan string) {
 		c <- handleHearthstoneQuery(cardTokens[1:])
 		return
 
+	case cardTokens[0] == "mtr", cardTokens[0] == "ipg", cardTokens[0] == "url":
+		log.Debug("Policy Query")
+		c <- HandlePolicyQuery(cardTokens)
+		return
+
 	case ruleRegexp.MatchString(message),
 		strings.HasPrefix(message, "def "),
 		strings.HasPrefix(message, "define "):
