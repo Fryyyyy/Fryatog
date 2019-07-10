@@ -139,6 +139,7 @@ func printHelp() string {
 	ret = append(ret, "!rule <rulename> to bring up a Comprehensive Rule entry")
 	ret = append(ret, "!define <glossary> to bring up the definition of a term")
 	ret = append(ret, "!uncard/vanguard/plane <cardname> to bring up normally filtered out cards")
+	ret = append(ret, "!url <mtr/ipg/cr/jar> to bring up the links to policy documents")
 	return strings.Join(ret, " · ")
 }
 
