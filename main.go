@@ -5,6 +5,7 @@ import (
 	"expvar"
 	"flag"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
@@ -140,6 +141,8 @@ func printHelp() string {
 	ret = append(ret, "!define <glossary> to bring up the definition of a term")
 	ret = append(ret, "!uncard/vanguard/plane <cardname> to bring up normally filtered out cards")
 	ret = append(ret, "!url <mtr/ipg/cr/jar> to bring up the links to policy documents")
+	ret = append(ret, "!roll <X> to roll X-sided die; !roll <XdY> to roll X Y-sided dice")
+	ret = append(ret, "!coin to flip a coin (heads/tails)")
 	return strings.Join(ret, " · ")
 }
 
@@ -353,6 +356,16 @@ func handleCommand(params *fryatogParams, c chan string) {
 		c <- handlePolicyQuery(cardTokens)
 		return
 
+	case diceRegex.MatchString(message):
+		log.Debug("Dice roll")
+		c <- rollDice(message)
+		return
+	
+	case message == "coin":
+		log.Debug("Coin flip")
+		c <- flipCoin()
+		return
+
 	case ruleRegexp.MatchString(message),
 		strings.HasPrefix(message, "def "),
 		strings.HasPrefix(message, "define "):
@@ -541,6 +554,9 @@ func main() {
 		log.Warn("Error importing ability words", "Err", err)
 		raven.CaptureErrorAndWait(err, nil)
 	}
+
+	// Seed random number generator
+	rand.Seed(time.Now().UnixNano())
 
 	hijackSession := func(bot *hbot.Bot) {
 		bot.HijackSession = true
