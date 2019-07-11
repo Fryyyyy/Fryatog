@@ -3,6 +3,7 @@
     "Password": "",
     "DevMode": true,
     "ProdChannels": [
+        "#magicjudges-policy",
         "#magicjudges-rules",
         "#magicjudges",
         "##mtg"
