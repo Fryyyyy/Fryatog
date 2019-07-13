@@ -25,7 +25,11 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 
 		case *slack.MessageEvent:
 			//log.Debug("New Slack MessageEvent", "Event", ev)
-			log.Debug("New Slack MessageEvent", "Channel", ev.Channel, "User", ev.User, "Text", ev.Text, "Ts", ev.Timestamp, "Thread TS", ev.ThreadTimestamp)
+			log.Debug("New Slack MessageEvent", "Channel", ev.Channel, "User", ev.User, "Text", ev.Text, "Ts", ev.Timestamp, "Thread TS", ev.ThreadTimestamp, "Message", ev.Msg)
+			if ev.User == "" && ev.Text == "" {
+				log.Info("NSM: Empty Message")
+				continue
+			}
 			text := strings.Replace(ev.Msg.Text, "\n", " ", -1)
 			if len(ims) == 0 {
 				ims, err = api.GetIMChannels()
@@ -47,7 +51,7 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 			slackLines.Add(1)
 			user, err := api.GetUserInfo(ev.Msg.User)
 			if err != nil {
-				fmt.Printf("%s\n", err)
+				log.Warn("New SlackMessage", "Error getting user info", err)
 				return
 			}
 			var options []slack.RTMsgOption
