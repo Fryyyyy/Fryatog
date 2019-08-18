@@ -22,6 +22,7 @@ var (
 	RealCards                    = map[string]string{
 		"Ponder":                      "test_data/ponder.json",
 		"Shahrazad":                   "test_data/shahrazad.json",
+		"jtms":			       "test_data/jacethemindsculptor.json",
 		"Jace, the Mind Sculptor":     "test_data/jacethemindsculptor.json",
 		"Expansion":                   "test_data/expansion.json",
 		"Bushi Tenderfoot":            "test_data/bushitenderfoot.json",
@@ -124,6 +125,7 @@ func TestPrintCardForIRC(t *testing.T) {
 	}{
 		{"Ponder", "\x02Ponder\x0F {U} · Sorcery · Look at the top three cards of your library, then put them back in any order. You may shuffle your library. \\ Draw a card. · C18-C · VinRes,Leg,ModBan"},
 		{"Shahrazad", "\x02Shahrazad\x0F {W}{W} · Sorcery · Players play a Magic subgame, using their libraries as their decks. Each player who doesn't win the subgame loses half their life, rounded up. · ARN-R · [RL] · VinBan,LegBan"},
+		{"Jace, the Mind Sculptor", "\x02Jace, the Mind Sculptor\x0F {2}{U}{U} · Legendary Planeswalker — Jace · [3] +2: Look at the top card of target player's library. You may put that card on the bottom of that player's library. \\ 0: Draw three cards, then put two cards from your hand on top of your library in any order. \\ −1: Return target creature to its owner's hand. \\ −12: Exile all cards from target player's library, then that player shuffles their hand into their library. · A25-M · Vin,Leg,Mod"},
 		{"Jace, the Mind Sculptor", "\x02Jace, the Mind Sculptor\x0F {2}{U}{U} · Legendary Planeswalker — Jace · [3] +2: Look at the top card of target player's library. You may put that card on the bottom of that player's library. \\ 0: Draw three cards, then put two cards from your hand on top of your library in any order. \\ −1: Return target creature to its owner's hand. \\ −12: Exile all cards from target player's library, then that player shuffles their hand into their library. · A25-M · Vin,Leg,Mod"},
 		{"Expansion", "\x02Expansion\x0F {U/R}{U/R} · Instant · Copy target instant or sorcery spell with converted mana cost 4 or less. You may choose new targets for the copy. · GRN-R · Vin,Leg,Mod,Std\n\x02Explosion\x0F {X}{U}{U}{R}{R} · Instant · Explosion deals X damage to any target. Target player draws X cards. · GRN-R · Vin,Leg,Mod,Std"},
 		{"Bushi Tenderfoot", "\x02Bushi Tenderfoot\x0F {W} · Creature — Human Soldier · 1/1 · When a creature dealt damage by Bushi Tenderfoot this turn dies, flip Bushi Tenderfoot. · CHK-U · Vin,Leg,Mod\n\x02Kenzo the Hardhearted\x0F · Legendary Creature — Human Samurai · 3/4 · Double strike; bushido 2 \x1D(Whenever this creature blocks or becomes blocked, it gets +2/+2 until end of turn.)\x0F"},

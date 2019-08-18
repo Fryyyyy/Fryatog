@@ -1,11 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"sort"
 	"strings"
 
 	log "gopkg.in/inconshreveable/log15.v2"
+	raven "github.com/getsentry/raven-go"
 )
 
 // CardList represents the Scryfall List API when retrieving multiple cards
@@ -173,6 +176,13 @@ type CardSearchResult struct {
 	Data       []Card `json:"data"`
 }
 
+// CardShortName stores a dict reference that matches common card shorthands (bob, steve, etc)
+// to the card's fully qualified name
+type ShortCardName struct {
+	ShortName 	   string `json:"shortname"`
+	FullyQualifiedName string `json:"fullname"`
+}
+
 func standardiseColorIndicator(ColorIndicators []string) string {
 	expandedColors := map[string]string{"W": "White",
 		"U": "Blue",
@@ -310,4 +320,27 @@ func lookupUniqueNamePrefix(input string) string {
 		return j
 	}
 	return ""
+}
+
+func importShortCardNames() error {
+	log.Debug("In importCardShortNames")
+	content, err := ioutil.ReadFile(cardShortNameFile)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Warn("Error opening shortNames file", "Error", err)
+		return err
+	}
+	var tempCardShortNames []ShortCardName
+	err = json.Unmarshal(content, &tempCardShortNames)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Warn("Unable to parse shortNames file", "Error", err)
+		return err
+	}
+	for _, sn := range tempCardShortNames {
+		shortCardNames[sn.ShortName] = sn.FullyQualifiedName
+		shortCardKeys = append(shortCardKeys, sn.ShortName)
+	}
+	log.Debug("Populated shortNames", "Length", len(shortCardNames))
+	return nil
 }
