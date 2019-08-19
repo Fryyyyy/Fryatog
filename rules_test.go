@@ -7,12 +7,6 @@ import (
 )
 
 func TestBetterGetRule(t *testing.T) {
-	// Clear and import rules
-	rules = make(map[string][]string)
-	err := importRules(false)
-	if err != nil {
-		t.Errorf("Didn't expect an error -- got %v", err)
-	}
 	tables := []struct {
 		input  string
 		output string
@@ -36,7 +30,7 @@ func TestBetterGetRule(t *testing.T) {
 	for _, table := range tables {
 		got := handleRulesQuery(table.input)
 		if got != table.output {
-			t.Errorf("Incorrect output -- got %s - want %s", got, table.output)
+			t.Errorf("Incorrect output --\ngot  %s\nwant %s", got, table.output)
 		}
 	}
 }
@@ -55,13 +49,7 @@ func TestAbilityWords(t *testing.T) {
 }
 
 func TestGetRule(t *testing.T) {
-	// Clear and import rules
-	rules = make(map[string][]string)
-	err := importRules(false)
-	if err != nil {
-		t.Errorf("Didn't expect an error -- got %v", err)
-	}
-	err = importAbilityWords()
+	err := importAbilityWords()
 	if err != nil {
 		t.Errorf("Didn't expect an error -- got %v", err)
 	}
@@ -105,7 +93,7 @@ func TestGetRule(t *testing.T) {
 	for _, table := range tables {
 		got := handleRulesQuery(table.input)
 		if diff := cmp.Diff(table.output, got); diff != "" {
-			t.Errorf("Incorrect output (-want +got):\n%s", diff)
+			t.Errorf("Incorrect output --\ngot  %s\nwant %s", got, table.output)
 		}
 	}
 }
@@ -132,7 +120,7 @@ func TestRules(t *testing.T) {
 	for _, table := range tables {
 		got := rules[table.input]
 		if diff := cmp.Diff(got, table.output); diff != "" {
-			t.Errorf("Incorrect output (-want +got):\n%s", diff)
+			t.Errorf("Incorrect output --\ngot  %s\nwant %s", got, table.output)
 		}
 	}
 }
