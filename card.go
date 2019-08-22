@@ -476,9 +476,17 @@ func getCachedOrStoreCard(card *Card, ncn string) (Card, error) {
 func getScryfallCard(input string) (Card, error) {
 	cardRequests.Add(1)
 	var card Card
+	
 	// Normalise input to match how we store in the cache:
 	// lowercase, no punctuation.
 	ncn := normaliseCardName(input)
+	
+	// See if it's a known short name of a card.
+	if qualifiedName, ok := shortCardNames[input]; ok {
+		input = qualifiedName
+		log.Debug("search for", input, "got", qualifiedName)
+	}
+
 	log.Debug("Asked for card", "Name", ncn)
 	card, err := checkCacheForCard(ncn)
 	if err == nil || (err != nil && err.Error() == "Card not found") {

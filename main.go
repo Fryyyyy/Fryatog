@@ -65,6 +65,9 @@ var (
 	abilityWordKeys []string
 	// Card names catalog
 	cardNames        []string
+	shortCardNames	 = make(map[string]string)
+	shortCardKeys	 []string
+
 	highlanderPoints = make(map[string]int)
 
 	// Store people who we know of as Ops
@@ -85,6 +88,7 @@ const crFile = "CR.txt"
 const cardCacheGob = "cardcache.gob"
 const configFile = "config.json"
 const abilityWordFile = "ability_words.json"
+const cardShortNameFile = "short_names.json"
 
 // CardGetter defines a function that retrieves a card's text.
 // Defining this type allows us to override it in testing, and not hit scryfall.com a million times.
@@ -552,6 +556,13 @@ func main() {
 	err = importAbilityWords()
 	if err != nil {
 		log.Warn("Error importing ability words", "Err", err)
+		raven.CaptureErrorAndWait(err, nil)
+	}
+
+	// Initialise Short Names
+	err = importShortCardNames()
+	if err != nil {
+		log.Warn("Error importing short card names", "Err", err)
 		raven.CaptureErrorAndWait(err, nil)
 	}
 
