@@ -7,8 +7,8 @@ import (
 	"sort"
 	"strings"
 
-	log "gopkg.in/inconshreveable/log15.v2"
 	raven "github.com/getsentry/raven-go"
+	log "gopkg.in/inconshreveable/log15.v2"
 )
 
 // CardList represents the Scryfall List API when retrieving multiple cards
@@ -176,10 +176,10 @@ type CardSearchResult struct {
 	Data       []Card `json:"data"`
 }
 
-// CardShortName stores a dict reference that matches common card shorthands (bob, steve, etc)
+// ShortCardName stores a dict reference that matches common card shorthands (bob, steve, etc)
 // to the card's fully qualified name
 type ShortCardName struct {
-	ShortName 	   string `json:"shortname"`
+	ShortName          string `json:"shortname"`
 	FullyQualifiedName string `json:"fullname"`
 }
 
@@ -339,7 +339,6 @@ func importShortCardNames() error {
 	}
 	for _, sn := range tempCardShortNames {
 		shortCardNames[sn.ShortName] = sn.FullyQualifiedName
-		shortCardKeys = append(shortCardKeys, sn.ShortName)
 	}
 	log.Debug("Populated shortNames", "Length", len(shortCardNames))
 	return nil

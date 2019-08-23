@@ -64,9 +64,8 @@ var (
 	abilityWords    = make(map[string]string)
 	abilityWordKeys []string
 	// Card names catalog
-	cardNames        []string
-	shortCardNames	 = make(map[string]string)
-	shortCardKeys	 []string
+	cardNames      []string
+	shortCardNames = make(map[string]string)
 
 	highlanderPoints = make(map[string]int)
 
@@ -364,7 +363,7 @@ func handleCommand(params *fryatogParams, c chan string) {
 		log.Debug("Dice roll")
 		c <- rollDice(message)
 		return
-	
+
 	case message == "coin":
 		log.Debug("Coin flip")
 		c <- flipCoin()

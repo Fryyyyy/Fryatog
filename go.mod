@@ -18,7 +18,9 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/paul-mannino/go-fuzzywuzzy v0.0.0-20190505212647-144c032ebff6
 	github.com/pkg/errors v0.8.1 // indirect
+	github.com/virtuald/go-ordered-json v0.0.0-20170621173500-b18e6e673d74
 	github.com/whyrusleeping/hellabot v0.0.0-20190117161550-dedc83c4926a
+	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
 	gopkg.in/inconshreveable/log15.v2 v2.0.0-20180818164646-67afb5ed74ec
 	gopkg.in/sorcix/irc.v1 v1.1.4 // indirect
 )
