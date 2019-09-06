@@ -16,8 +16,8 @@ import (
 	log "gopkg.in/inconshreveable/log15.v2"
 )
 
-const VoloRulesEndpointURL = "https://slack.vensersjournal.com/rule/"
-const VoloExamplesEndpointURL = "https://slack.vensersjournal.com/example/"
+const voloRulesEndpointURL = "https://slack.vensersjournal.com/rule/"
+const voloExamplesEndpointURL = "https://slack.vensersjournal.com/example/"
 
 // AbilityWord stores a quick description of Ability Words, which have no inherent rules meaning
 type AbilityWord struct {
@@ -25,6 +25,7 @@ type AbilityWord struct {
 	Description string `json:"description"`
 }
 
+// Rule stores the result of Rules queries from Volo's API
 type Rule struct {
 	RuleNumber      string `json:"ruleNumber"`
 	RuleText        string `json:"ruleText"`
@@ -166,8 +167,8 @@ func importRules(forceFetch bool) error {
 						rules[strings.ToLower(g)] = append(rules[strings.ToLower(g)], fmt.Sprintf("<b>%s</b>: %s", lastGlossary, line))
 					}
 				} else {
-				rules[strings.ToLower(lastGlossary)] = append(rules[strings.ToLower(lastGlossary)], fmt.Sprintf("<b>%s</b>: %s", lastGlossary, line))
-			}
+					rules[strings.ToLower(lastGlossary)] = append(rules[strings.ToLower(lastGlossary)], fmt.Sprintf("<b>%s</b>: %s", lastGlossary, line))
+				}
 			} else {
 				lastGlossary = line
 			}
@@ -188,16 +189,19 @@ func tryFindSeeMoreRule(input string) string {
 
 func findRule(input string, which string) (Rule, error) {
 	var endpoint string
-	switch (which) {
-		case "example":
-			endpoint = VoloExamplesEndpointURL
-			break
-		case "rule":
-			endpoint = VoloRulesEndpointURL
-			break
+	switch which {
+	case "example":
+		endpoint = voloExamplesEndpointURL
+	case "rule":
+		endpoint = voloRulesEndpointURL
+	default:
+		log.Error("findRule", "Called with unknown mode", which)
+		return Rule{}, errors.New("Unknown mode")
 	}
 
-	resp, err := http.Get(endpoint + input)
+	url := endpoint + input
+	log.Debug("findRule: Attempting to fetch", "URL", url)
+	resp, err := http.Get(url)
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Debug("HTTP request to Volo Rules Endpoint failed", "Error", err)
@@ -219,29 +223,25 @@ func findRule(input string, which string) (Rule, error) {
 func handleExampleQuery(input string) string {
 	exampleRequests.Add(1)
 	foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
-	log.Debug("In handleRulesQuery (Volo)", "Example matched on", foundRuleNum)
+	log.Debug("In handleExampleQuery (Volo)", "Example matched on", foundRuleNum)
 
 	foundExample, err := findRule(foundRuleNum, "example")
 
-	if err!= nil {
-		log.Debug("Something went catastrophically wrong retrieving the example", "Error", err)
-		raven.CaptureError(err, nil)
+	if err != nil || strings.Contains(foundExample.RawExampleTexts, "not found") {
 		return "Example not found"
 	}
 
 	foundExample.ExampleTexts = strings.Split(foundExample.RawExampleTexts, "\n")
 	var formattedExample []string
 	exampleNumber := "<b>[" + foundExample.RuleNumber + "] Example:</b> "
-	
+
 	for _, e := range foundExample.ExampleTexts {
 		formattedExample = append(formattedExample, exampleNumber+e[9:]+"\n")
 	}
 	return strings.TrimSpace(strings.Join(formattedExample, ""))
-	
-	return ""
 }
 
-func handleGlossaryQuery(input string) string {	
+func handleGlossaryQuery(input string) string {
 	defineRequests.Add(1)
 	split := strings.SplitN(input, " ", 2)
 	log.Debug("In handleRulesQuery", "Define matched on", split)
@@ -301,18 +301,13 @@ func handleRulesQuery(input string) string {
 
 		log.Debug("In handleRulesQuery (Volo)", "Rules matched on", foundRuleNum)
 		foundRule, err := findRule(foundRuleNum, "rule")
-		if err!= nil {
-			log.Debug("Something went catastrophically wrong retrieving the rule", "Error", err)
-			raven.CaptureError(err, nil)
+		if err != nil {
 			return "Rule not found"
 		}
-		log.Debug(foundRule.RuleNumber)
-		log.Debug(foundRule.RuleText)
 		ruleText := foundRule.RuleText
 		ruleNumber := []string{"<b>", foundRule.RuleNumber, ".</b> "}
 		ruleWithNumber := append(ruleNumber, ruleText, "\n")
 		return strings.TrimSpace(strings.Join(ruleWithNumber, ""))
-		
 	}
 
 	// Glossary stuff in case someone's silly and did 'rule deathtouch'
