@@ -3,9 +3,11 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
 
@@ -14,10 +16,20 @@ import (
 	log "gopkg.in/inconshreveable/log15.v2"
 )
 
+const VoloRulesEndpointURL = "https://slack.vensersjournal.com/rule/"
+const VoloExamplesEndpointURL = "https://slack.vensersjournal.com/example/"
+
 // AbilityWord stores a quick description of Ability Words, which have no inherent rules meaning
 type AbilityWord struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+}
+
+type Rule struct {
+	RuleNumber      string `json:"ruleNumber"`
+	RuleText        string `json:"ruleText"`
+	RawExampleTexts string `json:"exampleText"`
+	ExampleTexts    []string
 }
 
 func importAbilityWords() error {
@@ -174,149 +186,139 @@ func tryFindSeeMoreRule(input string) string {
 	return ""
 }
 
-func tryFindBetterAbilityRule(ruleText, ruleNumber string) (string, string) {
-	var forceB bool
-	// 0) Exceptions: Landwalk, Forecast, Vigilance, Banding
-	switch ruleText {
-	case "Banding":
-		fallthrough
-	case "Landwalk":
-		subRuleCLabel := ruleNumber + "c"
-		subRuleC, ok := rules[subRuleCLabel]
-		if !ok {
-			log.Debug("In tryFindBetterAbilityRule", "There is no subrule C")
-			return ruleText, ruleNumber
-		}
-		subRuleCText := strings.Join(subRuleC, "")
-		return subRuleCText, subRuleCLabel
-	case "Forecast":
-		fallthrough
-	case "Vigilance":
-		forceB = true
-	}
-	// 1) If subrule a contains means and ends in Step."), take subrule a. This covers Rampage and Bushido.
-	subRuleALabel := ruleNumber + "a"
-	subRuleBLabel := ruleNumber + "b"
-	subRuleA, ok := rules[subRuleALabel]
-	if !ok {
-		log.Debug("In tryFindBetterAbilityRule", "There is no subrule A")
-		return ruleText, ruleNumber
-	}
-	subRuleAText := strings.Join(subRuleA, "")
-	if !forceB && strings.Contains(subRuleAText, "means") && strings.HasSuffix(subRuleAText, `Step.")`) {
-		return subRuleAText, subRuleALabel
+func findRule(input string, which string) (Rule, error) {
+	var endpoint string
+	switch (which) {
+		case "example":
+			endpoint = VoloExamplesEndpointURL
+			break
+		case "rule":
+			endpoint = VoloRulesEndpointURL
+			break
 	}
 
-	// 2) If subrule a ends in ability. we should take subrule b. This covers the majority of your static and evasion abilities, except Landwalk, which has a useless a and mentions being a static ability in b.
-	if forceB || strings.HasSuffix(subRuleAText, "ability.") || strings.HasSuffix(subRuleAText, `Step.")`) {
-		subRuleB, ok := rules[subRuleBLabel]
-		if !ok {
-			log.Debug("In tryFindBetterAbilityRule", "There is no subrule B")
-			return subRuleAText, subRuleALabel
-		}
-		subRuleBText := strings.Join(subRuleB, "")
-		return subRuleBText, subRuleBLabel
+	resp, err := http.Get(endpoint + input)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Debug("HTTP request to Volo Rules Endpoint failed", "Error", err)
+		return Rule{}, err
 	}
-	// 3) Otherwise, just take subrule a
-	return subRuleAText, subRuleALabel
+	defer resp.Body.Close()
+	var foundRule Rule
+	if resp.StatusCode == 200 {
+		if err := json.NewDecoder(resp.Body).Decode(&foundRule); err != nil {
+			raven.CaptureError(err, nil)
+			log.Debug("Failed decoding the response", "Error", err)
+			return Rule{}, err
+		}
+		return foundRule, nil
+	}
+	return Rule{}, errors.New("Whatever you requested failed")
+}
+
+func handleExampleQuery(input string) string {
+	exampleRequests.Add(1)
+	foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
+	log.Debug("In handleRulesQuery (Volo)", "Example matched on", foundRuleNum)
+
+	foundExample, err := findRule(foundRuleNum, "example")
+
+	if err!= nil {
+		log.Debug("Something went catastrophically wrong retrieving the example", "Error", err)
+		raven.CaptureError(err, nil)
+		return "Example not found"
+	}
+
+	foundExample.ExampleTexts = strings.Split(foundExample.RawExampleTexts, "\n")
+	var formattedExample []string
+	exampleNumber := "<b>[" + foundExample.RuleNumber + "] Example:</b> "
+	
+	for _, e := range foundExample.ExampleTexts {
+		formattedExample = append(formattedExample, exampleNumber+e[9:]+"\n")
+	}
+	return strings.TrimSpace(strings.Join(formattedExample, ""))
+	
+	return ""
+}
+
+func handleGlossaryQuery(input string) string {	
+	defineRequests.Add(1)
+	split := strings.SplitN(input, " ", 2)
+	log.Debug("In handleRulesQuery", "Define matched on", split)
+	query := strings.ToLower(split[1])
+	var defineText string
+	v, ok := rules[query]
+	if ok {
+		log.Debug("Rules exact match")
+		defineText = strings.Join(v, "\n")
+	} else {
+		a, ok := abilityWords[query]
+		if ok {
+			log.Debug("Ability word exact match")
+			return "<b>" + strings.Title(query) + "</b>: " + a
+		}
+
+		customScorer := func(s1, s2 string) int {
+			return fuzzy.Ratio(s1, s2)
+		}
+		if bestGuess, err := fuzzy.ExtractOne(query, rulesKeys, customScorer); err != nil {
+			log.Info("InExact rules match", "Error", err)
+		} else {
+			log.Debug("InExact rules match", "Guess", bestGuess)
+			if bestGuess.Score > 60 {
+				defineText = strings.Join(rules[bestGuess.Match], "\n")
+			}
+		}
+		if defineText == "" {
+			if bestGuess, err := fuzzy.ExtractOne(query, abilityWordKeys, customScorer); err != nil {
+				log.Info("InExact aw match", "Error", err)
+			} else {
+				log.Debug("InExact aw match", "Guess", bestGuess)
+				if bestGuess.Score > 60 {
+					return "<b>" + strings.Title(bestGuess.Match) + "</b>: " + abilityWords[bestGuess.Match]
+				}
+			}
+		}
+	}
+	// Some crappy workaround/s
+	if !strings.HasPrefix(defineText, "<b>Dies</b>:") {
+		defineText += tryFindSeeMoreRule(defineText)
+	}
+	return strings.TrimSpace(defineText)
 }
 
 func handleRulesQuery(input string) string {
-	log.Debug("In handleRulesQuery", "Input", input)
-	// Match example first, for !ex101.a and !example 101.1a so the rule regexp doesn't eat it as a normal rule
-	if (strings.HasPrefix(input, "ex") || strings.HasPrefix(input, "example ")) && ruleRegexp.MatchString(input) {
-		exampleRequests.Add(1)
-		foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
-		log.Debug("In handleRulesQuery", "Example matched on", foundRuleNum)
-		if _, ok := rules["ex"+foundRuleNum]; !ok {
-			return "Example not found"
-		}
-		var formattedExample []string
-		exampleNumber := "<b>[" + foundRuleNum + "] Example:</b> "
-		for _, e := range rules["ex"+foundRuleNum] {
-			formattedExample = append(formattedExample, exampleNumber+e[9:]+"\n")
-		}
-		return strings.TrimSpace(strings.Join(formattedExample, ""))
+	log.Debug("in handleRulesQuery (Volo)", "Input", input)
+
+	// Hit examples first so it doesn't get consumed as a rule
+	if (strings.HasPrefix(input, "ex") || strings.HasPrefix(input, "example")) && ruleRegexp.MatchString(input) {
+		return handleExampleQuery(input)
 	}
-	// Then try normal rules
+
 	if ruleRegexp.MatchString(input) {
 		rulesRequests.Add(1)
 		foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
-		log.Debug("In handleRulesQuery", "Rules matched on", foundRuleNum)
 
-		if _, ok := rules[foundRuleNum]; !ok {
+		log.Debug("In handleRulesQuery (Volo)", "Rules matched on", foundRuleNum)
+		foundRule, err := findRule(foundRuleNum, "rule")
+		if err!= nil {
+			log.Debug("Something went catastrophically wrong retrieving the rule", "Error", err)
+			raven.CaptureError(err, nil)
 			return "Rule not found"
 		}
-
-		ruleText := strings.Join(rules[foundRuleNum], "")
-
-		// keyword abilities can just tag subrule a
-		if foundKeywordAbilityRegexp.MatchString(input) {
-			subRuleALabel := foundRuleNum + "a"
-			subRuleA, ok := rules[subRuleALabel]
-			if !ok {
-				log.Debug("In 701 handler", "There is no subrule A")
-			} else {
-				foundRuleNum = subRuleALabel
-				ruleText = strings.Join(subRuleA, "")
-			}
-
-		}
-
-		// keyword actions need a little bit more work
-		if foundKeywordActionRegexp.MatchString(input) {
-			ruleText, foundRuleNum = tryFindBetterAbilityRule(ruleText, foundRuleNum)
-		}
-		ruleNumber := []string{"<b>", foundRuleNum, ".</b> "}
+		log.Debug(foundRule.RuleNumber)
+		log.Debug(foundRule.RuleText)
+		ruleText := foundRule.RuleText
+		ruleNumber := []string{"<b>", foundRule.RuleNumber, ".</b> "}
 		ruleWithNumber := append(ruleNumber, ruleText, "\n")
 		return strings.TrimSpace(strings.Join(ruleWithNumber, ""))
+		
 	}
-	// Finally try Glossary entries, people might do "!rule Deathtouch" rather than the proper "!define Deathtouch"
-	if strings.HasPrefix(input, "def ") || strings.HasPrefix(input, "define ") || strings.HasPrefix(input, "rule ") || strings.HasPrefix(input, "r ") || strings.HasPrefix(input, "cr ") {
-		defineRequests.Add(1)
-		split := strings.SplitN(input, " ", 2)
-		log.Debug("In handleRulesQuery", "Define matched on", split)
-		query := strings.ToLower(split[1])
-		var defineText string
-		v, ok := rules[query]
-		if ok {
-			log.Debug("Rules exact match")
-			defineText = strings.Join(v, "\n")
-		} else {
-			a, ok := abilityWords[query]
-			if ok {
-				log.Debug("Ability word exact match")
-				return "<b>" + strings.Title(query) + "</b>: " + a
-			}
 
-			customScorer := func(s1, s2 string) int {
-				return fuzzy.Ratio(s1, s2)
-			}
-			if bestGuess, err := fuzzy.ExtractOne(query, rulesKeys, customScorer); err != nil {
-				log.Info("InExact rules match", "Error", err)
-			} else {
-				log.Debug("InExact rules match", "Guess", bestGuess)
-				if bestGuess.Score > 60 {
-					defineText = strings.Join(rules[bestGuess.Match], "\n")
-				}
-			}
-			if defineText == "" {
-				if bestGuess, err := fuzzy.ExtractOne(query, abilityWordKeys, customScorer); err != nil {
-					log.Info("InExact aw match", "Error", err)
-				} else {
-					log.Debug("InExact aw match", "Guess", bestGuess)
-					if bestGuess.Score > 60 {
-						return "<b>" + strings.Title(bestGuess.Match) + "</b>: " + abilityWords[bestGuess.Match]
-					}
-				}
-			}
-		}
-		// Some crappy workaround/s
-		if !strings.HasPrefix(defineText, "<b>Dies</b>:") {
-			defineText += tryFindSeeMoreRule(defineText)
-		}
-		return strings.TrimSpace(defineText)
+	// Glossary stuff in case someone's silly and did 'rule deathtouch'
+	if strings.HasPrefix(input, "def ") || strings.HasPrefix(input, "define ") || strings.HasPrefix(input, "rule ") || strings.HasPrefix(input, "r ") || strings.HasPrefix(input, "cr ") {
+		return handleGlossaryQuery(input)
 	}
-	// Didn't match ??
+	// Somehow nothing matched?
 	return ""
 }
