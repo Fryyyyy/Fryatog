@@ -371,7 +371,7 @@ func fetchScryfallCardByFuzzyName(input string) (Card, error) {
 			raven.CaptureError(err, nil)
 			return card, fmt.Errorf("Something went wrong parsing the card")
 		}
-		if (card.BorderColor != "black" && card.BorderColor != "white") || strings.Contains(card.Layout, "vanguard") ||  strings.Contains(card.Layout, "token") {
+		if (card.BorderColor != "black" && card.BorderColor != "white" && card.BorderColor != "borderless") || strings.Contains(card.Layout, "vanguard") ||  strings.Contains(card.Layout, "token") {
 			return emptyCard, fmt.Errorf("Dumb card returned, keep trying")
 		}
 		return card, nil
