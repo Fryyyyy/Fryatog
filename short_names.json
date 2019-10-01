@@ -3,7 +3,7 @@
     "fullname": "True-Name Nemesis"
   }, {
     "shortname": "mom",
-    "follname": "Mother of Runes"
+    "fullname": "Mother of Runes"
   }, {
     "shortname": "stepmom",
     "fullname": "Giver of Runes"
@@ -22,5 +22,8 @@
   }, {
     "shortname": "sadrobot",
     "fullname": "Solemn Simulacrum"
+  }, {
+    "shortname": "gary",
+    "fullname": "Gray Merchant of Asphodel"
   }
 ]
