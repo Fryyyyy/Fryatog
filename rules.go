@@ -289,15 +289,6 @@ func handleGlossaryQuery(input string) string {
 	return strings.TrimSpace(defineText)
 }
 
-func IsStringInList(problematicRule string, list []string) bool {
-	for _, str := range list {
-		if problematicRule == str {
-			return true
-		}
-	}
-	return false
-}
-
 func handleRulesQuery(input string) string {
 	log.Debug("in handleRulesQuery (Volo)", "Input", input)
 
@@ -311,7 +302,7 @@ func handleRulesQuery(input string) string {
 		foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
 
 		log.Debug("In handleRulesQuery (Volo)", "Rules matched on", foundRuleNum)
-		if (IsStringInList(foundRuleNum, tooLongRules)) {
+		if (stringSliceContains(tooLongRules, foundRuleNum)) {
 			tooLongRule := []string{"<b>", foundRuleNum, ".</b> The subtype list is too long. Please see ", voloSpecificRuleEndpointURL + foundRuleNum}
 			return strings.Join(tooLongRule, "")
 		}
