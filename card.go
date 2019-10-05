@@ -275,7 +275,7 @@ func (card *Card) getRulings(rulingNumber int) string {
 		return "Ruling not found"
 	}
 	if len(ret) > 3 {
-		return "Too many rulings, please request a specific one"
+		return fmt.Sprintf("Too many rulings (%d), please request a specific one", len(ret))
 	}
 	return strings.Join(ret, "\n")
 }
