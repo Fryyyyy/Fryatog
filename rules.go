@@ -18,6 +18,8 @@ import (
 
 const voloRulesEndpointURL = "https://slack.vensersjournal.com/rule/"
 const voloExamplesEndpointURL = "https://slack.vensersjournal.com/example/"
+const voloSpecificRuleEndpointURL = "https://www.vensersjournal.com/"
+var tooLongRules = []string{"205.3i", "205.3j", "205.3m", "205.3n"}
 
 // AbilityWord stores a quick description of Ability Words, which have no inherent rules meaning
 type AbilityWord struct {
@@ -287,6 +289,15 @@ func handleGlossaryQuery(input string) string {
 	return strings.TrimSpace(defineText)
 }
 
+func IsStringInList(problematicRule string, list []string) bool {
+	for _, str := range list {
+		if problematicRule == str {
+			return true
+		}
+	}
+	return false
+}
+
 func handleRulesQuery(input string) string {
 	log.Debug("in handleRulesQuery (Volo)", "Input", input)
 
@@ -300,6 +311,11 @@ func handleRulesQuery(input string) string {
 		foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
 
 		log.Debug("In handleRulesQuery (Volo)", "Rules matched on", foundRuleNum)
+		if (IsStringInList(foundRuleNum, tooLongRules)) {
+			tooLongRule := []string{"<b>", foundRuleNum, ".</b> The subtype list is too long. Please see ", voloSpecificRuleEndpointURL + foundRuleNum}
+			return strings.Join(tooLongRule, "")
+		}
+
 		foundRule, err := findRule(foundRuleNum, "rule")
 		if err != nil {
 			return "Rule not found"
