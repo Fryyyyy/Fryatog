@@ -227,7 +227,7 @@ func handleExampleQuery(input string) string {
 
 	foundExample, err := findRule(foundRuleNum, "example")
 
-	if err != nil || strings.Contains(foundExample.RawExampleTexts, "not found") {
+	if err != nil || foundExample.RawExampleTexts == "" {
 		return "Example not found"
 	}
 
