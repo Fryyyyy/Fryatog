@@ -303,8 +303,7 @@ func handleRulesQuery(input string) string {
 
 		log.Debug("In handleRulesQuery (Volo)", "Rules matched on", foundRuleNum)
 		if (stringSliceContains(tooLongRules, foundRuleNum)) {
-			tooLongRule := []string{"<b>", foundRuleNum, ".</b> The subtype list is too long. Please see ", voloSpecificRuleEndpointURL + foundRuleNum}
-			return strings.Join(tooLongRule, "")
+			return fmt.Sprintf("<b>%s.</b> <i>[This subtype list is too long for chat. Please see %s ]</i>", foundRuleNum, voloSpecificRuleEndpointURL + foundRuleNum)
 		}
 
 		foundRule, err := findRule(foundRuleNum, "rule")

@@ -260,12 +260,16 @@ func deleteItemFromCache(key string) error {
 func formatMessageForIRC(input string) string {
 	input = strings.Replace(input, "<b>", "\x02", -1)
 	input = strings.Replace(input, "</b>", "\x0F", -1)
+        input = strings.Replace(input, "<i>", "\x1D", -1)
+        input = strings.Replace(input, "</i>", "\x0F", -1)
 	return input
 }
 
 func formatMessageForSlack(input string) string {
 	input = strings.Replace(input, "<b>", "*", -1)
 	input = strings.Replace(input, "</b>", "*", -1)
+        input = strings.Replace(input, "<i>", "_", -1)
+        input = strings.Replace(input, "</i>", "_", -1)
 	return input
 }
 
