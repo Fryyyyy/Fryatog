@@ -45,6 +45,7 @@ var (
 		"Ancestral Recall":            "test_data/ancestralrecall.json",
 		"Crashing Footfalls":          "test_data/crashingfootfalls.json",
 		"Confiscate":                  "test_data/confiscate.json",
+		"Thermo-Alchemist":	       "test_data/thermoalchemist.json",
 	}
 )
 
@@ -137,6 +138,7 @@ func TestPrintCardForIRC(t *testing.T) {
 		{"Ancestral Recall", "\x02Ancestral Recall\x0F {U} · Instant · Target player draws three cards. · VMA-M · [RL] · VinRes,LegBan"},
 		{"Crashing Footfalls", "\x02Crashing Footfalls\x0F · Sorcery · [Green] · Suspend 4—{G} \x1D(Rather than cast this card from your hand, pay {G} and exile it with four time counters on it. At the beginning of your upkeep, remove a time counter. When the last is removed, cast it without paying its mana cost.)\x0F \\ Create two 4/4 green Rhino creature tokens with trample. · MH1-R · "},
 		{"Confiscate", "\x02Confiscate\x0F {4}{U}{U} · Enchantment — Aura · Enchant permanent \x1D(Target a permanent as you cast this. This card enters the battlefield attached to that permanent.)\x0F \\ You control enchanted permanent. · 9ED-U · Vin,Leg,Mod"},
+		{"Thermo-Alchemist", "\x02Thermo-Alchemist\x0F {1}{R} · Creature — Human Shaman · 0/3 · Defender \\ {T}: Thermo-Alchemist deals 1 damage to each opponent. \\ Whenever you cast an instant or sorcery spell, untap Thermo-Alchemist. · UMA-C · Vin,Leg,Mod,Pio"},
 	}
 	err := importShortCardNames()
 	if err != nil {
