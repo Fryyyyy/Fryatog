@@ -123,6 +123,7 @@ func TestTokens(t *testing.T) {
 		{"'Test!'", emptyStringSlice},
 		{"What?!? Why does that work", emptyStringSlice},
 		{"<Bird12> Just making sure, thank you!!!!", emptyStringSlice},
+		{"https://scryfall.com/search?q=cmc%3D9+f%3Avintage&unique=cards&as=grid&order=name It can go grab any of this fun stuff!", []string{}},
 		{"<Cyclops7> Thank you!! I have one more question kind of in the same realm-- if I want to bring some tokens with me to the same event, am I allowed to keep them in the deckbox with my deck and sideboard, or do I have to keep them someplace else?", emptyStringSlice},
 		{"<+mtgrelay> [Fear12] Hi!! Quick question: Does Sundial of the Infinite bypass/combo with Psychic Vortex?", emptyStringSlice},
 		{"<+mtgrelay> [Fear12] Hi!! Quick question: Does !Sundial of the Infinite bypass/combo with !Psychic Vortex?", []string{testCardExpected, testCardExpected}},
