@@ -111,7 +111,7 @@ type Card struct {
 		OneV1     string `json:"1v1"`
 		Duel      string `json:"duel"`
 		Brawl     string `json:"brawl"`
-                Pioneer   string `json:"pioneer"`
+		Pioneer   string `json:"pioneer"`
 	} `json:"legalities"`
 	Games           []string `json:"games"`
 	Reserved        bool     `json:"reserved"`
