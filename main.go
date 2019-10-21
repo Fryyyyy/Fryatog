@@ -272,6 +272,9 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 	}
 
 	for _, message := range commandList {
+		if !strings.HasPrefix(commandList[0], "!") && !strings.HasPrefix(commandList[0], "[[") {
+			return []string{}
+                }
 		log.Debug("Processing:", "Command", message)
 		totalQueries.Add(1)
 		if isIRC {
