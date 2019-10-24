@@ -148,6 +148,7 @@ func TestTokens(t *testing.T) {
 		{"!search o:test", []string{testRandomCardExpected + "\n" + testRandomCardExpected}},
 		{"Player != Planeswalker", emptyStringSlice},
 		{"Trying to bring = up a !Planeswalker =card", []string{testCardExpected}},
+		{"https://scryfall.com/search?q=cmc%3D9+f%3Avintage&unique=cards&as=grid&order=name It can go grab any of this fun stuff!", []string{}},
 	}
 	for _, table := range tables {
 		got := tokeniseAndDispatchInput(&fryatogParams{m: &hbot.Message{Content: table.input}}, fakeGetCard, fakeGetCard, fakeGetRandomCard, fakeFindCards)

@@ -218,6 +218,11 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 		input = "!" + input
 	}
 
+	if strings.Contains(input, "http") || strings.Contains(input, ".com") {
+		log.Info("URL skip", "Message", input)
+		return []string{}
+	}
+
 	// Undo HTML encoding of operators
 	input = strings.Replace(input, "&gt;", ">", -1)
 	input = strings.Replace(input, "&lt;", "<", -1)
@@ -239,12 +244,6 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 				return []string{err.Error()}
 			}
 			return []string{"Done!"}
-/* 		case input == "!updaterules" && isSenderAnOp(fp.m):
-			if err := importRules(true); err != nil {
-				log.Warn("Error importing Rules", "Error", err)
-				return []string{"Problem!"}
-			}
-			return []string{"Done!"} */
 		case input == "!updatecardnames" && isSenderAnOp(fp.m):
 			cardNames, err = importCardNames(true)
 			if err != nil {
@@ -254,9 +253,6 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 			return []string{"Done!"}
 		case input == "!startup" && isSenderAnOp(fp.m):
 			var ret []string
-/* 			if err = importRules(false); err != nil {
-				ret = append(ret, "Problem fetching rules")
-			} */
 			cardNames, err = importCardNames(false)
 			if err != nil {
 				ret = append(ret, "Problem fetching card names")
