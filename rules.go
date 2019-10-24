@@ -18,6 +18,8 @@ import (
 
 const voloRulesEndpointURL = "https://slack.vensersjournal.com/rule/"
 const voloExamplesEndpointURL = "https://slack.vensersjournal.com/example/"
+const voloSpecificRuleEndpointURL = "https://www.vensersjournal.com/"
+var tooLongRules = []string{"205.3i", "205.3j", "205.3m", "205.3n"}
 
 // AbilityWord stores a quick description of Ability Words, which have no inherent rules meaning
 type AbilityWord struct {
@@ -308,6 +310,10 @@ func handleRulesQuery(input string) string {
 		foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
 
 		log.Debug("In handleRulesQuery (Volo)", "Rules matched on", foundRuleNum)
+		if (stringSliceContains(tooLongRules, foundRuleNum)) {
+			return fmt.Sprintf("<b>%s.</b> <i>[This subtype list is too long for chat. Please see %s ]</i>", foundRuleNum, voloSpecificRuleEndpointURL + foundRuleNum)
+		}
+
 		foundRule, err := findRule(foundRuleNum, "rule")
 		if err != nil {
 			return "Rule not found"
