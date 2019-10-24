@@ -111,6 +111,7 @@ type Card struct {
 		OneV1     string `json:"1v1"`
 		Duel      string `json:"duel"`
 		Brawl     string `json:"brawl"`
+		Pioneer   string `json:"pioneer"`
 	} `json:"legalities"`
 	Games           []string `json:"games"`
 	Reserved        bool     `json:"reserved"`
@@ -270,6 +271,14 @@ func (card *Card) formatLegalities() string {
 		ret = append(ret, "ModRes")
 	case "banned":
 		ret = append(ret, "ModBan")
+	}
+	switch card.Legalities.Pioneer {
+	case "legal":
+		ret = append(ret, "Pio")
+	case "restricted":
+		ret = append(ret, "PioRes")
+	case "banned":
+		ret = append(ret, "PioBan")
 	}
 	switch card.Legalities.Standard {
 	case "legal":

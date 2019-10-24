@@ -182,6 +182,10 @@ func importRules(forceFetch bool) error {
 func tryFindSeeMoreRule(input string) string {
 	if strings.Contains(input, "See rule") && !strings.Contains(input, "See rules") && !strings.Contains(input, "and rule") {
 		matches := seeRuleRegexp.FindAllStringSubmatch(input, -1)
+		if (strings.Contains(input, "Source of Damage")) {
+			return "\n" + handleRulesQuery(matches[0][1]+"a");
+                }
+
 		if len(matches) > 0 {
 			return "\n" + handleRulesQuery(matches[0][1])
 		}
@@ -229,7 +233,7 @@ func handleExampleQuery(input string) string {
 
 	foundExample, err := findRule(foundRuleNum, "example")
 
-	if err != nil || strings.Contains(foundExample.RawExampleTexts, "not found") {
+	if err != nil || foundExample.RawExampleTexts == "" {
 		return "Example not found"
 	}
 
@@ -259,6 +263,10 @@ func handleGlossaryQuery(input string) string {
 			log.Debug("Ability word exact match")
 			return "<b>" + strings.Title(query) + "</b>: " + a
 		}
+
+                if query == "source" {
+			query = "source of damage"
+                }
 
 		customScorer := func(s1, s2 string) int {
 			return fuzzy.Ratio(s1, s2)
