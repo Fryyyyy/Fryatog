@@ -733,6 +733,12 @@ var mainTrigger = hbot.Trigger{
 							continue
 						}
 						for i, sss := range strings.Split(wordWrap(ss, (390-len(prefix))), "\n") {
+							if strings.Contains(sss, "<i>") && !strings.Contains(sss, "</i>") {
+								sss = sss + "</i>"
+							}
+							if strings.Contains(sss, "</i>") && !strings.Contains(sss, "<i>") {
+								sss = "<i>" + sss
+							}
 							if i == 0 {
 								irc.Reply(m, fmt.Sprintf("%s%s", prefix, sss))
 							} else {
