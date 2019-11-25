@@ -165,7 +165,7 @@ func importRules(forceFetch bool) error {
 			} else if lastGlossary != "" {
 				if strings.Contains(lastGlossary, "(Obsolete)") {
 					// including the leading " " here so we don't end up having "thing " in the indices
-					lastGlossary = strings.Replace(s, " (Obsolete)", "", -1)
+					lastGlossary = strings.Replace(lastGlossary, " (Obsolete)", "", -1)
 				}
 				if strings.Contains(lastGlossary, ",") {
 					gl := strings.Split(lastGlossary, ",")
