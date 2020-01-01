@@ -81,6 +81,7 @@ func TestGetRule(t *testing.T) {
 		{"rule 999.99", "Rule not found"},
 		{"def CLOWNS", ""},
 		{"define CLOWNS", ""},
+		{"define bury", "<b>Bury</b>: A term that meant \"put [a permanent] into its owner's graveyard.\" In general, cards that were printed with the term \"bury\" have received errata in the Oracle card reference to read, \"Destroy [a permanent]. It can't be regenerated,\" or \"Sacrifice [a permanent].\""},
 		{"define adsorb", "<b>Absorb</b>: A keyword ability that prevents damage. See rule 702.63, \"Absorb.\"\n<b>702.63a.</b> Absorb is a static ability. \"Absorb N\" means \"If a source would deal damage to this creature, prevent N of that damage.\""},
 		{"define deaftouch", "<b>Deathtouch</b>: A keyword ability that causes damage dealt by an object to be especially effective. See rule 702.2, \"Deathtouch.\"\n<b>702.2b.</b> A creature with toughness greater than 0 that's been dealt damage by a source with deathtouch since the last time state-based actions were checked is destroyed as a state-based action. See rule 704."},
 		{"define die", "<b>Dies</b>: A creature or planeswalker \"dies\" if it is put into a graveyard from the battlefield. See rule 700.4."},
