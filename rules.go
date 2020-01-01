@@ -253,6 +253,12 @@ func handleGlossaryQuery(input string) string {
 	log.Debug("In handleRulesQuery", "Define matched on", split)
 	query := strings.ToLower(split[1])
 	var defineText string
+
+	// Specialcase mana abilities, because 99% of the time the 
+	if query == "mana ability" || query == "mana abilities" {
+		return handleRulesQuery("605.1a")
+	}
+
 	v, ok := rules[query]
 	if ok {
 		log.Debug("Rules exact match")
