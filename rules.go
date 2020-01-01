@@ -189,6 +189,13 @@ func tryFindSeeMoreRule(input string) string {
 		if (strings.Contains(input, "Source of Damage")) {
 			return "\n" + handleRulesQuery(matches[0][1]+"a");
                 }
+                // Doing a couple things here:
+                // First, we want to match mana ability/ies, but too narrow to bother with regex
+                // Second, the rules reference in this definition DOES match our regex, so
+                // I'd rather use that match instead of hardcore 605.1a (as of 31/12/19).
+                if (strings.Contains(input, "Mana Abilit")) {
+                	return "\n" + handleRulesQuery(matches[0][1]+".1a")
+                }
 
 		if len(matches) > 0 {
 			return "\n" + handleRulesQuery(matches[0][1])
@@ -257,6 +264,7 @@ func handleGlossaryQuery(input string) string {
 	log.Debug("In handleRulesQuery", "Define matched on", split)
 	query := strings.ToLower(split[1])
 	var defineText string
+
 	v, ok := rules[query]
 	if ok {
 		log.Debug("Rules exact match")
