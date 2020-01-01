@@ -482,7 +482,7 @@ func getScryfallCard(input string) (Card, error) {
 	ncn := normaliseCardName(input)
 	
 	// See if it's a known short name of a card.
-	if qualifiedName, ok := shortCardNames[input]; ok {
+	if qualifiedName, ok := shortCardNames[ncn]; ok {
 		input = qualifiedName
 		log.Debug("search for", input, "got", qualifiedName)
 	}
