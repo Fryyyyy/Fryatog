@@ -356,6 +356,7 @@ func handleCommand(params *fryatogParams, c chan string) {
 		if len(cardTokens) == 2 {
 			p = strings.Split(cardTokens[1], "")
 			if len(p) != 3 {
+				c <- ""
 				return
 			}
 		} else {
