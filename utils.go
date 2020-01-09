@@ -280,3 +280,11 @@ func goRoutines() interface{} {
 func handleICC(cardTokens []string) string {
 	return fmt.Sprintf("%cce %crown %citadel", strings.ToUpper(cardTokens[0])[0], strings.ToUpper(cardTokens[1])[0], strings.ToUpper(cardTokens[2])[0])
 }
+
+// Null Coalescing Operator
+func nco(a string, b string) string {
+	if a != "" {
+		return a
+	}
+	return b
+}

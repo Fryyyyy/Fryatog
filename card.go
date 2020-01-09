@@ -149,7 +149,7 @@ func (cc CommonCard) getCardOrFaceAsString(mode string) []string {
 		}
 	}
 	// Type Line
-	r = append(r, fmt.Sprintf("· %s ·", cc.TypeLine))
+	r = append(r, fmt.Sprintf("· %s ·", nco(cc.PrintedTypeLine, cc.TypeLine)))
 	// P/T
 	if cc.Power != "" {
 		if slack {
@@ -170,12 +170,12 @@ func (cc CommonCard) getCardOrFaceAsString(mode string) []string {
 	if cc.OracleText != "" {
 		var modifiedOracleText string
 		if slack {
-			modifiedOracleText = strings.Replace(replaceManaCostForSlack(cc.OracleText), "\n", " \\ ", -1)
+			modifiedOracleText = strings.Replace(replaceManaCostForSlack(nco(cc.PrintedText, cc.OracleText)), "\n", " \\ ", -1)
 			modifiedOracleText = strings.Replace(modifiedOracleText, "(", "_(", -1)
 			modifiedOracleText = strings.Replace(modifiedOracleText, ")", ")_", -1)
 			modifiedOracleText = strings.Replace(modifiedOracleText, "*", "\xC2\xAD*", -1)
 		} else if irc {
-			modifiedOracleText = strings.Replace(cc.OracleText, "\n", " \\ ", -1)
+			modifiedOracleText = strings.Replace(nco(cc.PrintedText, cc.OracleText), "\n", " \\ ", -1)
 			// Change the open/closing parens of reminder text to also start and end italics
 			modifiedOracleText = strings.Replace(modifiedOracleText, "(", "\x1D(", -1)
 			modifiedOracleText = strings.Replace(modifiedOracleText, ")", ")\x0F", -1)
@@ -191,9 +191,9 @@ func (card *Card) formatCardForSlack() string {
 		for _, cf := range card.CardFaces {
 			var r []string
 			if len(card.MultiverseIds) == 0 {
-				r = append(r, fmt.Sprintf("*<%s|%s>*", card.ScryfallURI, cf.Name))
+				r = append(r, fmt.Sprintf("*<%s|%s>*", card.ScryfallURI, nco(cf.PrintedName, cf.Name)))
 			} else {
-				r = append(r, fmt.Sprintf("*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=%v|%v>*", card.MultiverseIds[0], cf.Name))
+				r = append(r, fmt.Sprintf("*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=%v|%v>*", card.MultiverseIds[0], nco(cf.PrintedName, cf.Name)))
 			}
 			r = append(r, cf.CommonCard.getCardOrFaceAsString("slack")...)
 			s = append(s, strings.Join(r, " "))
@@ -202,9 +202,9 @@ func (card *Card) formatCardForSlack() string {
 	}
 
 	if len(card.MultiverseIds) == 0 {
-		s = append(s, fmt.Sprintf("*<%s|%s>*", card.ScryfallURI, card.Name))
+		s = append(s, fmt.Sprintf("*<%s|%s>*", card.ScryfallURI, nco(card.PrintedName, card.Name)))
 	} else {
-		s = append(s, fmt.Sprintf("*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=%v|%v>*", card.MultiverseIds[0], card.Name))
+		s = append(s, fmt.Sprintf("*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=%v|%v>*", card.MultiverseIds[0], nco(card.PrintedName, card.Name)))
 	}
 	s = append(s, card.CommonCard.getCardOrFaceAsString("slack")...)
 	if card.Reserved == true {
@@ -223,7 +223,7 @@ func (card *Card) formatCardForIRC() string {
 		for _, cf := range card.CardFaces {
 			var r []string
 			// Bold card name
-			r = append(r, fmt.Sprintf("\x02%s\x0F", cf.Name))
+			r = append(r, fmt.Sprintf("\x02%s\x0F", nco(cf.PrintedName, cf.Name)))
 			r = append(r, cf.CommonCard.getCardOrFaceAsString("irc")...)
 			if cf.ManaCost != "" {
 				r = append(r, fmt.Sprintf("· %s ·", card.formatExpansions()))
@@ -235,7 +235,7 @@ func (card *Card) formatCardForIRC() string {
 	}
 
 	// Normal card
-	s = append(s, fmt.Sprintf("\x02%s\x0F", card.Name))
+	s = append(s, fmt.Sprintf("\x02%s\x0F", nco(card.PrintedName, card.Name)))
 	s = append(s, card.CommonCard.getCardOrFaceAsString("irc")...)
 	s = append(s, fmt.Sprintf("· %s ·", card.formatExpansions()))
 	if card.Reserved == true {
@@ -354,6 +354,44 @@ func (card *Card) sortRulings() error {
 	return nil
 }
 
+func (card *Card) cardGetLang(lang string) (Card, error) {
+	log.Debug("Getting Card Languages")
+	var c Card
+	// This is called even for empty Card objects, do don't do anything in that case
+	if card.ID == "" {
+		return c, fmt.Errorf("Empty card")
+	}
+	fetchURL := card.PrintsSearchURI + "&include_multilingual=true"
+	// Have a url?
+	if fetchURL == "" {
+		return c, fmt.Errorf("No URL")
+	}
+	log.Debug("cardGetLang: Attempting to fetch", "URL", fetchURL)
+	resp, err := http.Get(fetchURL)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Warn("cardGetLang: The HTTP request failed", "Error", err)
+		return c, fmt.Errorf("Error fetching results")
+	}
+	defer resp.Body.Close()
+	var list CardList
+	if resp.StatusCode == 200 {
+		if err := json.NewDecoder(resp.Body).Decode(&list); err != nil {
+			raven.CaptureError(err, nil)
+			return c, fmt.Errorf("Error decoding results")
+		}
+		if len(list.Warnings) > 0 {
+			return c, fmt.Errorf("Warnings in response")
+		}
+		for _, cs := range list.Data {
+			if cs.Lang == lang {
+				return cs, nil
+			}
+		}
+	}
+	return c, fmt.Errorf("Language not found")
+}
+
 func fetchScryfallCardByFuzzyName(input string) (Card, error) {
 	var emptyCard Card
 	url := fmt.Sprintf(scryfallFuzzyAPIURL, url.QueryEscape(input))
@@ -371,7 +409,7 @@ func fetchScryfallCardByFuzzyName(input string) (Card, error) {
 			raven.CaptureError(err, nil)
 			return card, fmt.Errorf("Something went wrong parsing the card")
 		}
-		if (card.BorderColor != "black" && card.BorderColor != "white" && card.BorderColor != "borderless") || strings.Contains(card.Layout, "vanguard") ||  strings.Contains(card.Layout, "token") {
+		if (card.BorderColor != "black" && card.BorderColor != "white" && card.BorderColor != "borderless") || strings.Contains(card.Layout, "vanguard") || strings.Contains(card.Layout, "token") {
 			return emptyCard, fmt.Errorf("Dumb card returned, keep trying")
 		}
 		return card, nil
@@ -476,11 +514,11 @@ func getCachedOrStoreCard(card *Card, ncn string) (Card, error) {
 func getScryfallCard(input string) (Card, error) {
 	cardRequests.Add(1)
 	var card Card
-	
+
 	// Normalise input to match how we store in the cache:
 	// lowercase, no punctuation.
 	ncn := normaliseCardName(input)
-	
+
 	// See if it's a known short name of a card.
 	if qualifiedName, ok := shortCardNames[ncn]; ok {
 		input = qualifiedName

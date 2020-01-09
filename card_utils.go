@@ -52,8 +52,10 @@ type CardRulingResult struct {
 type CommonCard struct {
 	ManaCost        string   `json:"mana_cost"`
 	TypeLine        string   `json:"type_line"`
+	PrintedTypeLine string   `json:"printed_type_line,omitempty"`
 	ColorIndicators []string `json:"color_indicator"`
 	OracleText      string   `json:"oracle_text"`
+	PrintedText     string   `json:"printed_text,omitempty"`
 	Power           string   `json:"power"`
 	Toughness       string   `json:"toughness"`
 	Loyalty         string   `json:"loyalty"`
@@ -64,6 +66,7 @@ type CardFace struct {
 	CommonCard
 	Object         string `json:"object"`
 	Name           string `json:"name"`
+	PrintedName    string `json:"printed_name,omitempty"`
 	Watermark      string `json:"watermark"`
 	Artist         string `json:"artist"`
 	IllustrationID string `json:"illustration_id,omitempty"`
@@ -80,6 +83,7 @@ type Card struct {
 	MtgoFoilID    int    `json:"mtgo_foil_id"`
 	TcgplayerID   int    `json:"tcgplayer_id"`
 	Name          string `json:"name"`
+	PrintedName   string `json:"printed_name,omitempty"`
 	Lang          string `json:"lang"`
 	ReleasedAt    string `json:"released_at"`
 	URI           string `json:"uri"`
@@ -156,6 +160,7 @@ type Card struct {
 		Cardmarket  string `json:"cardmarket"`
 		Cardhoarder string `json:"cardhoarder"`
 	} `json:"purchase_uris"`
+
 	Rulings  []CardRuling
 	Metadata CardMetadata
 }

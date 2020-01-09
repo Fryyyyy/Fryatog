@@ -45,9 +45,32 @@ var (
 		"Ancestral Recall":            "test_data/ancestralrecall.json",
 		"Crashing Footfalls":          "test_data/crashingfootfalls.json",
 		"Confiscate":                  "test_data/confiscate.json",
-		"Thermo-Alchemist":	       "test_data/thermoalchemist.json",
+		"Thermo-Alchemist":            "test_data/thermoalchemist.json",
+		"Wicked Guardian":             "test_data/wickedguardian.json",
 	}
 )
+
+func (card *Card) fakeGetLangs(lang string) (Card, error) {
+	var c Card
+	var list CardList
+	fi, err := os.Open("test_data/" + normaliseCardName(card.Name) + "-langs.json")
+	if err != nil {
+		return c, fmt.Errorf("Unable to open langs JSON: %v", err)
+	}
+	if err := json.NewDecoder(fi).Decode(&list); err != nil {
+		return c, fmt.Errorf("Something went wrong parsing the card list")
+	}
+	if len(list.Warnings) > 0 {
+		return c, fmt.Errorf("Scryfall said there were errors: %v", list.Warnings)
+	}
+	// These are in printing order, since the prints_search_uri includes "order=released"
+	for _, cs := range list.Data {
+		if cs.Lang == lang {
+			return cs, nil
+		}
+	}
+	return c, fmt.Errorf("Unknown Language")
+}
 
 func (card *Card) fakeGetMetadata() error {
 	var cm CardMetadata
@@ -417,5 +440,35 @@ func TestImportPoints(t *testing.T) {
 	}
 	if len(highlanderPoints) == 0 {
 		t.Errorf("Empty Highlander points after import")
+	}
+}
+
+func TestLangs(t *testing.T) {
+	tables := []struct {
+		cardname string
+		lang     string
+		output   string
+		wanterr  bool
+	}{
+		{"Wicked Guardian", "pt", "Guardiã Malvada", false},
+		{"Wicked Guardian", "de", "Böse Stiefmutter", false},
+		{"Wicked Guardian", "abc", "", true},
+	}
+	for _, table := range tables {
+		fi, err := os.Open(RealCards[table.cardname])
+		if err != nil {
+			t.Errorf("Unable to open %v", RealCards[table.cardname])
+		}
+		var c Card
+		if err := json.NewDecoder(fi).Decode(&c); err != nil {
+			t.Errorf("Something went wrong parsing the card: %s", err)
+		}
+		tc, err := c.fakeGetLangs(table.lang)
+		if (err != nil) != table.wanterr {
+			t.Errorf("Unexpected error: %v", err)
+		}
+		if tc.PrintedName != table.output {
+			t.Errorf("Incorrect output -- got %s -- want %s", tc.Name, table.output)
+		}
 	}
 }
