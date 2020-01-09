@@ -350,6 +350,11 @@ func handleCommand(params *fryatogParams, c chan string) {
 		c <- handleHearthstoneQuery(cardTokens[1:])
 		return
 
+	case cardTokens[0] == "icc" && len(cardTokens) == 4 && !params.isIRC:
+		log.Debug("Slack-based ICC", "Input", message)
+		c <- handleICC(cardTokens[1:])
+		return
+
 	case cardTokens[0] == "mtr", cardTokens[0] == "ipg", cardTokens[0] == "url":
 		log.Debug("Policy Query")
 		c <- handlePolicyQuery(cardTokens)
