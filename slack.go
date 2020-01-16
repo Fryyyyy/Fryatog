@@ -47,6 +47,10 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 			if !(strings.Contains(text, "!") || strings.Contains(text, "[[")) && !isIM {
 				continue
 			}
+			if strings.HasPrefix(text, "<!") && strings.Contains(text, ">") {
+				log.Debug("Slack Message", "Skipping Meta Ping", text)
+				continue
+			}
 			totalLines.Add(1)
 			slackLines.Add(1)
 			user, err := api.GetUserInfo(ev.Msg.User)
