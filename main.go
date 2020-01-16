@@ -452,9 +452,9 @@ func handleCommand(params *fryatogParams, c chan string) {
 					} else {
 						c <- translatedCard.formatCardForSlack()
 					}
+					return
 				}
 			}
-			return
 		}
 		fallthrough
 
