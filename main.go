@@ -426,17 +426,27 @@ func handleCommand(params *fryatogParams, c chan string) {
 
 	case cardTokens[0] == "en", cardTokens[0] == "es", cardTokens[0] == "fr", cardTokens[0] == "de", cardTokens[0] == "it", cardTokens[0] == "pt", cardTokens[0] == "ja", cardTokens[0] == "ko", cardTokens[0] == "ru", cardTokens[0] == "zhs", cardTokens[0] == "zht":
 		log.Debug("Asked for card in language", "Input", message)
-		if card, err := findCard(cardTokens[1:], params.cardGetFunction); err == nil {
-			translatedCard, err := card.cardGetLang(cardTokens[0])
-			if err == nil {
-				if params.isIRC {
-					c <- translatedCard.formatCardForIRC()
-				} else {
-					c <- translatedCard.formatCardForSlack()
-				}
+		// Before we search for the language, make sure it's not the actual name of a card
+		var found bool
+		for _, x := range cardNames {
+			if normaliseCardName(x) == normaliseCardName(message) {
+				found = true
 			}
 		}
-		return
+		if !found {
+			if card, err := findCard(cardTokens[1:], params.cardGetFunction); err == nil {
+				translatedCard, err := card.cardGetLang(cardTokens[0])
+				if err == nil {
+					if params.isIRC {
+						c <- translatedCard.formatCardForIRC()
+					} else {
+						c <- translatedCard.formatCardForSlack()
+					}
+				}
+			}
+			return
+		}
+		fallthrough
 
 	default:
 		log.Debug("I think it's a card")
