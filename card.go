@@ -534,6 +534,10 @@ func getScryfallCard(input string) (Card, error) {
 	log.Debug("Checking Scryfall for card", "Name", ncn)
 	// Try fuzzily matching the name
 	card, err = fetchScryfallCardByFuzzyName(input)
+	// Smol hack
+	if card.Lang != "en" && strings.HasPrefix(card.Name, "Flash") {
+		return card, fmt.Errorf("Potential foreign language fail")
+	}
 	if err == nil {
 		return getCachedOrStoreCard(&card, ncn)
 	}
