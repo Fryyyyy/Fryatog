@@ -399,8 +399,18 @@ func handleCommand(params *fryatogParams, c chan string) {
 
 	case cardTokens[0] == "search":
 		log.Debug("Advanced search query", "Input", message)
-		c <- strings.Join(handleAdvancedSearchQuery(params, cardTokens[1:]), "\n")
-		return
+		// Before we search, make sure it's not the actual name of a card
+		var found bool
+		for _, x := range cardNames {
+			if normaliseCardName(x) == normaliseCardName(message) {
+				found = true
+			}
+		}
+		if !found {
+			c <- strings.Join(handleAdvancedSearchQuery(params, cardTokens[1:]), "\n")
+			return
+		}
+		fallthrough
 
 	case cardTokens[0] == "uncard", cardTokens[0] == "vanguard", cardTokens[0] == "plane":
 		log.Debug("Special card query", "Input", message)
