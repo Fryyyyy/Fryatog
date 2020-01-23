@@ -487,6 +487,10 @@ func checkCacheForCard(ncn string) (Card, error) {
 func getCachedOrStoreCard(card *Card, ncn string) (Card, error) {
 	log.Debug("In GCOSC", "Card Name", card.Name, "ncn", ncn)
 	cNcn := normaliseCardName(card.Name)
+	// If it's a foreign card, store the foreign name
+	if card.PrintedName != "" {
+		cNcn = normaliseCardName(card.PrintedName)
+	}
 
 	card.getExtraMetadata("")
 	// Remember what they typed
