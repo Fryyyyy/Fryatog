@@ -19,6 +19,7 @@ import (
 const voloRulesEndpointURL = "https://slack.vensersjournal.com/rule/"
 const voloExamplesEndpointURL = "https://slack.vensersjournal.com/example/"
 const voloSpecificRuleEndpointURL = "https://www.vensersjournal.com/"
+
 var tooLongRules = []string{"205.3i", "205.3j", "205.3m", "205.3n"}
 
 // AbilityWord stores a quick description of Ability Words, which have no inherent rules meaning
@@ -186,16 +187,16 @@ func importRules(forceFetch bool) error {
 func tryFindSeeMoreRule(input string) string {
 	if strings.Contains(input, "See rule") && !strings.Contains(input, "See rules") && !strings.Contains(input, "and rule") {
 		matches := seeRuleRegexp.FindAllStringSubmatch(input, -1)
-		if (strings.Contains(input, "Source of Damage")) {
-			return "\n" + handleRulesQuery(matches[0][1]+"a");
-                }
-                // Doing a couple things here:
-                // First, we want to match mana ability/ies, but too narrow to bother with regex
-                // Second, the rules reference in this definition DOES match our regex, so
-                // I'd rather use that match instead of hardcore 605.1a (as of 31/12/19).
-                if (strings.Contains(input, "Mana Abilit")) {
-                	return "\n" + handleRulesQuery(matches[0][1]+".1a")
-                }
+		if strings.Contains(input, "Source of Damage") {
+			return "\n" + handleRulesQuery(matches[0][1]+"a")
+		}
+		// Doing a couple things here:
+		// First, we want to match mana ability/ies, but too narrow to bother with regex
+		// Second, the rules reference in this definition DOES match our regex, so
+		// I'd rather use that match instead of hardcore 605.1a (as of 31/12/19).
+		if strings.Contains(input, "Mana Abilit") {
+			return "\n" + handleRulesQuery(matches[0][1]+".1a")
+		}
 
 		if len(matches) > 0 {
 			return "\n" + handleRulesQuery(matches[0][1])
@@ -276,9 +277,12 @@ func handleGlossaryQuery(input string) string {
 			return "<b>" + strings.Title(query) + "</b>: " + a
 		}
 
-                if query == "source" {
+		if query == "source" {
 			query = "source of damage"
-                }
+		}
+		if query == "cda" {
+			query = "characteristic-defining ability"
+		}
 
 		customScorer := func(s1, s2 string) int {
 			return fuzzy.Ratio(s1, s2)
@@ -322,8 +326,8 @@ func handleRulesQuery(input string) string {
 		foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
 
 		log.Debug("In handleRulesQuery (Volo)", "Rules matched on", foundRuleNum)
-		if (stringSliceContains(tooLongRules, foundRuleNum)) {
-			return fmt.Sprintf("<b>%s.</b> <i>[This subtype list is too long for chat. Please see %s ]</i>", foundRuleNum, voloSpecificRuleEndpointURL + foundRuleNum)
+		if stringSliceContains(tooLongRules, foundRuleNum) {
+			return fmt.Sprintf("<b>%s.</b> <i>[This subtype list is too long for chat. Please see %s ]</i>", foundRuleNum, voloSpecificRuleEndpointURL+foundRuleNum)
 		}
 
 		foundRule, err := findRule(foundRuleNum, "rule")
