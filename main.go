@@ -414,7 +414,7 @@ func handleCommand(params *fryatogParams, c chan string) {
 
 	case cardTokens[0] == "uncard", cardTokens[0] == "vanguard", cardTokens[0] == "plane":
 		log.Debug("Special card query", "Input", message)
-		if card, err := findCard(cardTokens[1:], params.dumbCardGetFunction); err == nil {
+		if card, err := findCard(cardTokens[1:], false, params.dumbCardGetFunction); err == nil {
 			if params.isIRC {
 				c <- card.formatCardForIRC()
 			} else {
@@ -444,7 +444,11 @@ func handleCommand(params *fryatogParams, c chan string) {
 			}
 		}
 		if !found {
-			if card, err := findCard(cardTokens[1:], params.cardGetFunction); err == nil {
+			isLang := true
+			if cardTokens[0] == "en" {
+				isLang = false
+			}
+			if card, err := findCard(cardTokens[1:], isLang, params.cardGetFunction); err == nil {
 				translatedCard, err := card.cardGetLang(cardTokens[0])
 				if err == nil {
 					if params.isIRC {
@@ -460,7 +464,7 @@ func handleCommand(params *fryatogParams, c chan string) {
 
 	default:
 		log.Debug("I think it's a card")
-		if card, err := findCard(cardTokens, params.cardGetFunction); err == nil {
+		if card, err := findCard(cardTokens, false, params.cardGetFunction); err == nil {
 			if params.isIRC {
 				c <- card.formatCardForIRC()
 			} else {
@@ -496,14 +500,14 @@ func handleCardMetadataQuery(params *fryatogParams, command string) string {
 		rulingNumber int
 	)
 	if command == "reminder" {
-		c, err := findCard(strings.Fields(params.message)[1:], params.cardGetFunction)
+		c, err := findCard(strings.Fields(params.message)[1:], false, params.cardGetFunction)
 		if err != nil {
 			return "Card not found"
 		}
 		return c.getReminderTexts()
 	}
 	if command == "flavor" || command == "flavour" {
-		c, err := findCard(strings.Fields(params.message)[1:], params.cardGetFunction)
+		c, err := findCard(strings.Fields(params.message)[1:], false, params.cardGetFunction)
 		if err != nil {
 			return "Card not found"
 		}
@@ -530,7 +534,7 @@ func handleCardMetadataQuery(params *fryatogParams, command string) string {
 			}
 		}
 		log.Debug("In a Ruling Query - Valid command detected", "Command", command, "Card Name", cardName, "Ruling No.", rulingNumber)
-		c, err := findCard(strings.Split(cardName, " "), params.cardGetFunction)
+		c, err := findCard(strings.Split(cardName, " "), false, params.cardGetFunction)
 		if err != nil {
 			return "Unable to find card"
 		}
@@ -541,14 +545,24 @@ func handleCardMetadataQuery(params *fryatogParams, command string) string {
 	return ""
 }
 
-func findCard(cardTokens []string, cardGetFunction CardGetter) (Card, error) {
+func findCard(cardTokens []string, isLang bool, cardGetFunction CardGetter) (Card, error) {
+	var bestCardSoFar Card
 	for _, rc := range reduceCardSentence(cardTokens) {
 		card, err := cardGetFunction(rc)
 		log.Debug("Card Func gave us", "CardID", card.ID, "Err", err)
 		if err == nil {
 			log.Debug("Found card!", "Token", rc, "CardID", card.ID)
-			return card, nil
+			if card.Lang == "en" && !isLang {
+				return card, nil
+			}
+			// Initialise with the longest/best card
+			if bestCardSoFar.ID == "" {
+				bestCardSoFar = card
+			}
 		}
+	}
+	if bestCardSoFar.ID != "" {
+		return bestCardSoFar, nil
 	}
 	return Card{}, fmt.Errorf("Card not found")
 }
