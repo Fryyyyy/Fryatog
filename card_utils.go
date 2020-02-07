@@ -126,6 +126,7 @@ type Card struct {
 	Reprint         bool     `json:"reprint"`
 	Set             string   `json:"set"`
 	SetName         string   `json:"set_name"`
+	SetType         string   `json:"set_type"`
 	SetURI          string   `json:"set_uri"`
 	SetSearchURI    string   `json:"set_search_uri"`
 	ScryfallSetURI  string   `json:"scryfall_set_uri"`
