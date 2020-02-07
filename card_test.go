@@ -13,11 +13,11 @@ import (
 )
 
 var (
-	TestCardWithNoRulings        = Card{Name: "TestCardWithNoRulings"}
-	TestCardWithEmptyRulings     = Card{Name: "TestCardWithNoRulings", Rulings: []CardRuling{}}
-	TestCardWithOneNonWOTCRuling = Card{Name: "TestCardWithOneNonWOTCRuling", Rulings: []CardRuling{{Source: "Fry", Comment: "No Print!"}}}
-	TestCardWithOneWOTCRuling    = Card{Name: "TestCardWithOneWOTCRuling", Rulings: []CardRuling{{Source: "wotc", Comment: "Print Me", PublishedAt: "1900-01-01"}}}
-	TestCardWithTwoWOTCRulings   = Card{Name: "TestCardWithTwoWOTCRulings", Rulings: []CardRuling{{Source: "wotc", Comment: "Print Me", PublishedAt: "1900-02-02"}, {Source: "wotc", Comment: "Print Me Too!", PublishedAt: "1900-03-03"}}}
+	TestCardWithNoRulings        = Card{ID: "1", Name: "TestCardWithNoRulings"}
+	TestCardWithEmptyRulings     = Card{ID: "1", Name: "TestCardWithNoRulings", Rulings: []CardRuling{}}
+	TestCardWithOneNonWOTCRuling = Card{ID: "1", Name: "TestCardWithOneNonWOTCRuling", Rulings: []CardRuling{{Source: "Fry", Comment: "No Print!"}}}
+	TestCardWithOneWOTCRuling    = Card{ID: "1", Name: "TestCardWithOneWOTCRuling", Rulings: []CardRuling{{Source: "wotc", Comment: "Print Me", PublishedAt: "1900-01-01"}}}
+	TestCardWithTwoWOTCRulings   = Card{ID: "1", Name: "TestCardWithTwoWOTCRulings", Rulings: []CardRuling{{Source: "wotc", Comment: "Print Me", PublishedAt: "1900-02-02"}, {Source: "wotc", Comment: "Print Me Too!", PublishedAt: "1900-03-03"}}}
 	FakeCards                    = []Card{TestCardWithNoRulings, TestCardWithEmptyRulings, TestCardWithOneNonWOTCRuling, TestCardWithOneWOTCRuling, TestCardWithTwoWOTCRulings}
 	RealCards                    = map[string]string{
 		"Ponder":                      "test_data/ponder.json",
