@@ -509,9 +509,11 @@ func getCachedOrStoreCard(card *Card, ncn string) (Card, error) {
 		return cc, err
 	}
 
-	// We didn't, so store the canonical object
-	log.Debug("Storing new Canonical object")
-	nameToCardCache.Add(cNcn, *card)
+	// We didn't, so store the canonical object if it's not an alternate printing
+	if card.PrintedName == "" {
+		log.Debug("Storing new Canonical object")
+		nameToCardCache.Add(cNcn, *card)
+	}
 	return *card, nil
 }
 
