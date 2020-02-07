@@ -533,7 +533,7 @@ func getScryfallCard(input string) (Card, error) {
 
 	log.Debug("Asked for card", "Name", ncn)
 	card, err := checkCacheForCard(ncn)
-	if err == nil || (err != nil && err.Error() == "Card not found") {
+	if err == nil || err.Error() == "Card not found" {
 		return card, err
 	}
 
