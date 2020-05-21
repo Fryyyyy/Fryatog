@@ -185,6 +185,26 @@ func min(a, b int) int {
 	return b
 }
 
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+// A dumb function that returns the minimum of two ints
+// with the restriction that the result will try to be bigger than
+// a third given value.
+func cappedMin(a, b, c int) int {
+	if a < b && a > c {
+		return a
+	}
+	if b < a && b > c {
+		return b
+	}
+	return max(a, b)
+}
+
 func readConfig() configuration {
 	file, _ := os.Open(configFile)
 	defer file.Close()

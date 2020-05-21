@@ -213,6 +213,14 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 		return []string{}
 	}
 
+	// Only start processing from the first ! or [[, not from the first &
+	if strings.Contains(input, "&") {
+		firstCmdIdx := max(cappedMin(strings.Index(input, "!"), strings.Index(input, "[["), -1), -1)
+		if strings.Index(input, "&") < firstCmdIdx {
+			input = input[firstCmdIdx:]
+		}
+	}
+
 	// Little bit of hackery for PMs
 	if !strings.Contains(input, "!") && !strings.Contains(input, "[[") {
 		input = "!" + input
