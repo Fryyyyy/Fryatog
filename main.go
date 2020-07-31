@@ -16,8 +16,8 @@ import (
 	"github.com/algolia/algoliasearch-client-go/algolia/search"
 	raven "github.com/getsentry/raven-go"
 	lru "github.com/hashicorp/golang-lru"
-	"github.com/nlopes/slack"
 	cache "github.com/patrickmn/go-cache"
+	"github.com/slack-go/slack"
 	hbot "github.com/whyrusleeping/hellabot"
 	log "gopkg.in/inconshreveable/log15.v2"
 )
@@ -428,8 +428,8 @@ func handleCommand(params *fryatogParams, c chan string) {
 			} else {
 				c <- card.formatCardForSlack()
 			}
+			return
 		}
-		return
 
 	case message == "random":
 		log.Debug("Asked for random card")
