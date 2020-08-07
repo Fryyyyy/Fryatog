@@ -150,6 +150,8 @@ func TestTokens(t *testing.T) {
 		{"Trying to bring = up a !Planeswalker =card", []string{testCardExpected}},
 		{"https://scryfall.com/search?q=cmc%3D9+f%3Avintage&unique=cards&as=grid&order=name It can go grab any of this fun stuff!", emptyStringSlice},
 		{"B&R today!", emptyStringSlice},
+		{"!wc WrongPlaceUser", []string{"WrongPlaceUser: Rules questions belong in the rules channel, not in here. Click #magicjudges-rules or type '/join #magicjudges-rules' (without the quotes) to get there"}},
+		{"!wc", []string{"Rules questions belong in the rules channel, not in here. Click #magicjudges-rules or type '/join #magicjudges-rules' (without the quotes) to get there"}},
 	}
 	for _, table := range tables {
 		got := tokeniseAndDispatchInput(&fryatogParams{m: &hbot.Message{Content: table.input}}, fakeGetCard, fakeGetCard, fakeGetRandomCard, fakeFindCards)
