@@ -470,6 +470,10 @@ func handleCommand(params *fryatogParams, c chan string) {
 		}
 		fallthrough
 
+	case cardTokens[0] == "wc":
+		log.Debug("Asked for redirecting a user to rules")
+		c <- sendRulesRedirectText(cardTokens)
+		return
 	default:
 		log.Debug("I think it's a card")
 		if card, err := findCard(cardTokens, false, params.cardGetFunction); err == nil {
@@ -484,6 +488,15 @@ func handleCommand(params *fryatogParams, c chan string) {
 	// If we got here, no cards found.
 	c <- ""
 	return
+}
+
+func sendRulesRedirectText(cardTokens []string) string {
+	if (len(cardTokens) == 1) {
+		return "Rules questions belong in the rules channel, not in here. Click #magicjudges-rules or type '/join #magicjudges-rules' (without the quotes) to get there"
+	} else {
+		return fmt.Sprintf("%s: Rules questions belong in the rules channel, not in here. Click #magicjudges-rules or type '/join #magicjudges-rules' (without the quotes) to get there", cardTokens[1])
+	}
+	
 }
 
 func handleAdvancedSearchQuery(params *fryatogParams, cardTokens []string) []string {
@@ -783,8 +796,8 @@ var mainTrigger = hbot.Trigger{
 		for _, s := range sliceUniqMap(toPrint) {
 			var prefix string
 			isPublic := strings.Contains(m.To, "#")
-			// If it's not a PM, address them
-			if isPublic {
+			// If it's not a PM, address them. 
+			if isPublic && !strings.Contains(s, "#magicjudges-rules") {
 				prefix = fmt.Sprintf("%s: ", m.From)
 			}
 			if s != "" {
