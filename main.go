@@ -13,6 +13,8 @@ import (
 	"syscall"
 	"time"
 
+	blizzard "github.com/FuzzyStatic/blizzard"
+	"github.com/FuzzyStatic/blizzard/wowgd"
 	"github.com/algolia/algoliasearch-client-go/algolia/search"
 	raven "github.com/getsentry/raven-go"
 	lru "github.com/hashicorp/golang-lru"
@@ -38,6 +40,10 @@ type configuration struct {
 		APIToken  string `json:"APIToken"`
 		IndexName string `json:"IndexName"`
 	} `json:"Hearthstone"`
+	BattleNet struct {
+		ClientID     string `json:"ClientID"`
+		ClientSecret string `json:"ClientSecret"`
+	} `json:"BattleNet"`
 	IRC   bool `json:"IRC"`
 	Slack bool `json:"Slack"`
 }
@@ -78,6 +84,13 @@ var (
 	// Hearthstone clients
 	hsClient *search.Client
 	hsIndex  *search.Index
+
+	// BattleNet client
+	bNetClient           *blizzard.Client
+	wowPlayerCache       *cache.Cache
+	wowPlayerChieveCache *cache.Cache
+	wowRealms            *wowgd.RealmIndex
+	wowChieves           *wowgd.AchievementIndex
 )
 
 // Is there a stable URL that always points to a text version of the most up to date CR ?
@@ -358,6 +371,18 @@ func handleCommand(params *fryatogParams, c chan string) {
 		c <- handleHearthstoneQuery(cardTokens[1:])
 		return
 
+	case cardTokens[0] == "wowchieve" && !params.isIRC:
+		log.Debug("Slack-based Wow Chievo", "Input", message)
+		if len(cardTokens) == 2 {
+			c <- chieveDetails(cardTokens[1])
+			return
+		}
+		if len(cardTokens) == 4 {
+			c <- chieveForPlayer(cardTokens[1], cardTokens[2], strings.Join(cardTokens[3:], " "))
+			return
+		}
+		fallthrough
+
 	case cardTokens[0] == "icc" && (len(cardTokens) == 4 || len(cardTokens) == 2) && !params.isIRC:
 		log.Debug("Slack-based ICC", "Input", message)
 		var p []string
@@ -470,10 +495,11 @@ func handleCommand(params *fryatogParams, c chan string) {
 		}
 		fallthrough
 
-	case cardTokens[0] == "wc":
+	case cardTokens[0] == "wc" && params.isIRC:
 		log.Debug("Asked for redirecting a user to rules")
 		c <- sendRulesRedirectText(cardTokens)
 		return
+
 	default:
 		log.Debug("I think it's a card")
 		if card, err := findCard(cardTokens, false, params.cardGetFunction); err == nil {
@@ -491,12 +517,10 @@ func handleCommand(params *fryatogParams, c chan string) {
 }
 
 func sendRulesRedirectText(cardTokens []string) string {
-	if (len(cardTokens) == 1) {
+	if len(cardTokens) == 1 {
 		return "Rules questions belong in the rules channel, not in here. Click #magicjudges-rules or type '/join #magicjudges-rules' (without the quotes) to get there"
-	} else {
-		return fmt.Sprintf("%s: Rules questions belong in the rules channel, not in here. Click #magicjudges-rules or type '/join #magicjudges-rules' (without the quotes) to get there", cardTokens[1])
 	}
-	
+	return fmt.Sprintf("%s: Rules questions belong in the rules channel, not in here. Click #magicjudges-rules or type '/join #magicjudges-rules' (without the quotes) to get there", cardTokens[1])
 }
 
 func handleAdvancedSearchQuery(params *fryatogParams, cardTokens []string) []string {
@@ -639,8 +663,7 @@ func main() {
 	}
 
 	// Initialise Short Names
-	err = importShortCardNames()
-	if err != nil {
+	if importShortCardNames() != nil {
 		log.Warn("Error importing short card names", "Err", err)
 		raven.CaptureErrorAndWait(err, nil)
 	}
@@ -733,6 +756,22 @@ func main() {
 	hsClient = search.NewClient(conf.Hearthstone.AppID, conf.Hearthstone.APIToken)
 	hsIndex = hsClient.InitIndex(conf.Hearthstone.IndexName)
 
+	// Initialise Battlenet client
+	bNetClient = blizzard.NewClient(conf.BattleNet.ClientID, conf.BattleNet.ClientSecret, blizzard.US, blizzard.EnUS)
+	err = bNetClient.AccessTokenRequest()
+	if err != nil {
+		bNetClient = nil
+		log.Warn("Error authenticating to Blizzard services", "Err", err)
+		raven.CaptureErrorAndWait(err, nil)
+	}
+	wowPlayerCache = cache.New(24*time.Hour, 1*time.Hour)
+	wowPlayerChieveCache = cache.New(24*time.Hour, 1*time.Hour)
+	wowRealms, _, err = bNetClient.WoWRealmIndex()
+	if err != nil {
+		log.Warn("Error retrieving Realms", "Err", err)
+		raven.CaptureErrorAndWait(err, nil)
+	}
+
 	bot.AddTrigger(mainTrigger)
 	bot.AddTrigger(whoTrigger)
 	bot.AddTrigger(endOfWhoTrigger)
@@ -796,7 +835,7 @@ var mainTrigger = hbot.Trigger{
 		for _, s := range sliceUniqMap(toPrint) {
 			var prefix string
 			isPublic := strings.Contains(m.To, "#")
-			// If it's not a PM, address them. 
+			// If it's not a PM, address them.
 			if isPublic && !strings.Contains(s, "#magicjudges-rules") {
 				prefix = fmt.Sprintf("%s: ", m.From)
 			}

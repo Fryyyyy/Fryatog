@@ -1,0 +1,137 @@
+{
+    "_links": {
+      "self": {
+        "href": "https://us.api.blizzard.com/profile/wow/character/barthilas/test/statistics?namespace=profile-us"
+      }
+    },
+    "health": 399720,
+    "power": 100000,
+    "power_type": {
+      "key": {
+        "href": "https://us.api.blizzard.com/data/wow/power-type/0?namespace=static-8.3.7_35114-us"
+      },
+      "name": "Mana",
+      "id": 0
+    },
+    "speed": {
+      "rating": 0,
+      "rating_bonus": 0
+    },
+    "strength": {
+      "base": 848,
+      "effective": 848
+    },
+    "agility": {
+      "base": 1219,
+      "effective": 1219
+    },
+    "intellect": {
+      "base": 1469,
+      "effective": 12149
+    },
+    "stamina": {
+      "base": 1001,
+      "effective": 19986
+    },
+    "melee_crit": {
+      "rating": 1126,
+      "rating_bonus": 15.638889,
+      "value": 21.638887
+    },
+    "melee_haste": {
+      "rating": 1056,
+      "rating_bonus": 15.529411,
+      "value": 15.529404
+    },
+    "mastery": {
+      "rating": 1149,
+      "rating_bonus": 19.947916,
+      "value": 29.947914
+    },
+    "bonus_armor": 0,
+    "lifesteal": {
+      "rating": 0,
+      "rating_bonus": 0,
+      "value": 3
+    },
+    "versatility": 564,
+    "versatility_damage_done_bonus": 6.635294,
+    "versatility_healing_done_bonus": 6.635294,
+    "versatility_damage_taken_bonus": 3.317647,
+    "avoidance": {
+      "rating": 0,
+      "rating_bonus": 0
+    },
+    "attack_power": 0,
+    "main_hand_damage_min": 234.59763,
+    "main_hand_damage_max": 391.3515,
+    "main_hand_speed": 1.558,
+    "main_hand_dps": 200.88226,
+    "off_hand_damage_min": 0,
+    "off_hand_damage_max": 0,
+    "off_hand_speed": 1.731,
+    "off_hand_dps": 0,
+    "spell_power": 12149,
+    "spell_penetration": 0,
+    "spell_crit": {
+      "rating": 1126,
+      "rating_bonus": 15.638889,
+      "value": 21.638887
+    },
+    "mana_regen": 4400,
+    "mana_regen_combat": 4400,
+    "armor": {
+      "base": 0,
+      "effective": 1876
+    },
+    "dodge": {
+      "rating": 0,
+      "rating_bonus": 0,
+      "value": 3
+    },
+    "parry": {
+      "rating": 0,
+      "rating_bonus": 0,
+      "value": 0
+    },
+    "block": {
+      "rating": 0,
+      "rating_bonus": 0,
+      "value": 0
+    },
+    "ranged_crit": {
+      "rating": 1126,
+      "rating_bonus": 15.638889,
+      "value": 21.638887
+    },
+    "ranged_haste": {
+      "rating": 1056,
+      "rating_bonus": 15.529411,
+      "value": 15.529404
+    },
+    "spell_haste": {
+      "rating": 1056,
+      "rating_bonus": 15.529411,
+      "value": 15.529404
+    },
+    "character": {
+      "key": {
+        "href": "https://us.api.blizzard.com/profile/wow/character/barthilas/test?namespace=profile-us"
+      },
+      "name": "Test",
+      "id": 1,
+      "realm": {
+        "key": {
+          "href": "https://us.api.blizzard.com/data/wow/realm/3723?namespace=dynamic-us"
+        },
+        "name": "Barthilas",
+        "id": 3723,
+        "slug": "barthilas"
+      }
+    },
+    "corruption": {
+      "corruption": 42,
+      "corruption_resistance": 37,
+      "effective_corruption": 5
+    }
+  }
