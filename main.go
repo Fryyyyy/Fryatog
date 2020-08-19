@@ -373,15 +373,17 @@ func handleCommand(params *fryatogParams, c chan string) {
 
 	case cardTokens[0] == "wowchieve" && !params.isIRC:
 		log.Debug("Slack-based Wow Chievo", "Input", message)
-		if len(cardTokens) == 2 {
-			c <- chieveDetails(cardTokens[1])
-			return
+		switch len(cardTokens) {
+		// Just bare command
+		case 1:
+			c <- "!wowchieve [realm] [player] <achievement name>"
+		// Single Word Chieve Name
+		case 2:
+			c <- formatChieveForSlack(chieveFromID(chieveNameToID(cardTokens[1])))
+		default:
+			c <- handleChieveInput(message[10:]) //TODO : no worky
 		}
-		if len(cardTokens) == 4 {
-			c <- chieveForPlayer(cardTokens[1], cardTokens[2], strings.Join(cardTokens[3:], " "))
-			return
-		}
-		fallthrough
+		return
 
 	case cardTokens[0] == "icc" && (len(cardTokens) == 4 || len(cardTokens) == 2) && !params.isIRC:
 		log.Debug("Slack-based ICC", "Input", message)
@@ -769,6 +771,11 @@ func main() {
 	wowRealms, _, err = bNetClient.WoWRealmIndex()
 	if err != nil {
 		log.Warn("Error retrieving Realms", "Err", err)
+		raven.CaptureErrorAndWait(err, nil)
+	}
+	wowChieves, _, err = bNetClient.WoWAchievementIndex()
+	if err != nil {
+		log.Warn("Error retrieving Chieves", "Err", err)
 		raven.CaptureErrorAndWait(err, nil)
 	}
 

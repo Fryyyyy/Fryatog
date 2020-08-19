@@ -4,24 +4,13 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/FuzzyStatic/blizzard/wowgd"
 	"github.com/FuzzyStatic/blizzard/wowp"
 	raven "github.com/getsentry/raven-go"
 )
 
 //TODO: wowchar
 //TODO: wow
-
-func distinguishRealmFromPlayer(input1, input2 string) (string, string, error) {
-	for _, r := range wowRealms.Realms {
-		if strings.ToLower(input1) == strings.ToLower(r.Name) {
-			return r.Slug, input2, nil
-		}
-		if strings.ToLower(input2) == strings.ToLower(r.Name) {
-			return r.Slug, input1, nil
-		}
-	}
-	return "", "", fmt.Errorf("Realm not found")
-}
 
 func retrieveChievesForPlayer(realm, player string) (*wowp.CharacterAchievementsSummary, error) {
 	if c, ok := wowPlayerChieveCache.Get(realm + "-" + player); ok {
@@ -35,70 +24,57 @@ func retrieveChievesForPlayer(realm, player string) (*wowp.CharacterAchievements
 	return cas, nil
 }
 
-func chieveForPlayer(input1, input2, chieveName string) string {
+func chieveForPlayer(realm, player, chieveName string) string {
 	if bNetClient == nil {
 		return "WOW API not available"
-	}
-	realm, player, err := distinguishRealmFromPlayer(input1, input2)
-	if err != nil {
-		return "Could not distinguish realm"
 	}
 	cas, err := retrieveChievesForPlayer(realm, player)
 	if err != nil {
 		raven.CaptureError(err, nil)
 		return "Could not retrieve Chieves for Player"
 	}
+	return playerSingleChieveStatus(cas, chieveName)
+}
+
+// Parses the chieves of a player and returns a Slack formatted string
+// as to whether they have received it or not.
+func playerSingleChieveStatus(cas *wowp.CharacterAchievementsSummary, chieveName string) string {
 	for _, a := range cas.Achievements {
 		if a.Achievement.Name == chieveName {
+			var ret []string
 			if a.Criteria.IsCompleted {
-				return ":fire: Achievement Unlocked! :fire:"
+				ret = append(ret, ":fire: Achievement Unlocked! :fire:")
+			} else {
+				ret = append(ret, ":cry: Chievo not got :cry:")
 			}
-			if len(a.Criteria.ChildCriteria) > 0 {
-				var ret []string
-				return strings.Join(ret, "\n")
+			/* TODO: SubChieves */
+			if len(a.Criteria.ChildCriteria) > 1 {
+				ret = append(ret, "Criteria goes here")
 			}
-			return ":cry: Chievo not got :cry:"
+			return strings.Join(ret, "\n")
 		}
 	}
-	return "Chieve not found"
+	return "Chieve not found :("
 }
 
-func retrieveChieves() error {
-	var err error
-	if wowChieves == nil {
-		wowChieves, _, err = bNetClient.WoWAchievementIndex()
-		if err != nil {
-			raven.CaptureError(err, nil)
-			return err
+func formatChieveForSlack(a *wowgd.Achievement) string {
+	if a == nil {
+		return "Chieve not found :("
+	}
+	if len(a.Criteria.ChildCriteria) < 2 {
+		return fmt.Sprintf("<http://www.wowhead.com/achievement=%d|%s> - %s", a.ID, a.Name, a.Description)
+	}
+	var ret []string
+	ret = append(ret, fmt.Sprintf("%s - %s\n", a.Name, a.Description))
+	for _, c := range dedupeCriteria(a.Criteria.ChildCriteria) {
+		tryChieve := chieveFromID(c.ID)
+		if tryChieve != nil && tryChieve.ID != 0 {
+			ret = append(ret, fmt.Sprintf("<http://www.wowhead.com/achievement=%d|%s> %s", tryChieve.ID, tryChieve.Name, tryChieve.Description))
+		} else {
+			ret = append(ret, "Unknown Criterion")
 		}
 	}
-	return nil
-}
-
-func chieveDetails(chieveName string) string {
-	if bNetClient == nil {
-		return "WOW API not available"
-	}
-	retrieveChieves()
-	var chieveToGet int
-	for _, a := range wowChieves.Achievements {
-		if strings.ToLower(a.Name) == strings.ToLower(chieveName) {
-			chieveToGet = a.ID
-		}
-	}
-	if chieveToGet == 0 {
-		return "Chieve not found"
-	}
-	return formatChieve(chieveToGet)
-}
-
-func formatChieve(chieveID int) string {
-	c, _, err := bNetClient.WoWAchievement(chieveID)
-	if err != nil {
-		raven.CaptureError(err, nil)
-		return "Unable to fetch Chieve from API"
-	}
-	return c.Name
+	return ret[0] + strings.Join(ret[1:], ", ")
 }
 
 type wowDude struct {
