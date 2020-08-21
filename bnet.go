@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/FuzzyStatic/blizzard/wowgd"
 	"github.com/FuzzyStatic/blizzard/wowp"
 	raven "github.com/getsentry/raven-go"
 	log "gopkg.in/inconshreveable/log15.v2"
@@ -44,7 +43,7 @@ func playerSingleChieveStatus(cas *wowp.CharacterAchievementsSummary, chieveName
 	log.Debug("Handling Chieve Player Status")
 	for _, a := range cas.Achievements {
 		if strings.ToLower(a.Achievement.Name) == strings.ToLower(chieveName) {
-			log.Debug("playerSingleChieveStatus: Found chieve")
+			log.Debug("playerSingleChieveStatus: Found chieve", "Chievo", a)
 			var ret []string
 			if a.Criteria.IsCompleted {
 				ret = append(ret, ":fire: Achievement Unlocked! :fire:")
@@ -54,13 +53,17 @@ func playerSingleChieveStatus(cas *wowp.CharacterAchievementsSummary, chieveName
 			/* SubChieves */
 			ac := chieveFromID(a.Achievement.ID)
 			accc := mapCriteriaToName(ac.Criteria.ChildCriteria)
-			log.Debug("Retrieved Chieve", "Map", accc)
+			// A bare chievo with a single child criterion
+			if len(ac.Criteria.ChildCriteria) == 1 && len(ac.Criteria.ChildCriteria[0].ChildCriteria) == 0 {
+				accc = singleBareChievoCriterion(ac)
+			}
+			log.Debug("Retrieved Chieve", "C", ac, "Map", accc)
 			if len(a.Criteria.ChildCriteria) > 0 {
 				ccret := recursePlayerCriteria(a.Criteria.ChildCriteria)
 				log.Debug("Looping CCs", "Map", ccret)
 				for k, v := range ccret {
 					if ad, ok := accc[k]; ok {
-						if strings.Contains("%s", ad) {
+						if strings.Contains(ad, "%s") {
 							ad = fmt.Sprintf(ad, v.amount)
 						}
 						if v.completed {
@@ -76,24 +79,6 @@ func playerSingleChieveStatus(cas *wowp.CharacterAchievementsSummary, chieveName
 	}
 	log.Debug("playerSingleChieveStatus: Not found")
 	return "Chieve not found :("
-}
-
-func formatChieveForSlack(a *wowgd.Achievement) string {
-	if a == nil {
-		return "Chieve not found :("
-	}
-	if len(a.Criteria.ChildCriteria) < 2 {
-		return fmt.Sprintf("<http://www.wowhead.com/achievement=%d|%s> - %s [:point_right: %d :point_left:]", a.ID, a.Name, a.Description, a.Points)
-	}
-	var ret []string
-	ret = append(ret, fmt.Sprintf("%s - %s\n", a.Name, a.Description))
-	for _, v := range mapCriteriaToStrings(a.Criteria.ChildCriteria) {
-		ret = append(ret, v)
-	}
-	if len(a.RewardDescription) > 0 {
-		ret = append(ret, fmt.Sprintf(":trophy: %s :trophy:", a.RewardDescription))
-	}
-	return ret[0] + strings.Join(ret[1:], "\n")
 }
 
 type wowDude struct {

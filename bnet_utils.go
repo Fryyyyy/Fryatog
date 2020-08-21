@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/FuzzyStatic/blizzard/wowgd"
@@ -29,7 +30,25 @@ func distinguishRealmFromPlayer(input1, input2 string) (string, string, error) {
 /* CHIEVE UTILITIES */
 type playerCriteriaStuff struct {
 	completed bool
-	amount    int
+	amount    string
+}
+
+func formatChieveForSlack(a *wowgd.Achievement) string {
+	if a == nil {
+		return "Chieve not found :("
+	}
+	if len(a.Criteria.ChildCriteria) < 2 {
+		return fmt.Sprintf("<http://www.wowhead.com/achievement=%d|%s> - %s [:point_right: %d :point_left:]", a.ID, a.Name, a.Description, a.Points)
+	}
+	var ret []string
+	ret = append(ret, fmt.Sprintf("%s - %s\n", a.Name, a.Description))
+	for _, v := range mapCriteriaToStrings(a.Criteria.ChildCriteria) {
+		ret = append(ret, v)
+	}
+	if len(a.RewardDescription) > 0 {
+		ret = append(ret, fmt.Sprintf(":trophy: %s :trophy:", a.RewardDescription))
+	}
+	return ret[0] + strings.Join(ret[1:], "\n")
 }
 
 func handleChieveInput(input string) string {
@@ -106,10 +125,21 @@ func mapCriteriaToStrings(cc wowgd.ChildCriteria) []string {
 	return ret
 }
 
+func singleBareChievoCriterion(c *wowgd.Achievement) map[int]string {
+	log.Debug("SBCC")
+	ret := make(map[int]string)
+	ret[c.Criteria.ChildCriteria[0].ID] = fmt.Sprintf("<http://www.wowhead.com/achievement=%d|%s> - %s", c.ID, c.Name, c.Description)
+	if c.Criteria.Amount > 1 {
+		ret[c.Criteria.ChildCriteria[0].ID] = ret[c.Criteria.ChildCriteria[0].ID] + fmt.Sprintf(" [%%s/%d]", c.Criteria.Amount)
+	}
+	return ret
+}
+
 func mapCriteriaToName(cc wowgd.ChildCriteria) map[int]string {
+	log.Debug("Recursing into Mapping Criteria to Name")
 	ret := make(map[int]string)
 	for _, c := range cc {
-		if c.Achievement.ID == 0 && len(c.ChildCriteria) == 0 {
+		if c.Achievement.ID == 0 {
 			continue
 		}
 		tryChieve := chieveFromID(c.Achievement.ID)
@@ -123,6 +153,7 @@ func mapCriteriaToName(cc wowgd.ChildCriteria) map[int]string {
 			ret = mergeIntStringMaps(mapCriteriaToName(c.ChildCriteria), ret)
 		}
 	}
+	log.Debug("Recursing into Mapping Criteria to Name", "Ret", ret)
 	return ret
 }
 
@@ -130,11 +161,12 @@ func recursePlayerCriteria(cc wowp.ChildCriteria) map[int]playerCriteriaStuff {
 	log.Debug("Recursing into Player Criteria")
 	ret := make(map[int]playerCriteriaStuff)
 	for _, c := range cc {
-		ret[c.ID] = playerCriteriaStuff{c.IsCompleted, 0}
+		ret[c.ID] = playerCriteriaStuff{c.IsCompleted, strconv.FormatInt(int64(c.Amount), 10)}
 		if len(c.ChildCriteria) > 0 {
 			ret = mergeIntStuffMaps(recursePlayerCriteria(c.ChildCriteria), ret)
 		}
 	}
+	log.Debug("Recursing into Player Criteria", "Ret", ret)
 	return ret
 }
 
