@@ -7,6 +7,7 @@ import (
 	"github.com/FuzzyStatic/blizzard/wowgd"
 	"github.com/FuzzyStatic/blizzard/wowp"
 	raven "github.com/getsentry/raven-go"
+	log "gopkg.in/inconshreveable/log15.v2"
 )
 
 //TODO: wowchar
@@ -28,6 +29,7 @@ func chieveForPlayer(realm, player, chieveName string) string {
 	if bNetClient == nil {
 		return "WOW API not available"
 	}
+	log.Debug("Handling Chieve Player", "Realm", realm, "Player", player, "ChieveName", chieveName)
 	cas, err := retrieveChievesForPlayer(realm, player)
 	if err != nil {
 		raven.CaptureError(err, nil)
@@ -39,21 +41,40 @@ func chieveForPlayer(realm, player, chieveName string) string {
 // Parses the chieves of a player and returns a Slack formatted string
 // as to whether they have received it or not.
 func playerSingleChieveStatus(cas *wowp.CharacterAchievementsSummary, chieveName string) string {
+	log.Debug("Handling Chieve Player Status")
 	for _, a := range cas.Achievements {
-		if a.Achievement.Name == chieveName {
+		if strings.ToLower(a.Achievement.Name) == strings.ToLower(chieveName) {
+			log.Debug("playerSingleChieveStatus: Found chieve")
 			var ret []string
 			if a.Criteria.IsCompleted {
 				ret = append(ret, ":fire: Achievement Unlocked! :fire:")
 			} else {
 				ret = append(ret, ":cry: Chievo not got :cry:")
 			}
-			/* TODO: SubChieves */
-			if len(a.Criteria.ChildCriteria) > 1 {
-				ret = append(ret, "Criteria goes here")
+			/* SubChieves */
+			ac := chieveFromID(a.Achievement.ID)
+			accc := mapCriteriaToName(ac.Criteria.ChildCriteria)
+			log.Debug("Retrieved Chieve", "Map", accc)
+			if len(a.Criteria.ChildCriteria) > 0 {
+				ccret := recursePlayerCriteria(a.Criteria.ChildCriteria)
+				log.Debug("Looping CCs", "Map", ccret)
+				for k, v := range ccret {
+					if ad, ok := accc[k]; ok {
+						if strings.Contains("%s", ad) {
+							ad = fmt.Sprintf(ad, v.amount)
+						}
+						if v.completed {
+							ret = append(ret, "[:white_check_mark:] "+ad)
+						} else {
+							ret = append(ret, "[:x:] "+ad)
+						}
+					}
+				}
 			}
 			return strings.Join(ret, "\n")
 		}
 	}
+	log.Debug("playerSingleChieveStatus: Not found")
 	return "Chieve not found :("
 }
 
@@ -62,19 +83,17 @@ func formatChieveForSlack(a *wowgd.Achievement) string {
 		return "Chieve not found :("
 	}
 	if len(a.Criteria.ChildCriteria) < 2 {
-		return fmt.Sprintf("<http://www.wowhead.com/achievement=%d|%s> - %s", a.ID, a.Name, a.Description)
+		return fmt.Sprintf("<http://www.wowhead.com/achievement=%d|%s> - %s [:point_right: %d :point_left:]", a.ID, a.Name, a.Description, a.Points)
 	}
 	var ret []string
 	ret = append(ret, fmt.Sprintf("%s - %s\n", a.Name, a.Description))
-	for _, c := range dedupeCriteria(a.Criteria.ChildCriteria) {
-		tryChieve := chieveFromID(c.ID)
-		if tryChieve != nil && tryChieve.ID != 0 {
-			ret = append(ret, fmt.Sprintf("<http://www.wowhead.com/achievement=%d|%s> %s", tryChieve.ID, tryChieve.Name, tryChieve.Description))
-		} else {
-			ret = append(ret, "Unknown Criterion")
-		}
+	for _, v := range mapCriteriaToStrings(a.Criteria.ChildCriteria) {
+		ret = append(ret, v)
 	}
-	return ret[0] + strings.Join(ret[1:], ", ")
+	if len(a.RewardDescription) > 0 {
+		ret = append(ret, fmt.Sprintf(":trophy: %s :trophy:", a.RewardDescription))
+	}
+	return ret[0] + strings.Join(ret[1:], "\n")
 }
 
 type wowDude struct {

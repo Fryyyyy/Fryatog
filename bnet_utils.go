@@ -5,7 +5,9 @@ import (
 	"strings"
 
 	"github.com/FuzzyStatic/blizzard/wowgd"
+	"github.com/FuzzyStatic/blizzard/wowp"
 	raven "github.com/getsentry/raven-go"
+	log "gopkg.in/inconshreveable/log15.v2"
 )
 
 /* REALM UTILITIES */
@@ -25,8 +27,14 @@ func distinguishRealmFromPlayer(input1, input2 string) (string, string, error) {
 }
 
 /* CHIEVE UTILITIES */
+type playerCriteriaStuff struct {
+	completed bool
+	amount    int
+}
+
 func handleChieveInput(input string) string {
 	cardTokens := strings.SplitN(input, " ", 3)
+	log.Debug("Handling Chieve Input", "Input", input, "Tokens", cardTokens)
 	realm, player, err := distinguishRealmFromPlayer(cardTokens[0], cardTokens[1])
 	if err != nil {
 		return formatChieveForSlack(chieveFromID(chieveNameToID(input)))
@@ -36,37 +44,103 @@ func handleChieveInput(input string) string {
 }
 func chieveNameToID(chieveName string) int {
 	if bNetClient == nil || len(wowChieves.Achievements) == 0 {
+		log.Debug("Chieve Name to ID - no client or chieves")
 		return 0
 	}
 
 	for _, a := range wowChieves.Achievements {
 		if strings.ToLower(a.Name) == strings.ToLower(chieveName) {
+			log.Debug("Chieve Name to ID", "Name", chieveName, "Chievo Found", a.ID)
 			return a.ID
 		}
 	}
 
+	log.Debug("Chieve Name to ID -- not found")
 	// Not found
 	return 0
 }
 
 // Little wrapper to make the format function hermetic.
 func chieveFromID(chieveID int) *wowgd.Achievement {
+	log.Debug("Chieve from ID", "ID", chieveID)
+	if chieveID == 0 {
+		return nil
+	}
 	c, _, err := bNetClient.WoWAchievement(chieveID)
 	if err != nil {
 		raven.CaptureError(err, nil)
 		return nil
 	}
+	log.Debug("Chieve from ID", "ID", chieveID, "Chievo Found", c.Name)
 	return c
 }
 
-func dedupeCriteria(cs wowgd.ChildCriteria) wowgd.ChildCriteria {
-	var ret wowgd.ChildCriteria
-	keys := make(map[string]bool)
-	for _, r := range cs {
-		if _, ok := keys[r.Description]; !ok {
-			keys[r.Description] = true
-			ret = append(ret, r)
+func mapCriteriaToStrings(cc wowgd.ChildCriteria) []string {
+	var ret []string
+	for _, c := range cc {
+		if c.Achievement.ID == 0 {
+			if len(c.ChildCriteria) == 0 {
+				continue
+			}
+			if c.Operator.Name != "" && len(c.ChildCriteria) > 1 {
+				if c.Amount > 0 {
+					ret = append(ret, fmt.Sprintf("%s %d of:", c.Operator.Name, c.Amount))
+				} else {
+					ret = append(ret, fmt.Sprintf("%s of:", c.Operator.Name))
+				}
+			}
+		} else {
+			tryChieve := chieveFromID(c.Achievement.ID)
+			if tryChieve != nil && tryChieve.ID != 0 {
+				var faction string
+				if len(c.Faction.Name) > 1 {
+					faction = fmt.Sprintf(" [%s]", string(c.Faction.Name[0]))
+				}
+				ret = append(ret, fmt.Sprintf("<http://www.wowhead.com/achievement=%d|%s>%s - %s", tryChieve.ID, tryChieve.Name, faction, tryChieve.Description))
+			}
+		}
+		if len(c.ChildCriteria) > 0 {
+			ret = append(ret, mapCriteriaToStrings(c.ChildCriteria)...)
 		}
 	}
 	return ret
+}
+
+func mapCriteriaToName(cc wowgd.ChildCriteria) map[int]string {
+	ret := make(map[int]string)
+	for _, c := range cc {
+		if c.Achievement.ID == 0 && len(c.ChildCriteria) == 0 {
+			continue
+		}
+		tryChieve := chieveFromID(c.Achievement.ID)
+		if tryChieve != nil && tryChieve.ID != 0 {
+			ret[c.ID] = fmt.Sprintf("<http://www.wowhead.com/achievement=%d|%s> - %s", tryChieve.ID, tryChieve.Name, tryChieve.Description)
+			if c.Amount > 1 {
+				ret[c.ID] = ret[c.ID] + fmt.Sprintf(" [%%s/%d]", c.Amount)
+			}
+		}
+		if len(c.ChildCriteria) > 0 {
+			ret = mergeIntStringMaps(mapCriteriaToName(c.ChildCriteria), ret)
+		}
+	}
+	return ret
+}
+
+func recursePlayerCriteria(cc wowp.ChildCriteria) map[int]playerCriteriaStuff {
+	log.Debug("Recursing into Player Criteria")
+	ret := make(map[int]playerCriteriaStuff)
+	for _, c := range cc {
+		ret[c.ID] = playerCriteriaStuff{c.IsCompleted, 0}
+		if len(c.ChildCriteria) > 0 {
+			ret = mergeIntStuffMaps(recursePlayerCriteria(c.ChildCriteria), ret)
+		}
+	}
+	return ret
+}
+
+func mergeIntStuffMaps(new map[int]playerCriteriaStuff, existing map[int]playerCriteriaStuff) map[int]playerCriteriaStuff {
+	for k, v := range new {
+		existing[k] = v
+	}
+	return existing
 }

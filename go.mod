@@ -1,11 +1,10 @@
 module github.com/fryyyyy/fryatog
 
 require (
-	github.com/FuzzyStatic/blizzard v0.0.0-20200818004559-f03a708985ac
+	github.com/FuzzyStatic/blizzard v0.0.0-20200821013218-58adaa678360
 	github.com/algolia/algoliasearch-client-go v0.0.0-20190409094142-b60d13f65ed3
 	github.com/certifi/gocertifi v0.0.0-20200211180108-c7c1fbc02894 // indirect
 	github.com/getsentry/raven-go v0.2.0
-	github.com/golang/mock v1.4.3 // indirect
 	github.com/google/go-cmp v0.5.1
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/mattn/go-colorable v0.1.7 // indirect
