@@ -41,8 +41,10 @@ type configuration struct {
 		IndexName string `json:"IndexName"`
 	} `json:"Hearthstone"`
 	BattleNet struct {
-		ClientID     string `json:"ClientID"`
-		ClientSecret string `json:"ClientSecret"`
+		ClientID         string `json:"ClientID"`
+		ClientSecret     string `json:"ClientSecret"`
+		CurrentExpansion string `json:"CurrentExpansion"`
+		CurrentRaidTier  string `json:"CurrentRaidTier"`
 	} `json:"BattleNet"`
 	IRC   bool `json:"IRC"`
 	Slack bool `json:"Slack"`
@@ -381,7 +383,21 @@ func handleCommand(params *fryatogParams, c chan string) {
 		case 2:
 			c <- formatChieveForSlack(chieveFromID(chieveNameToID(cardTokens[1])))
 		default:
-			c <- handleChieveInput(message[10:]) //TODO : no worky
+			c <- handleChieveInput(message[10:])
+		}
+		return
+
+	case cardTokens[0] == "wowdude" && !params.isIRC:
+		log.Debug("Slack-based Wow Dude", "Input", message)
+		switch len(cardTokens) {
+		case 3:
+			c <- printWoWDude(cardTokens[1], cardTokens[2])
+		case 4:
+			if cardTokens[1] == "raid" {
+				c <- getDudeRaid(cardTokens[2], cardTokens[3], conf.BattleNet.CurrentExpansion, conf.BattleNet.CurrentRaidTier)
+			}
+		default:
+			c <- "!wowdude [raid] <realm> <player>"
 		}
 		return
 
@@ -625,7 +641,7 @@ func getRandomCard(randomCardGetFunction RandomCardGetter) (Card, error) {
 
 func main() {
 	flag.Parse()
-	conf := readConfig()
+	conf = readConfig()
 	raven.SetDSN(conf.DSN)
 
 	var err error

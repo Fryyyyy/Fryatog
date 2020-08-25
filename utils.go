@@ -214,6 +214,7 @@ func readConfig() configuration {
 	if err != nil {
 		panic(err)
 	}
+	log.Debug("Conf", "Parsed as", conf)
 	return conf
 }
 
