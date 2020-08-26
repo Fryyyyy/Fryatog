@@ -133,7 +133,6 @@ func chieveNameToID(chieveName string) int {
 	}
 
 	log.Debug("Chieve Name to ID -- not found")
-	// Not found
 	return 0
 }
 
@@ -197,12 +196,14 @@ func mapCriteriaToName(cc wowgd.ChildCriteria) map[int]string {
 	log.Debug("Recursing into Mapping Criteria to Name")
 	ret := make(map[int]string)
 	for _, c := range cc {
-		if c.Achievement.ID == 0 {
-			continue
-		}
 		tryChieve := chieveFromID(c.Achievement.ID)
 		if tryChieve != nil && tryChieve.ID != 0 {
 			ret[c.ID] = fmt.Sprintf("<http://www.wowhead.com/achievement=%d|%s> - %s", tryChieve.ID, tryChieve.Name, tryChieve.Description)
+			if c.Amount > 1 {
+				ret[c.ID] = ret[c.ID] + fmt.Sprintf(" [%%s/%d]", c.Amount)
+			}
+		} else {
+			ret[c.ID] = fmt.Sprintf("%s", c.Description)
 			if c.Amount > 1 {
 				ret[c.ID] = ret[c.ID] + fmt.Sprintf(" [%%s/%d]", c.Amount)
 			}
