@@ -667,7 +667,7 @@ func main() {
 	}
 
 	// Initialise HL points
-	err = importHighlanderPoints(false)
+	err = importHighlanderPoints(true)
 	if err != nil {
 		log.Warn("Error importing Highlander points", "Err", err)
 		raven.CaptureErrorAndWait(err, nil)
