@@ -48,6 +48,7 @@ func playerSingleChieveStatus(cas *wowp.CharacterAchievementsSummary, chieveName
 		if strings.ToLower(a.Achievement.Name) == strings.ToLower(chieveName) {
 			log.Debug("playerSingleChieveStatus: Found chieve", "Chievo", a)
 			var ret []string
+			ret = append(ret, fmt.Sprintf("<http://www.wowhead.com/achievement=%d|%s>", a.ID, a.Achievement.Name))
 			if a.Criteria.IsCompleted {
 				ret = append(ret, ":fire: Achievement Unlocked! :fire:")
 			} else {
@@ -55,10 +56,17 @@ func playerSingleChieveStatus(cas *wowp.CharacterAchievementsSummary, chieveName
 			}
 			/* SubChieves */
 			ac := chieveFromID(a.Achievement.ID)
+			if len(ac.Name) > 0 {
+				ret = append(ret, ac.Description)
+			}
 			accc := mapCriteriaToName(ac.Criteria.ChildCriteria)
 			// A bare chievo with a single child criterion
 			if len(ac.Criteria.ChildCriteria) == 1 && len(ac.Criteria.ChildCriteria[0].ChildCriteria) == 0 {
 				accc = singleBareChievoCriterion(ac)
+			}
+			// A bare chievo with a single amount and no children
+			if len(ac.Criteria.ChildCriteria) == 0 && ac.Criteria.Amount > 1 {
+				ret = append(ret, fmt.Sprintf("[Progress: %d/%d]", int64(a.Criteria.Amount), ac.Criteria.Amount))
 			}
 			log.Debug("Retrieved Chieve", "C", ac, "Map", accc)
 			if len(a.Criteria.ChildCriteria) > 0 {

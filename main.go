@@ -41,10 +41,11 @@ type configuration struct {
 		IndexName string `json:"IndexName"`
 	} `json:"Hearthstone"`
 	BattleNet struct {
-		ClientID         string `json:"ClientID"`
-		ClientSecret     string `json:"ClientSecret"`
-		CurrentExpansion string `json:"CurrentExpansion"`
-		CurrentRaidTier  string `json:"CurrentRaidTier"`
+		ClientID         string   `json:"ClientID"`
+		ClientSecret     string   `json:"ClientSecret"`
+		CurrentExpansion string   `json:"CurrentExpansion"`
+		CurrentRaidTier  string   `json:"CurrentRaidTier"`
+		Reputations      []string `json:"Reputations"`
 	} `json:"BattleNet"`
 	IRC   bool `json:"IRC"`
 	Slack bool `json:"Slack"`
@@ -395,9 +396,11 @@ func handleCommand(params *fryatogParams, c chan string) {
 		case 4:
 			if cardTokens[1] == "raid" {
 				c <- getDudeRaid(cardTokens[2], cardTokens[3], conf.BattleNet.CurrentExpansion, conf.BattleNet.CurrentRaidTier)
+			} else if cardTokens[1] == "rep" {
+				c <- getDudeReps(cardTokens[2], cardTokens[3])
 			}
 		default:
-			c <- "!wowdude [raid] <realm> <player>"
+			c <- "!wowdude [raid/rep] <realm> <player>"
 		}
 		return
 

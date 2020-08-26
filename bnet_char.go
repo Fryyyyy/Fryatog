@@ -26,6 +26,11 @@ func getDudeRaid(input1, input2, expn, tier string) string {
 	}
 	var ret []string
 	cr, _, err := bNetClient.WoWCharacterRaids(realm, player)
+	if err != nil {
+		log.Warn("GDR", "Err", err)
+		raven.CaptureError(err, nil)
+		return "Could not retrieve raids"
+	}
 	for _, ex := range cr.Expansions {
 		if strings.ToLower(ex.Expansion.Name) == strings.ToLower(expn) {
 			for _, i := range ex.Instances {
@@ -109,6 +114,46 @@ func printWoWDude(input1, input2 string) string {
 		}
 		ret = append(ret, fmt.Sprintf("%s <http://www.wowhead.com/item=%d|%s> (%d) %s", emoji, ei.Item.ID, ei.Name, ei.Level.Value, sText))
 		// TODO: Context (i.e Mythic, WQ, etc)
+	}
+	return strings.Join(ret, "\n")
+}
+
+func getDudeReps(input1, input2 string) string {
+	if bNetClient == nil {
+		return "WOW API not available"
+	}
+	realm, player, err := distinguishRealmFromPlayer(input1, input2)
+	if err != nil {
+		return "Could not distinguish realm"
+	}
+	var ret []string
+	reps, _, err := bNetClient.WoWCharacterReputationsSummary(realm, player)
+	if err != nil {
+		log.Warn("GDRep", "Err", err)
+		raven.CaptureError(err, nil)
+		return "Could not retrieve reputations"
+	}
+	for _, r := range reps.Reputations {
+		if stringSliceContains(conf.BattleNet.Reputations, r.Faction.Name) {
+			emoji := ":question_man:"
+			switch r.Standing.Name {
+			case "Hated":
+				emoji = ":angry:"
+			case "Stranger":
+				emoji = ":thinking_tom:"
+			case "Neutral":
+				emoji = ":neutral_face:"
+			case "Friendly":
+				emoji = ":fry_real:"
+			case "Honored":
+				emoji = ":ok_hand:"
+			case "Revered":
+				emoji = ":bflove:"
+			case "Exalted":
+				emoji = ":angrylaugh:"
+			}
+			ret = append(ret, fmt.Sprintf("%s %s - %s [%d/%d]", emoji, r.Faction.Name, r.Standing.Name, r.Standing.Value, r.Standing.Max))
+		}
 	}
 	return strings.Join(ret, "\n")
 }
