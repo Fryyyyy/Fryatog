@@ -1,13 +1,9 @@
 package main
 
 import (
-	"encoding/json"
-	"os"
-	"strings"
 	"testing"
 
 	"github.com/FuzzyStatic/blizzard/wowgd"
-	"github.com/FuzzyStatic/blizzard/wowp"
 )
 
 func TestDistinguishRealmFromPlayer(t *testing.T) {
@@ -51,64 +47,6 @@ func TestDistinguishRealmFromPlayer(t *testing.T) {
 			}
 			if gotRealm != tt.wantRealm {
 				t.Errorf("distinguishRealmFromPlayer() realm got = %v, want %v", gotRealm, tt.wantRealm)
-			}
-		})
-	}
-}
-
-func TestPlayerSingleChieveStatus(t *testing.T) {
-	var cas wowp.CharacterAchievementsSummary
-	fi, err := os.Open("test_data/wowcharacterchieve.json")
-	if err != nil {
-		t.Errorf("Unable to open JSON: %v", err)
-	}
-	if err := json.NewDecoder(fi).Decode(&cas); err != nil {
-		t.Errorf("Something went wrong parsing the card list")
-	}
-	type args struct {
-		cas        *wowp.CharacterAchievementsSummary
-		chieveName string
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{"hasSimpleChieve", args{&cas, "Level 10"}, "Achievement Unlocked"},
-		{"doesntHaveSimpleChieve", args{&cas, "Split Personality"}, "not got"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := playerSingleChieveStatus(tt.args.cas, tt.args.chieveName); !strings.Contains(got, tt.want) {
-				t.Errorf("playerSingleChieveStatus() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestFormatChieveForSlack(t *testing.T) {
-	var a wowgd.Achievement
-	fi, err := os.Open("test_data/wowsinglechieve.json")
-	if err != nil {
-		t.Errorf("Unable to open JSON: %v", err)
-	}
-	if err := json.NewDecoder(fi).Decode(&a); err != nil {
-		t.Errorf("Something went wrong parsing the card list")
-	}
-	type args struct {
-		a *wowgd.Achievement
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{"pathfinder", args{&a}, ""},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := formatChieveForSlack(tt.args.a); got != tt.want {
-				t.Errorf("formatChieveForSlack() = %v, want %v", got, tt.want)
 			}
 		})
 	}
