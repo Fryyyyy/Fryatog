@@ -7,12 +7,10 @@ require (
 	github.com/getsentry/raven-go v0.2.0
 	github.com/google/go-cmp v0.5.1
 	github.com/hashicorp/golang-lru v0.5.4
-	github.com/lithammer/fuzzysearch v1.1.0
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/paul-mannino/go-fuzzywuzzy v0.0.0-20200127021948-54652b135d0e
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/schollz/closestmatch v2.1.0+incompatible
 	github.com/slack-go/slack v0.6.6
 	github.com/whyrusleeping/hellabot v0.0.0-20200817083746-271d68a20232
 	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc // indirect
