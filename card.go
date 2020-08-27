@@ -35,7 +35,7 @@ func (card *Card) getExtraMetadata(inputURL string) {
 	}
 	fetchURL := card.PrintsSearchURI
 	var cm CardMetadata
-	// Aready have metadata?
+	// Already have metadata?
 	if !reflect.DeepEqual(card.Metadata, cm) {
 		return
 	}

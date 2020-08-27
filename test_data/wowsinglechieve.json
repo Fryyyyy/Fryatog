@@ -1,0 +1,160 @@
+{
+    "_links": {
+      "self": {
+        "href": "https://us.api.blizzard.com/data/wow/achievement/12989?namespace=static-8.3.7_35114-us"
+      }
+    },
+    "id": 12989,
+    "category": {
+      "key": {
+        "href": "https://us.api.blizzard.com/data/wow/achievement-category/15298?namespace=static-8.3.7_35114-us"
+      },
+      "name": "Battle for Azeroth",
+      "id": 15298
+    },
+    "name": "Battle for Azeroth Pathfinder, Part One",
+    "description": "Complete the Kul Tiras and Zandalar achievements listed below.",
+    "points": 25,
+    "is_account_wide": true,
+    "criteria": {
+      "id": 68499,
+      "description": null,
+      "amount": 0,
+      "operator": {
+        "type": "AND",
+        "name": "Complete All"
+      },
+      "child_criteria": [
+        {
+          "id": 68500,
+          "description": "Battle for Azeroth Explorer",
+          "amount": 0,
+          "achievement": {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/achievement/12988?namespace=static-8.3.7_35114-us"
+            },
+            "name": "Battle for Azeroth Explorer",
+            "id": 12988
+          }
+        },
+        {
+          "id": 68503,
+          "description": "Azerothian Diplomat",
+          "amount": 0,
+          "achievement": {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/achievement/12947?namespace=static-8.3.7_35114-us"
+            },
+            "name": "Azerothian Diplomat",
+            "id": 12947
+          }
+        },
+        {
+          "id": 68506,
+          "description": "Wide World of Quests",
+          "amount": 0,
+          "achievement": {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/achievement/13144?namespace=static-8.3.7_35114-us"
+            },
+            "name": "Wide World of Quests",
+            "id": 13144
+          }
+        },
+        {
+          "id": 68504,
+          "description": "Complete Zone Questlines",
+          "amount": 1,
+          "operator": {
+            "type": "COMPLETE_AT_LEAST",
+            "name": "Complete At Least"
+          },
+          "child_criteria": [
+            {
+              "id": 68501,
+              "description": "Loremaster of Kul Tiras",
+              "amount": 0,
+              "faction": {
+                "type": "ALLIANCE",
+                "name": "Alliance"
+              },
+              "achievement": {
+                "key": {
+                  "href": "https://us.api.blizzard.com/data/wow/achievement/12593?namespace=static-8.3.7_35114-us"
+                },
+                "name": "Loremaster of Kul Tiras",
+                "id": 12593
+              }
+            },
+            {
+              "id": 68502,
+              "description": "Zandalar Forever!",
+              "amount": 0,
+              "faction": {
+                "type": "HORDE",
+                "name": "Horde"
+              },
+              "achievement": {
+                "key": {
+                  "href": "https://us.api.blizzard.com/data/wow/achievement/12479?namespace=static-8.3.7_35114-us"
+                },
+                "name": "Zandalar Forever!",
+                "id": 12479
+              }
+            }
+          ]
+        },
+        {
+          "id": 70667,
+          "description": "War Campaign",
+          "amount": 1,
+          "operator": {
+            "type": "COMPLETE_AT_LEAST",
+            "name": "Complete At Least"
+          },
+          "child_criteria": [
+            {
+              "id": 68505,
+              "description": "Ready for War",
+              "amount": 0,
+              "faction": {
+                "type": "ALLIANCE",
+                "name": "Alliance"
+              },
+              "achievement": {
+                "key": {
+                  "href": "https://us.api.blizzard.com/data/wow/achievement/12510?namespace=static-8.3.7_35114-us"
+                },
+                "name": "Ready for War",
+                "id": 12510
+              }
+            },
+            {
+              "id": 68753,
+              "description": "Ready for War",
+              "amount": 0,
+              "faction": {
+                "type": "HORDE",
+                "name": "Horde"
+              },
+              "achievement": {
+                "key": {
+                  "href": "https://us.api.blizzard.com/data/wow/achievement/12509?namespace=static-8.3.7_35114-us"
+                },
+                "name": "Ready for War",
+                "id": 12509
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "reward_description": "Reward: Increased Mount Speed in Kul Tiras and Zandalar",
+    "media": {
+      "key": {
+        "href": "https://us.api.blizzard.com/data/wow/media/achievement/12989?namespace=static-8.3.7_35114-us"
+      },
+      "id": 12989
+    },
+    "display_order": 1
+  }

@@ -214,6 +214,7 @@ func readConfig() configuration {
 	if err != nil {
 		panic(err)
 	}
+	log.Debug("Conf", "Parsed as", conf)
 	return conf
 }
 
@@ -307,4 +308,11 @@ func nco(a string, b string) string {
 		return a
 	}
 	return b
+}
+
+func mergeIntStringMaps(new map[int]string, existing map[int]string) map[int]string {
+	for k, v := range new {
+		existing[k] = v
+	}
+	return existing
 }

@@ -1,0 +1,3055 @@
+{
+    "_links": {
+      "self": {
+        "href": "https://us.api.blizzard.com/profile/wow/character/barthilas/test/equipment?namespace=profile-us"
+      }
+    },
+    "character": {
+      "key": {
+        "href": "https://us.api.blizzard.com/profile/wow/character/barthilas/test?namespace=profile-us"
+      },
+      "name": "Test",
+      "id": 1,
+      "realm": {
+        "key": {
+          "href": "https://us.api.blizzard.com/data/wow/realm/3723?namespace=dynamic-us"
+        },
+        "name": "Barthilas",
+        "id": 3723,
+        "slug": "barthilas"
+      }
+    },
+    "equipped_items": [
+      {
+        "item": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item/174234?namespace=static-8.3.7_35114-us"
+          },
+          "id": 174234
+        },
+        "slot": {
+          "type": "HEAD",
+          "name": "Head"
+        },
+        "quantity": 1,
+        "context": 3,
+        "bonus_list": [
+          4822,
+          1487,
+          4786,
+          6505
+        ],
+        "quality": {
+          "type": "EPIC",
+          "name": "Epic"
+        },
+        "name": "Maniacal Speaker's Cover",
+        "azerite_details": {
+          "selected_powers": [
+            {
+              "id": 13,
+              "tier": 0,
+              "spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/263978?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Azerite Empowered",
+                  "id": 263978
+                },
+                "description": "Increases Item Level by 5 and increases the potency of all Azerite powers granted by this item.",
+                "cast_time": "Passive"
+              },
+              "is_display_hidden": true
+            },
+            {
+              "id": 83,
+              "tier": 1,
+              "spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/268437?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Impassive Visage",
+                  "id": 268437
+                },
+                "description": "When you take damage, heal for 13,535. Cannot occur more than once every 6 sec.",
+                "cast_time": "Passive"
+              }
+            },
+            {
+              "id": 42,
+              "tier": 2,
+              "spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/267883?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Savior",
+                  "id": 267883
+                },
+                "description": "Your heals on targets below 50% health have a chance to heal for an additional 14,070.",
+                "cast_time": "Passive"
+              }
+            },
+            {
+              "id": 402,
+              "tier": 3,
+              "spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/287336?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Promise of Deliverance",
+                  "id": 287336
+                },
+                "description": "For 10 sec after you cast Holy Word: Serenity, Heal and Flash Heal heal for an additional 3,165, and reduce the cooldown of Holy Word: Serenity by an additional 1 sec.",
+                "cast_time": "Passive"
+              }
+            },
+            {
+              "id": 165,
+              "tier": 4,
+              "spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/273313?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Blessed Sanctuary",
+                  "id": 273313
+                },
+                "description": "Echo of Light from Holy Word: Sanctify heals for an additional 9,496.",
+                "cast_time": "Passive"
+              }
+            }
+          ],
+          "selected_powers_string": "Fully Upgraded"
+        },
+        "media": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/media/item/174234?namespace=static-8.3.7_35114-us"
+          },
+          "id": 174234
+        },
+        "item_class": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Armor",
+          "id": 4
+        },
+        "item_subclass": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4/item-subclass/1?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Cloth",
+          "id": 1
+        },
+        "inventory_type": {
+          "type": "HEAD",
+          "name": "Head"
+        },
+        "binding": {
+          "type": "ON_ACQUIRE",
+          "name": "Binds when picked up"
+        },
+        "armor": {
+          "value": 240,
+          "display": {
+            "display_string": "240 Armor",
+            "color": {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 1
+            }
+          }
+        },
+        "stats": [
+          {
+            "type": {
+              "type": "INTELLECT",
+              "name": "Intellect"
+            },
+            "value": 1145,
+            "display": {
+              "display_string": "+1,145 Intellect",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "STAMINA",
+              "name": "Stamina"
+            },
+            "value": 2720,
+            "display": {
+              "display_string": "+2,720 Stamina",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          }
+        ],
+        "requirements": {
+          "level": {
+            "value": 120,
+            "display_string": "Requires Level 120"
+          }
+        },
+        "level": {
+          "value": 450,
+          "display_string": "Item Level 450"
+        },
+        "durability": {
+          "value": 100,
+          "display_string": "Durability 100 / 100"
+        }
+      },
+      {
+        "item": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item/158075?namespace=static-8.3.7_35114-us"
+          },
+          "id": 158075
+        },
+        "slot": {
+          "type": "NECK",
+          "name": "Neck"
+        },
+        "quantity": 1,
+        "context": 11,
+        "bonus_list": [
+          4932,
+          4933,
+          6316
+        ],
+        "quality": {
+          "type": "ARTIFACT",
+          "name": "Artifact"
+        },
+        "name": "Heart of Azeroth",
+        "azerite_details": {
+          "percentage_to_next_level": 0.29700085689802913,
+          "selected_essences": [
+            {
+              "slot": 0,
+              "rank": 4,
+              "main_spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/299353?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Concentrated Flame",
+                  "id": 299353
+                },
+                "description": "Blast your target with a ball of concentrated flame, dealing 21,673 Fire damage to an enemy or healing an ally for 21,673, then burn the target for an additional 75% of the damage or healing done over 6 sec.\r\n\r\nEach cast of Concentrated Flame deals 100% increased damage or healing. This bonus resets after every third cast.\r\nMax 2 Charges.",
+                "cast_time": "Instant",
+                "range": "40 yd range"
+              },
+              "passive_spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/299350?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Ancient Flame",
+                  "id": 299350
+                },
+                "description": "Your spells and abilities have a chance to cauterize your target for 12,542 Fire damage over 10 sec or to heal an ally for 12,542 over 10 sec, stacking up to 5 times.",
+                "cast_time": "Passive"
+              },
+              "essence": {
+                "key": {
+                  "href": "https://us.api.blizzard.com/data/wow/azerite-essence/12?namespace=static-8.3.7_35114-us"
+                },
+                "name": "The Crucible of Flame",
+                "id": 12
+              },
+              "media": {
+                "key": {
+                  "href": "https://us.api.blizzard.com/data/wow/media/azerite-essence/12?namespace=static-8.3.7_35114-us"
+                },
+                "id": 12
+              }
+            },
+            {
+              "slot": 1,
+              "rank": 1,
+              "passive_spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/293030?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Unwavering Ward",
+                  "id": 293030
+                },
+                "description": "Every 10 sec, allies within 15 yds gain a shield that absorbs 2,481 damage, stacking up to 18,609.\r\n\r\nUnique:  Corruption Resistance increased by 10.",
+                "cast_time": "Passive"
+              },
+              "essence": {
+                "key": {
+                  "href": "https://us.api.blizzard.com/data/wow/azerite-essence/16?namespace=static-8.3.7_35114-us"
+                },
+                "name": "Unwavering Ward",
+                "id": 16
+              },
+              "media": {
+                "key": {
+                  "href": "https://us.api.blizzard.com/data/wow/media/azerite-essence/16?namespace=static-8.3.7_35114-us"
+                },
+                "id": 16
+              }
+            },
+            {
+              "slot": 2,
+              "rank": 1,
+              "passive_spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/297411?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Devout Spirit",
+                  "id": 297411
+                },
+                "description": "Every 5 sec, gain Devout Spirit, causing your next Flash Heal to heal for an additional 3,157, stacking up to 3 times.\r\n\r\nUnique: Corruption Resistance increased by 10.",
+                "cast_time": "Passive"
+              },
+              "essence": {
+                "key": {
+                  "href": "https://us.api.blizzard.com/data/wow/azerite-essence/24?namespace=static-8.3.7_35114-us"
+                },
+                "name": "Spirit of Preservation",
+                "id": 24
+              },
+              "media": {
+                "key": {
+                  "href": "https://us.api.blizzard.com/data/wow/media/azerite-essence/24?namespace=static-8.3.7_35114-us"
+                },
+                "id": 24
+              }
+            },
+            {
+              "slot": 3,
+              "rank": 2,
+              "passive_spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/299939?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Seed of Eonar",
+                  "id": 299939
+                },
+                "description": "Your heals have a very high chance to implant a Seed of Eonar in the target for 18 sec.\r\n\r\nSeed of Eonar\r\nIf the target takes damage, the Seed bursts, healing them for 8,972.\r\n",
+                "cast_time": "Passive"
+              },
+              "essence": {
+                "key": {
+                  "href": "https://us.api.blizzard.com/data/wow/azerite-essence/20?namespace=static-8.3.7_35114-us"
+                },
+                "name": "Life-Binder's Invocation",
+                "id": 20
+              },
+              "media": {
+                "key": {
+                  "href": "https://us.api.blizzard.com/data/wow/media/azerite-essence/20?namespace=static-8.3.7_35114-us"
+                },
+                "id": 20
+              }
+            }
+          ],
+          "level": {
+            "value": 85,
+            "display_string": "Azerite Power Level 85"
+          }
+        },
+        "media": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/media/item/158075?namespace=static-8.3.7_35114-us"
+          },
+          "id": 158075
+        },
+        "item_class": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Armor",
+          "id": 4
+        },
+        "item_subclass": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4/item-subclass/0?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Miscellaneous",
+          "id": 0
+        },
+        "inventory_type": {
+          "type": "NECK",
+          "name": "Neck"
+        },
+        "binding": {
+          "type": "ON_ACQUIRE",
+          "name": "Binds when picked up"
+        },
+        "unique_equipped": "Unique",
+        "stats": [
+          {
+            "type": {
+              "type": "INTELLECT",
+              "name": "Intellect"
+            },
+            "value": 555,
+            "display": {
+              "display_string": "+555 Intellect",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "AGILITY",
+              "name": "Agility"
+            },
+            "value": 555,
+            "is_negated": true,
+            "display": {
+              "display_string": "+555 Agility",
+              "color": {
+                "r": 128,
+                "g": 128,
+                "b": 128,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "STRENGTH",
+              "name": "Strength"
+            },
+            "value": 555,
+            "is_negated": true,
+            "display": {
+              "display_string": "+555 Strength",
+              "color": {
+                "r": 128,
+                "g": 128,
+                "b": 128,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "STAMINA",
+              "name": "Stamina"
+            },
+            "value": 1100,
+            "display": {
+              "display_string": "+1,100 Stamina",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "CRIT_RATING",
+              "name": "Critical Strike"
+            },
+            "value": 369,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+369 Critical Strike",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "HASTE_RATING",
+              "name": "Haste"
+            },
+            "value": 369,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+369 Haste",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "MASTERY_RATING",
+              "name": "Mastery"
+            },
+            "value": 369,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+369 Mastery",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          }
+        ],
+        "spells": [
+          {
+            "spell": {
+              "key": {
+                "href": "https://us.api.blizzard.com/data/wow/spell/277253?namespace=static-8.3.7_35114-us"
+              },
+              "name": "Heart of Azeroth",
+              "id": 277253
+            },
+            "description": "Equip: Harnesses the energy of raw Azerite, awakening exceptional pieces of armor that possess latent powers."
+          }
+        ],
+        "requirements": {
+          "level": {
+            "value": 110,
+            "display_string": "Requires Level 110"
+          }
+        },
+        "description": "A living symbol of hope, borne by the champions of a dying planet. The fate of Azeroth will be shared by all her children.",
+        "level": {
+          "value": 503,
+          "display_string": "Item Level 503"
+        },
+        "is_subclass_hidden": true
+      },
+      {
+        "item": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item/174120?namespace=static-8.3.7_35114-us"
+          },
+          "id": 174120
+        },
+        "slot": {
+          "type": "SHOULDER",
+          "name": "Shoulders"
+        },
+        "quantity": 1,
+        "context": 3,
+        "bonus_list": [
+          4822,
+          1487,
+          4786,
+          6506
+        ],
+        "quality": {
+          "type": "EPIC",
+          "name": "Epic"
+        },
+        "name": "Void Ascendant's Mantle",
+        "azerite_details": {
+          "selected_powers": [
+            {
+              "id": 13,
+              "tier": 0,
+              "spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/263978?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Azerite Empowered",
+                  "id": 263978
+                },
+                "description": "Increases Item Level by 5 and increases the potency of all Azerite powers granted by this item.",
+                "cast_time": "Passive"
+              },
+              "is_display_hidden": true
+            },
+            {
+              "id": 15,
+              "tier": 1,
+              "spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/263962?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Resounding Protection",
+                  "id": 263962
+                },
+                "description": "Every 30 sec, gain an absorb shield for 38,671 for 30 sec.",
+                "cast_time": "Passive"
+              }
+            },
+            {
+              "id": 103,
+              "tier": 2,
+              "spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/267882?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Concentrated Mending",
+                  "id": 267882
+                },
+                "description": "Your healing effects have a chance to grant the target 282 additional healing every 2 sec for 12 sec. This effect doubles every 2 sec. ",
+                "cast_time": "Passive"
+              }
+            },
+            {
+              "id": 402,
+              "tier": 3,
+              "spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/287336?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Promise of Deliverance",
+                  "id": 287336
+                },
+                "description": "For 10 sec after you cast Holy Word: Serenity, Heal and Flash Heal heal for an additional 3,165, and reduce the cooldown of Holy Word: Serenity by an additional 1 sec.",
+                "cast_time": "Passive"
+              }
+            },
+            {
+              "id": 401,
+              "tier": 4,
+              "spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/278645?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Word of Mending",
+                  "id": 278645
+                },
+                "description": "Prayer of Mending heals for an additional 1,207 and reduces Holy Word: Sanctify's cooldown by 2 sec.",
+                "cast_time": "Passive"
+              }
+            }
+          ],
+          "selected_powers_string": "Fully Upgraded"
+        },
+        "media": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/media/item/174120?namespace=static-8.3.7_35114-us"
+          },
+          "id": 174120
+        },
+        "item_class": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Armor",
+          "id": 4
+        },
+        "item_subclass": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4/item-subclass/1?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Cloth",
+          "id": 1
+        },
+        "inventory_type": {
+          "type": "SHOULDER",
+          "name": "Shoulder"
+        },
+        "binding": {
+          "type": "ON_ACQUIRE",
+          "name": "Binds when picked up"
+        },
+        "armor": {
+          "value": 222,
+          "display": {
+            "display_string": "222 Armor",
+            "color": {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 1
+            }
+          }
+        },
+        "stats": [
+          {
+            "type": {
+              "type": "INTELLECT",
+              "name": "Intellect"
+            },
+            "value": 859,
+            "display": {
+              "display_string": "+859 Intellect",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "STAMINA",
+              "name": "Stamina"
+            },
+            "value": 2041,
+            "display": {
+              "display_string": "+2,041 Stamina",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          }
+        ],
+        "requirements": {
+          "level": {
+            "value": 120,
+            "display_string": "Requires Level 120"
+          }
+        },
+        "level": {
+          "value": 450,
+          "display_string": "Item Level 450"
+        },
+        "durability": {
+          "value": 100,
+          "display_string": "Durability 100 / 100"
+        }
+      },
+      {
+        "item": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item/169878?namespace=static-8.3.7_35114-us"
+          },
+          "id": 169878
+        },
+        "slot": {
+          "type": "SHIRT",
+          "name": "Shirt"
+        },
+        "quantity": 1,
+        "quality": {
+          "type": "UNCOMMON",
+          "name": "Uncommon"
+        },
+        "name": "Irradiated Undercoat",
+        "media": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/media/item/169878?namespace=static-8.3.7_35114-us"
+          },
+          "id": 169878
+        },
+        "item_class": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Armor",
+          "id": 4
+        },
+        "item_subclass": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4/item-subclass/5?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Cosmetic",
+          "id": 5
+        },
+        "inventory_type": {
+          "type": "BODY",
+          "name": "Shirt"
+        },
+        "binding": {
+          "type": "ON_ACQUIRE",
+          "name": "Binds when picked up"
+        },
+        "unique_equipped": "Unique",
+        "spells": [
+          {
+            "spell": {
+              "key": {
+                "href": "https://us.api.blizzard.com/data/wow/spell/303003?namespace=static-8.3.7_35114-us"
+              },
+              "name": "Irradiated Undercoat",
+              "id": 303003
+            },
+            "description": "Equip: Chance on hit to draw Unstable Isotopes from any Irradiated Elemental or Contaminated Glob."
+          },
+          {
+            "spell": {
+              "key": {
+                "href": "https://us.api.blizzard.com/data/wow/spell/302987?namespace=static-8.3.7_35114-us"
+              },
+              "name": "Unstable Regeneration",
+              "id": 302987
+            },
+            "description": "Use: Absorb 100 Unstable Isotopes, increasing threat generation by 20%, Nature damage taken by 5%, and periodically heals the caster for 1% to 5% per 6 sec for 30 min.\r\n\r\nOnly usable on Mechagon Island. (1 Day Cooldown)"
+          }
+        ],
+        "sell_price": {
+          "value": 17000,
+          "display_strings": {
+            "header": "Sell Price:",
+            "gold": "1",
+            "silver": "70",
+            "copper": "0"
+          }
+        },
+        "requirements": {
+          "level": {
+            "value": 110,
+            "display_string": "Requires Level 110"
+          }
+        },
+        "description": "The metal links have a slight green glow to them. Wearing it cannot possibly be good for you.",
+        "level": {
+          "value": 1,
+          "display_string": "Item Level 1"
+        },
+        "charges": {
+          "value": 5,
+          "display_string": "5 Charges"
+        }
+      },
+      {
+        "item": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item/157962?namespace=static-8.3.7_35114-us"
+          },
+          "id": 157962
+        },
+        "slot": {
+          "type": "CHEST",
+          "name": "Chest"
+        },
+        "quantity": 1,
+        "context": 28,
+        "bonus_list": [
+          1637,
+          4786,
+          6504
+        ],
+        "quality": {
+          "type": "EPIC",
+          "name": "Epic"
+        },
+        "name": "Sandspinner Vestments",
+        "azerite_details": {
+          "selected_powers": [
+            {
+              "id": 13,
+              "tier": 0,
+              "spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/263978?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Azerite Empowered",
+                  "id": 263978
+                },
+                "description": "Increases Item Level by 5 and increases the potency of all Azerite powers granted by this item.",
+                "cast_time": "Passive"
+              },
+              "is_display_hidden": true
+            },
+            {
+              "id": 15,
+              "tier": 1,
+              "spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/263962?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Resounding Protection",
+                  "id": 263962
+                },
+                "description": "Every 30 sec, gain an absorb shield for 38,671 for 30 sec.",
+                "cast_time": "Passive"
+              }
+            },
+            {
+              "id": 104,
+              "tier": 2,
+              "spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/267884?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Bracing Chill",
+                  "id": 267884
+                },
+                "description": "Your heals have a chance to apply Bracing Chill. Healing a target with Bracing Chill will heal for an additional 7,740 and move Bracing Chill to a nearby ally (up to 6 times).",
+                "cast_time": "Passive"
+              }
+            },
+            {
+              "id": 114,
+              "tier": 3,
+              "spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/272780?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Permeating Glow",
+                  "id": 272780
+                },
+                "description": "Flash Heal increases the healing of your Flash Heals on that ally by 3,971 for 6 sec.",
+                "cast_time": "Passive"
+              }
+            },
+            {
+              "id": 402,
+              "tier": 4,
+              "spell_tooltip": {
+                "spell": {
+                  "key": {
+                    "href": "https://us.api.blizzard.com/data/wow/spell/287336?namespace=static-8.3.7_35114-us"
+                  },
+                  "name": "Promise of Deliverance",
+                  "id": 287336
+                },
+                "description": "For 10 sec after you cast Holy Word: Serenity, Heal and Flash Heal heal for an additional 3,165, and reduce the cooldown of Holy Word: Serenity by an additional 1 sec.",
+                "cast_time": "Passive"
+              }
+            }
+          ],
+          "selected_powers_string": "Fully Upgraded"
+        },
+        "media": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/media/item/157962?namespace=static-8.3.7_35114-us"
+          },
+          "id": 157962
+        },
+        "item_class": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Armor",
+          "id": 4
+        },
+        "item_subclass": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4/item-subclass/1?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Cloth",
+          "id": 1
+        },
+        "inventory_type": {
+          "type": "ROBE",
+          "name": "Chest"
+        },
+        "binding": {
+          "type": "ON_ACQUIRE",
+          "name": "Binds when picked up"
+        },
+        "armor": {
+          "value": 296,
+          "display": {
+            "display_string": "296 Armor",
+            "color": {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 1
+            }
+          }
+        },
+        "stats": [
+          {
+            "type": {
+              "type": "INTELLECT",
+              "name": "Intellect"
+            },
+            "value": 1145,
+            "display": {
+              "display_string": "+1,145 Intellect",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "STAMINA",
+              "name": "Stamina"
+            },
+            "value": 2720,
+            "display": {
+              "display_string": "+2,720 Stamina",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          }
+        ],
+        "requirements": {
+          "level": {
+            "value": 120,
+            "display_string": "Requires Level 120"
+          }
+        },
+        "level": {
+          "value": 450,
+          "display_string": "Item Level 450"
+        },
+        "durability": {
+          "value": 165,
+          "display_string": "Durability 165 / 165"
+        }
+      },
+      {
+        "item": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item/157876?namespace=static-8.3.7_35114-us"
+          },
+          "id": 157876
+        },
+        "slot": {
+          "type": "WAIST",
+          "name": "Waist"
+        },
+        "quantity": 1,
+        "context": 28,
+        "bonus_list": [
+          4803,
+          6516,
+          6513,
+          1637,
+          4786
+        ],
+        "quality": {
+          "type": "EPIC",
+          "name": "Epic"
+        },
+        "name": "Fen Spirit Cinch",
+        "media": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/media/item/157876?namespace=static-8.3.7_35114-us"
+          },
+          "id": 157876
+        },
+        "item_class": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Armor",
+          "id": 4
+        },
+        "item_subclass": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4/item-subclass/1?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Cloth",
+          "id": 1
+        },
+        "inventory_type": {
+          "type": "WAIST",
+          "name": "Waist"
+        },
+        "binding": {
+          "type": "ON_ACQUIRE",
+          "name": "Binds when picked up"
+        },
+        "armor": {
+          "value": 160,
+          "display": {
+            "display_string": "160 Armor",
+            "color": {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 1
+            }
+          }
+        },
+        "stats": [
+          {
+            "type": {
+              "type": "INTELLECT",
+              "name": "Intellect"
+            },
+            "value": 431,
+            "display": {
+              "display_string": "+431 Intellect",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "STAMINA",
+              "name": "Stamina"
+            },
+            "value": 789,
+            "display": {
+              "display_string": "+789 Stamina",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "CRIT_RATING",
+              "name": "Critical Strike"
+            },
+            "value": 124,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+124 Critical Strike",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "VERSATILITY",
+              "name": "Versatility"
+            },
+            "value": 104,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+104 Versatility",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          }
+        ],
+        "sell_price": {
+          "value": 409370,
+          "display_strings": {
+            "header": "Sell Price:",
+            "gold": "40",
+            "silver": "93",
+            "copper": "70"
+          }
+        },
+        "requirements": {
+          "level": {
+            "value": 120,
+            "display_string": "Requires Level 120"
+          }
+        },
+        "level": {
+          "value": 445,
+          "display_string": "Item Level 445"
+        },
+        "durability": {
+          "value": 55,
+          "display_string": "Durability 55 / 55"
+        }
+      },
+      {
+        "item": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item/165468?namespace=static-8.3.7_35114-us"
+          },
+          "id": 165468
+        },
+        "sockets": [
+          {
+            "socket_type": {
+              "type": "PRISMATIC",
+              "name": "Prismatic Socket"
+            }
+          }
+        ],
+        "slot": {
+          "type": "LEGS",
+          "name": "Legs"
+        },
+        "quantity": 1,
+        "context": 23,
+        "bonus_list": [
+          5845,
+          4802,
+          6516,
+          1577,
+          4786
+        ],
+        "quality": {
+          "type": "EPIC",
+          "name": "Epic"
+        },
+        "name": "Plaguebringer's Legwraps",
+        "modified_appearance_id": 102949,
+        "media": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/media/item/165468?namespace=static-8.3.7_35114-us"
+          },
+          "id": 165468
+        },
+        "item_class": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Armor",
+          "id": 4
+        },
+        "item_subclass": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4/item-subclass/1?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Cloth",
+          "id": 1
+        },
+        "inventory_type": {
+          "type": "LEGS",
+          "name": "Legs"
+        },
+        "binding": {
+          "type": "ON_ACQUIRE",
+          "name": "Binds when picked up"
+        },
+        "armor": {
+          "value": 280,
+          "display": {
+            "display_string": "280 Armor",
+            "color": {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 1
+            }
+          }
+        },
+        "stats": [
+          {
+            "type": {
+              "type": "INTELLECT",
+              "name": "Intellect"
+            },
+            "value": 661,
+            "display": {
+              "display_string": "+661 Intellect",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "STAMINA",
+              "name": "Stamina"
+            },
+            "value": 1238,
+            "display": {
+              "display_string": "+1,238 Stamina",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "VERSATILITY",
+              "name": "Versatility"
+            },
+            "value": 153,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+153 Versatility",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "MASTERY_RATING",
+              "name": "Mastery"
+            },
+            "value": 167,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+167 Mastery",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          }
+        ],
+        "sell_price": {
+          "value": 789992,
+          "display_strings": {
+            "header": "Sell Price:",
+            "gold": "78",
+            "silver": "99",
+            "copper": "92"
+          }
+        },
+        "requirements": {
+          "level": {
+            "value": 120,
+            "display_string": "Requires Level 120"
+          },
+          "faction": {
+            "value": {
+              "type": "HORDE",
+              "name": "Horde"
+            },
+            "display_string": "Horde Only"
+          }
+        },
+        "level": {
+          "value": 460,
+          "display_string": "Item Level 460"
+        },
+        "durability": {
+          "value": 120,
+          "display_string": "Durability 120 / 120"
+        },
+        "name_description": {
+          "display_string": "Heroic",
+          "color": {
+            "r": 0,
+            "g": 255,
+            "b": 0,
+            "a": 1
+          }
+        }
+      },
+      {
+        "item": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item/174123?namespace=static-8.3.7_35114-us"
+          },
+          "id": 174123
+        },
+        "slot": {
+          "type": "FEET",
+          "name": "Feet"
+        },
+        "quantity": 1,
+        "context": 3,
+        "bonus_list": [
+          4822,
+          6578,
+          6579,
+          6493,
+          6612,
+          6515,
+          1487,
+          4786
+        ],
+        "quality": {
+          "type": "EPIC",
+          "name": "Epic"
+        },
+        "name": "Psychic's Subtle Slippers",
+        "media": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/media/item/174123?namespace=static-8.3.7_35114-us"
+          },
+          "id": 174123
+        },
+        "item_class": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Armor",
+          "id": 4
+        },
+        "item_subclass": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4/item-subclass/1?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Cloth",
+          "id": 1
+        },
+        "inventory_type": {
+          "type": "FEET",
+          "name": "Feet"
+        },
+        "binding": {
+          "type": "ON_ACQUIRE",
+          "name": "Binds when picked up"
+        },
+        "armor": {
+          "value": 196,
+          "display": {
+            "display_string": "196 Armor",
+            "color": {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 1
+            }
+          }
+        },
+        "stats": [
+          {
+            "type": {
+              "type": "INTELLECT",
+              "name": "Intellect"
+            },
+            "value": 431,
+            "display": {
+              "display_string": "+431 Intellect",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "STAMINA",
+              "name": "Stamina"
+            },
+            "value": 789,
+            "display": {
+              "display_string": "+789 Stamina",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "CRIT_RATING",
+              "name": "Critical Strike"
+            },
+            "value": 112,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+112 Critical Strike",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "MASTERY_RATING",
+              "name": "Mastery"
+            },
+            "value": 116,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+116 Mastery",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "CORRUPTION",
+              "name": "Corruption"
+            },
+            "value": 17,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+17 Corruption",
+              "color": {
+                "r": 149,
+                "g": 109,
+                "b": 209,
+                "a": 1
+              }
+            }
+          }
+        ],
+        "spells": [
+          {
+            "spell": {
+              "key": {
+                "href": "https://us.api.blizzard.com/data/wow/spell/315590?namespace=static-8.3.7_35114-us"
+              },
+              "name": "Siphoner",
+              "id": 315590
+            },
+            "description": "Equip: Increases your Leech by 3%.",
+            "display_color": {
+              "r": 149,
+              "g": 109,
+              "b": 209,
+              "a": 1
+            }
+          }
+        ],
+        "sell_price": {
+          "value": 602120,
+          "display_strings": {
+            "header": "Sell Price:",
+            "gold": "60",
+            "silver": "21",
+            "copper": "20"
+          }
+        },
+        "requirements": {
+          "level": {
+            "value": 120,
+            "display_string": "Requires Level 120"
+          }
+        },
+        "level": {
+          "value": 445,
+          "display_string": "Item Level 445"
+        },
+        "durability": {
+          "value": 80,
+          "display_string": "Durability 80 / 80"
+        },
+        "is_corrupted": true
+      },
+      {
+        "item": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item/174953?namespace=static-8.3.7_35114-us"
+          },
+          "id": 174953
+        },
+        "slot": {
+          "type": "WRIST",
+          "name": "Wrist"
+        },
+        "quantity": 1,
+        "context": 28,
+        "bonus_list": [
+          6540,
+          6515,
+          6578,
+          6579,
+          4803
+        ],
+        "quality": {
+          "type": "EPIC",
+          "name": "Epic"
+        },
+        "name": "Vile Manipulator's Wristwraps",
+        "media": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/media/item/174953?namespace=static-8.3.7_35114-us"
+          },
+          "id": 174953
+        },
+        "item_class": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Armor",
+          "id": 4
+        },
+        "item_subclass": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4/item-subclass/1?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Cloth",
+          "id": 1
+        },
+        "inventory_type": {
+          "type": "WRIST",
+          "name": "Wrist"
+        },
+        "binding": {
+          "type": "ON_ACQUIRE",
+          "name": "Binds when picked up"
+        },
+        "armor": {
+          "value": 120,
+          "display": {
+            "display_string": "120 Armor",
+            "color": {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 1
+            }
+          }
+        },
+        "stats": [
+          {
+            "type": {
+              "type": "INTELLECT",
+              "name": "Intellect"
+            },
+            "value": 309,
+            "display": {
+              "display_string": "+309 Intellect",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "STAMINA",
+              "name": "Stamina"
+            },
+            "value": 562,
+            "display": {
+              "display_string": "+562 Stamina",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "CRIT_RATING",
+              "name": "Critical Strike"
+            },
+            "value": 73,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+73 Critical Strike",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "HASTE_RATING",
+              "name": "Haste"
+            },
+            "value": 95,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+95 Haste",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "CORRUPTION",
+              "name": "Corruption"
+            },
+            "value": 15,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+15 Corruption",
+              "color": {
+                "r": 149,
+                "g": 109,
+                "b": 209,
+                "a": 1
+              }
+            }
+          }
+        ],
+        "spells": [
+          {
+            "spell": {
+              "key": {
+                "href": "https://us.api.blizzard.com/data/wow/spell/318286?namespace=static-8.3.7_35114-us"
+              },
+              "name": "Void Ritual",
+              "id": 318286
+            },
+            "description": "Equip: Gain Void Ritual, giving your spells and abilities a chance to increase all secondary stats by 14 every sec for 20 sec. This chance is increased if at least 2 nearby allies also have Void Ritual.",
+            "display_color": {
+              "r": 149,
+              "g": 109,
+              "b": 209,
+              "a": 1
+            }
+          }
+        ],
+        "sell_price": {
+          "value": 372519,
+          "display_strings": {
+            "header": "Sell Price:",
+            "gold": "37",
+            "silver": "25",
+            "copper": "19"
+          }
+        },
+        "requirements": {
+          "level": {
+            "value": 120,
+            "display_string": "Requires Level 120"
+          }
+        },
+        "level": {
+          "value": 440,
+          "display_string": "Item Level 440"
+        },
+        "durability": {
+          "value": 55,
+          "display_string": "Durability 55 / 55"
+        },
+        "is_corrupted": true
+      },
+      {
+        "item": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item/173507?namespace=static-8.3.7_35114-us"
+          },
+          "id": 173507
+        },
+        "slot": {
+          "type": "HANDS",
+          "name": "Hands"
+        },
+        "quantity": 1,
+        "context": 29,
+        "bonus_list": [
+          6412,
+          4803,
+          6515,
+          6578,
+          6579,
+          6474,
+          6455,
+          1497,
+          4786
+        ],
+        "quality": {
+          "type": "EPIC",
+          "name": "Epic"
+        },
+        "name": "Vile Manipulator's Handguards",
+        "media": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/media/item/173507?namespace=static-8.3.7_35114-us"
+          },
+          "id": 173507
+        },
+        "item_class": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Armor",
+          "id": 4
+        },
+        "item_subclass": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4/item-subclass/1?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Cloth",
+          "id": 1
+        },
+        "inventory_type": {
+          "type": "HAND",
+          "name": "Hands"
+        },
+        "binding": {
+          "type": "ON_ACQUIRE",
+          "name": "Binds when picked up"
+        },
+        "armor": {
+          "value": 171,
+          "display": {
+            "display_string": "171 Armor",
+            "color": {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 1
+            }
+          }
+        },
+        "stats": [
+          {
+            "type": {
+              "type": "INTELLECT",
+              "name": "Intellect"
+            },
+            "value": 411,
+            "display": {
+              "display_string": "+411 Intellect",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "STAMINA",
+              "name": "Stamina"
+            },
+            "value": 749,
+            "display": {
+              "display_string": "+749 Stamina",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "HASTE_RATING",
+              "name": "Haste"
+            },
+            "value": 127,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+127 Haste",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "MASTERY_RATING",
+              "name": "Mastery"
+            },
+            "value": 98,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+98 Mastery",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "CORRUPTION",
+              "name": "Corruption"
+            },
+            "value": 10,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+10 Corruption",
+              "color": {
+                "r": 149,
+                "g": 109,
+                "b": 209,
+                "a": 1
+              }
+            }
+          }
+        ],
+        "spells": [
+          {
+            "spell": {
+              "key": {
+                "href": "https://us.api.blizzard.com/data/wow/spell/315544?namespace=static-8.3.7_35114-us"
+              },
+              "name": "Expedient",
+              "id": 315544
+            },
+            "description": "Equip: Increases the amount of Haste you gain from all sources by 6%.",
+            "display_color": {
+              "r": 149,
+              "g": 109,
+              "b": 209,
+              "a": 1
+            }
+          }
+        ],
+        "sell_price": {
+          "value": 376767,
+          "display_strings": {
+            "header": "Sell Price:",
+            "gold": "37",
+            "silver": "67",
+            "copper": "67"
+          }
+        },
+        "requirements": {
+          "level": {
+            "value": 120,
+            "display_string": "Requires Level 120"
+          }
+        },
+        "level": {
+          "value": 440,
+          "display_string": "Item Level 440"
+        },
+        "durability": {
+          "value": 55,
+          "display_string": "Durability 55 / 55"
+        },
+        "is_corrupted": true
+      },
+      {
+        "item": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item/174530?namespace=static-8.3.7_35114-us"
+          },
+          "id": 174530
+        },
+        "slot": {
+          "type": "FINGER_1",
+          "name": "Ring 1"
+        },
+        "quantity": 1,
+        "context": 4,
+        "bonus_list": [
+          4825,
+          6516,
+          6513,
+          1472,
+          4786
+        ],
+        "quality": {
+          "type": "EPIC",
+          "name": "Epic"
+        },
+        "name": "Ring of Collective Consciousness",
+        "modified_appearance_id": 0,
+        "media": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/media/item/174530?namespace=static-8.3.7_35114-us"
+          },
+          "id": 174530
+        },
+        "item_class": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Armor",
+          "id": 4
+        },
+        "item_subclass": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4/item-subclass/0?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Miscellaneous",
+          "id": 0
+        },
+        "inventory_type": {
+          "type": "FINGER",
+          "name": "Finger"
+        },
+        "binding": {
+          "type": "ON_ACQUIRE",
+          "name": "Binds when picked up"
+        },
+        "unique_equipped": "Unique-Equipped",
+        "stats": [
+          {
+            "type": {
+              "type": "STAMINA",
+              "name": "Stamina"
+            },
+            "value": 504,
+            "display": {
+              "display_string": "+504 Stamina",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "CRIT_RATING",
+              "name": "Critical Strike"
+            },
+            "value": 292,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+292 Critical Strike",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "HASTE_RATING",
+              "name": "Haste"
+            },
+            "value": 219,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+219 Haste",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          }
+        ],
+        "sell_price": {
+          "value": 477625,
+          "display_strings": {
+            "header": "Sell Price:",
+            "gold": "47",
+            "silver": "76",
+            "copper": "25"
+          }
+        },
+        "requirements": {
+          "level": {
+            "value": 120,
+            "display_string": "Requires Level 120"
+          }
+        },
+        "level": {
+          "value": 430,
+          "display_string": "Item Level 430"
+        },
+        "is_subclass_hidden": true,
+        "name_description": {
+          "display_string": "Raid Finder",
+          "color": {
+            "r": 0,
+            "g": 255,
+            "b": 0,
+            "a": 1
+          }
+        }
+      },
+      {
+        "item": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item/174469?namespace=static-8.3.7_35114-us"
+          },
+          "id": 174469
+        },
+        "slot": {
+          "type": "FINGER_2",
+          "name": "Ring 2"
+        },
+        "quantity": 1,
+        "context": 3,
+        "bonus_list": [
+          4822,
+          6516,
+          6513,
+          1487,
+          4786
+        ],
+        "quality": {
+          "type": "EPIC",
+          "name": "Epic"
+        },
+        "name": "Band of Insidious Ruminations",
+        "media": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/media/item/174469?namespace=static-8.3.7_35114-us"
+          },
+          "id": 174469
+        },
+        "item_class": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Armor",
+          "id": 4
+        },
+        "item_subclass": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4/item-subclass/0?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Miscellaneous",
+          "id": 0
+        },
+        "inventory_type": {
+          "type": "FINGER",
+          "name": "Finger"
+        },
+        "binding": {
+          "type": "ON_ACQUIRE",
+          "name": "Binds when picked up"
+        },
+        "unique_equipped": "Unique-Equipped",
+        "stats": [
+          {
+            "type": {
+              "type": "STAMINA",
+              "name": "Stamina"
+            },
+            "value": 592,
+            "display": {
+              "display_string": "+592 Stamina",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "VERSATILITY",
+              "name": "Versatility"
+            },
+            "value": 307,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+307 Versatility",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "MASTERY_RATING",
+              "name": "Mastery"
+            },
+            "value": 230,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+230 Mastery",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          }
+        ],
+        "sell_price": {
+          "value": 469196,
+          "display_strings": {
+            "header": "Sell Price:",
+            "gold": "46",
+            "silver": "91",
+            "copper": "96"
+          }
+        },
+        "requirements": {
+          "level": {
+            "value": 120,
+            "display_string": "Requires Level 120"
+          }
+        },
+        "level": {
+          "value": 445,
+          "display_string": "Item Level 445"
+        },
+        "is_subclass_hidden": true
+      },
+      {
+        "item": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item/174103?namespace=static-8.3.7_35114-us"
+          },
+          "id": 174103
+        },
+        "slot": {
+          "type": "TRINKET_1",
+          "name": "Trinket 1"
+        },
+        "quantity": 1,
+        "context": 3,
+        "bonus_list": [
+          4822,
+          6513,
+          1487,
+          4786
+        ],
+        "quality": {
+          "type": "EPIC",
+          "name": "Epic"
+        },
+        "name": "Manifesto of Madness",
+        "media": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/media/item/174103?namespace=static-8.3.7_35114-us"
+          },
+          "id": 174103
+        },
+        "item_class": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Armor",
+          "id": 4
+        },
+        "item_subclass": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4/item-subclass/0?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Miscellaneous",
+          "id": 0
+        },
+        "inventory_type": {
+          "type": "TRINKET",
+          "name": "Trinket"
+        },
+        "binding": {
+          "type": "ON_ACQUIRE",
+          "name": "Binds when picked up"
+        },
+        "unique_equipped": "Unique-Equipped",
+        "stats": [
+          {
+            "type": {
+              "type": "INTELLECT",
+              "name": "Intellect"
+            },
+            "value": 600,
+            "display": {
+              "display_string": "+600 Intellect",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          }
+        ],
+        "spells": [
+          {
+            "spell": {
+              "key": {
+                "href": "https://us.api.blizzard.com/data/wow/spell/313948?namespace=static-8.3.7_35114-us"
+              },
+              "name": "Manifesto of Madness: Chapter One",
+              "id": 313948
+            },
+            "description": "Use: Increase your Critical Strike by up to 1,441, reduced by 115 for each ally within 8 yards of you. Lasts 10 sec. When this effect ends, your Versatility is increased by 288 for each ally within 5 yards of you, up to a max of 1,440. Lasts 10 sec.\r\n (1 Min 30 Sec Cooldown)"
+          },
+          {
+            "spell": {
+              "key": {
+                "href": "https://us.api.blizzard.com/data/wow/spell/314042?namespace=static-8.3.7_35114-us"
+              },
+              "name": "Manifesto of Madness",
+              "id": 314042
+            },
+            "description": "Equip: The radius of the second half of the Manifesto is increased by 1 yard based on the power of your Ashjra'kamas, Shroud of Resolve."
+          }
+        ],
+        "sell_price": {
+          "value": 695361,
+          "display_strings": {
+            "header": "Sell Price:",
+            "gold": "69",
+            "silver": "53",
+            "copper": "61"
+          }
+        },
+        "requirements": {
+          "level": {
+            "value": 120,
+            "display_string": "Requires Level 120"
+          }
+        },
+        "level": {
+          "value": 455,
+          "display_string": "Item Level 455"
+        },
+        "is_subclass_hidden": true
+      },
+      {
+        "item": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item/174180?namespace=static-8.3.7_35114-us"
+          },
+          "id": 174180
+        },
+        "slot": {
+          "type": "TRINKET_2",
+          "name": "Trinket 2"
+        },
+        "quantity": 1,
+        "context": 3,
+        "bonus_list": [
+          4822,
+          6513,
+          1487,
+          4786
+        ],
+        "quality": {
+          "type": "EPIC",
+          "name": "Epic"
+        },
+        "name": "Oozing Coagulum",
+        "media": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/media/item/174180?namespace=static-8.3.7_35114-us"
+          },
+          "id": 174180
+        },
+        "item_class": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Armor",
+          "id": 4
+        },
+        "item_subclass": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4/item-subclass/0?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Miscellaneous",
+          "id": 0
+        },
+        "inventory_type": {
+          "type": "TRINKET",
+          "name": "Trinket"
+        },
+        "binding": {
+          "type": "ON_ACQUIRE",
+          "name": "Binds when picked up"
+        },
+        "unique_equipped": "Unique-Equipped",
+        "stats": [
+          {
+            "type": {
+              "type": "INTELLECT",
+              "name": "Intellect"
+            },
+            "value": 546,
+            "display": {
+              "display_string": "+546 Intellect",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          }
+        ],
+        "spells": [
+          {
+            "spell": {
+              "key": {
+                "href": "https://us.api.blizzard.com/data/wow/spell/314070?namespace=static-8.3.7_35114-us"
+              },
+              "name": "Oozing Coagulum",
+              "id": 314070
+            },
+            "description": "Equip: Your healing spells have a chance to conjure a sanguine pool near your location, containing 63,234 healing. While standing within the pool, your healing spells restore 3,162 additional health, until the pool is depleted."
+          }
+        ],
+        "sell_price": {
+          "value": 681844,
+          "display_strings": {
+            "header": "Sell Price:",
+            "gold": "68",
+            "silver": "18",
+            "copper": "44"
+          }
+        },
+        "requirements": {
+          "level": {
+            "value": 120,
+            "display_string": "Requires Level 120"
+          }
+        },
+        "level": {
+          "value": 445,
+          "display_string": "Item Level 445"
+        },
+        "is_subclass_hidden": true
+      },
+      {
+        "item": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item/169223?namespace=static-8.3.7_35114-us"
+          },
+          "id": 169223
+        },
+        "slot": {
+          "type": "BACK",
+          "name": "Back"
+        },
+        "quantity": 1,
+        "context": 11,
+        "bonus_list": [
+          6278,
+          1472
+        ],
+        "quality": {
+          "type": "LEGENDARY",
+          "name": "Legendary"
+        },
+        "name": "Ashjra'kamas, Shroud of Resolve",
+        "modified_appearance_id": 105939,
+        "media": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/media/item/169223?namespace=static-8.3.7_35114-us"
+          },
+          "id": 169223
+        },
+        "item_class": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Armor",
+          "id": 4
+        },
+        "item_subclass": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4/item-subclass/1?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Cloth",
+          "id": 1
+        },
+        "inventory_type": {
+          "type": "CLOAK",
+          "name": "Back"
+        },
+        "binding": {
+          "type": "ON_ACQUIRE",
+          "name": "Binds when picked up"
+        },
+        "armor": {
+          "value": 191,
+          "display": {
+            "display_string": "191 Armor",
+            "color": {
+              "r": 255,
+              "g": 255,
+              "b": 255,
+              "a": 1
+            }
+          }
+        },
+        "stats": [
+          {
+            "type": {
+              "type": "INTELLECT",
+              "name": "Intellect"
+            },
+            "value": 456,
+            "display": {
+              "display_string": "+456 Intellect",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "AGILITY",
+              "name": "Agility"
+            },
+            "value": 456,
+            "is_negated": true,
+            "display": {
+              "display_string": "+456 Agility",
+              "color": {
+                "r": 128,
+                "g": 128,
+                "b": 128,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "STRENGTH",
+              "name": "Strength"
+            },
+            "value": 456,
+            "is_negated": true,
+            "display": {
+              "display_string": "+456 Strength",
+              "color": {
+                "r": 128,
+                "g": 128,
+                "b": 128,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "STAMINA",
+              "name": "Stamina"
+            },
+            "value": 881,
+            "display": {
+              "display_string": "+881 Stamina",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "CRIT_RATING",
+              "name": "Critical Strike"
+            },
+            "value": 69,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+69 Critical Strike",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "HASTE_RATING",
+              "name": "Haste"
+            },
+            "value": 69,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+69 Haste",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "MASTERY_RATING",
+              "name": "Mastery"
+            },
+            "value": 69,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+69 Mastery",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "CORRUPTION_RESISTANCE",
+              "name": "Corruption Resistance"
+            },
+            "value": 27,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+27 Corruption Resistance",
+              "color": {
+                "r": 255,
+                "g": 210,
+                "b": 0,
+                "a": 1
+              }
+            }
+          }
+        ],
+        "spells": [
+          {
+            "spell": {
+              "key": {
+                "href": "https://us.api.blizzard.com/data/wow/spell/317411?namespace=static-8.3.7_35114-us"
+              },
+              "name": "Shroud of Resolve",
+              "id": 317411
+            },
+            "description": "Equip: Reduce Sanity loss within the Visions of N'Zoth by 40%."
+          },
+          {
+            "spell": {
+              "key": {
+                "href": "https://us.api.blizzard.com/data/wow/spell/318378?namespace=static-8.3.7_35114-us"
+              },
+              "name": "Steadfast Resolve",
+              "id": 318378
+            },
+            "description": "Use: Dispel any effects of N'Zoth's Corruption, and become immune to any further Corruption effects for 6 sec. (3 Min Cooldown)"
+          }
+        ],
+        "requirements": {
+          "level": {
+            "value": 120,
+            "display_string": "Requires Level 120"
+          }
+        },
+        "level": {
+          "value": 482,
+          "display_string": "Item Level 482"
+        },
+        "is_subclass_hidden": true,
+        "name_description": {
+          "display_string": "Rank 7",
+          "color": {
+            "r": 0,
+            "g": 255,
+            "b": 255,
+            "a": 1
+          }
+        }
+      },
+      {
+        "item": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item/172201?namespace=static-8.3.7_35114-us"
+          },
+          "id": 172201
+        },
+        "slot": {
+          "type": "MAIN_HAND",
+          "name": "Main Hand"
+        },
+        "quantity": 1,
+        "context": 3,
+        "bonus_list": [
+          4822,
+          6516,
+          6513,
+          1487,
+          4786
+        ],
+        "quality": {
+          "type": "EPIC",
+          "name": "Epic"
+        },
+        "name": "Bloodstained Ritual Athame",
+        "media": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/media/item/172201?namespace=static-8.3.7_35114-us"
+          },
+          "id": 172201
+        },
+        "item_class": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/2?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Weapon",
+          "id": 2
+        },
+        "item_subclass": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/2/item-subclass/15?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Dagger",
+          "id": 15
+        },
+        "inventory_type": {
+          "type": "WEAPON",
+          "name": "One-Hand"
+        },
+        "binding": {
+          "type": "ON_ACQUIRE",
+          "name": "Binds when picked up"
+        },
+        "weapon": {
+          "damage": {
+            "min_value": 220,
+            "max_value": 367,
+            "display_string": "220 - 367 Damage",
+            "damage_class": {
+              "type": "PHYSICAL",
+              "name": "Physical"
+            }
+          },
+          "attack_speed": {
+            "value": 1800,
+            "display_string": "Speed 1.80"
+          },
+          "dps": {
+            "value": 163.05554,
+            "display_string": "(163.1 damage per second)"
+          }
+        },
+        "stats": [
+          {
+            "type": {
+              "type": "INTELLECT",
+              "name": "Intellect"
+            },
+            "value": 1672,
+            "display": {
+              "display_string": "+1,672 Intellect",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "STAMINA",
+              "name": "Stamina"
+            },
+            "value": 526,
+            "display": {
+              "display_string": "+526 Stamina",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "HASTE_RATING",
+              "name": "Haste"
+            },
+            "value": 52,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+52 Haste",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "MASTERY_RATING",
+              "name": "Mastery"
+            },
+            "value": 100,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+100 Mastery",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          }
+        ],
+        "sell_price": {
+          "value": 1115503,
+          "display_strings": {
+            "header": "Sell Price:",
+            "gold": "111",
+            "silver": "55",
+            "copper": "3"
+          }
+        },
+        "requirements": {
+          "level": {
+            "value": 120,
+            "display_string": "Requires Level 120"
+          }
+        },
+        "level": {
+          "value": 445,
+          "display_string": "Item Level 445"
+        },
+        "durability": {
+          "value": 80,
+          "display_string": "Durability 80 / 80"
+        }
+      },
+      {
+        "item": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item/172190?namespace=static-8.3.7_35114-us"
+          },
+          "id": 172190
+        },
+        "slot": {
+          "type": "OFF_HAND",
+          "name": "Off Hand"
+        },
+        "quantity": 1,
+        "context": 3,
+        "bonus_list": [
+          4822,
+          6516,
+          6515,
+          1487,
+          4786
+        ],
+        "quality": {
+          "type": "EPIC",
+          "name": "Epic"
+        },
+        "name": "Uhnish Vwah",
+        "media": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/media/item/172190?namespace=static-8.3.7_35114-us"
+          },
+          "id": 172190
+        },
+        "item_class": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Armor",
+          "id": 4
+        },
+        "item_subclass": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4/item-subclass/0?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Miscellaneous",
+          "id": 0
+        },
+        "inventory_type": {
+          "type": "HOLDABLE",
+          "name": "Held In Off-hand"
+        },
+        "binding": {
+          "type": "ON_ACQUIRE",
+          "name": "Binds when picked up"
+        },
+        "stats": [
+          {
+            "type": {
+              "type": "INTELLECT",
+              "name": "Intellect"
+            },
+            "value": 881,
+            "display": {
+              "display_string": "+881 Intellect",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "STAMINA",
+              "name": "Stamina"
+            },
+            "value": 526,
+            "display": {
+              "display_string": "+526 Stamina",
+              "color": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "CRIT_RATING",
+              "name": "Critical Strike"
+            },
+            "value": 87,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+87 Critical Strike",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          },
+          {
+            "type": {
+              "type": "HASTE_RATING",
+              "name": "Haste"
+            },
+            "value": 65,
+            "is_equip_bonus": true,
+            "display": {
+              "display_string": "+65 Haste",
+              "color": {
+                "r": 0,
+                "g": 255,
+                "b": 0,
+                "a": 1
+              }
+            }
+          }
+        ],
+        "sell_price": {
+          "value": 642348,
+          "display_strings": {
+            "header": "Sell Price:",
+            "gold": "64",
+            "silver": "23",
+            "copper": "48"
+          }
+        },
+        "requirements": {
+          "level": {
+            "value": 120,
+            "display_string": "Requires Level 120"
+          }
+        },
+        "level": {
+          "value": 445,
+          "display_string": "Item Level 445"
+        },
+        "is_subclass_hidden": true
+      },
+      {
+        "item": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item/69210?namespace=static-8.3.7_35114-us"
+          },
+          "id": 69210
+        },
+        "slot": {
+          "type": "TABARD",
+          "name": "Tabard"
+        },
+        "quantity": 1,
+        "context": 14,
+        "quality": {
+          "type": "EPIC",
+          "name": "Epic"
+        },
+        "name": "Renowned Guild Tabard",
+        "media": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/media/item/69210?namespace=static-8.3.7_35114-us"
+          },
+          "id": 69210
+        },
+        "item_class": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Armor",
+          "id": 4
+        },
+        "item_subclass": {
+          "key": {
+            "href": "https://us.api.blizzard.com/data/wow/item-class/4/item-subclass/0?namespace=static-8.3.7_35114-us"
+          },
+          "name": "Miscellaneous",
+          "id": 0
+        },
+        "inventory_type": {
+          "type": "TABARD",
+          "name": "Tabard"
+        },
+        "binding": {
+          "type": "TO_BNETACCOUNT",
+          "name": "Binds to Blizzard account"
+        },
+        "spells": [
+          {
+            "spell": {
+              "key": {
+                "href": "https://us.api.blizzard.com/data/wow/spell/97341?namespace=static-8.3.7_35114-us"
+              },
+              "name": "Guild Champion",
+              "id": 97341
+            },
+            "description": "Equip: You champion the causes of your guild.  All guild reputation gains are increased by 100%."
+          }
+        ],
+        "sell_price": {
+          "value": 625000,
+          "display_strings": {
+            "header": "Sell Price:",
+            "gold": "62",
+            "silver": "50",
+            "copper": "0"
+          }
+        },
+        "level": {
+          "value": 1,
+          "display_string": "Item Level 1"
+        },
+        "is_subclass_hidden": true
+      }
+    ]
+  }

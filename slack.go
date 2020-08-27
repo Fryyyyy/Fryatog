@@ -30,8 +30,7 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 				log.Info("NSM: Empty Message")
 				continue
 			}
-			text := strings.Replace(ev.Msg.Text, "\n", " ", -1)
-			text = strings.Replace(ev.Msg.Text, "&amp;", "&", -1)
+			text := strings.Replace(ev.Msg.Text, "&amp;", "&", -1)
 			if len(ims) == 0 {
 				ims, err = api.GetIMChannels()
 				if err != nil {
