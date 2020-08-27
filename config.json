@@ -21,6 +21,24 @@
         "APIToken": "",
         "IndexName": ""
     },
+    "BattleNet": {
+        "ClientID": "",
+        "ClientSecret": "",
+        "CurrentExpansion": "Battle for Azeroth",
+        "CurrentRaidTier": "Ny'alotha, the Waking City",
+        "Reputations": [
+            "Champions of Azeroth",
+            "Rajani",
+            "Rustbolt Resistance",
+            "Talanji's Expedition",
+            "The Honorbound",
+            "The Unshackled",
+            "Tortollan Seekers",
+            "Uldum Accord",
+            "Voldunai",
+            "Zandalari Empire"
+        ]
+    },
     "IRC": true,
     "Slack": true
 }
