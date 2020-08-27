@@ -12,10 +12,11 @@ require (
 	github.com/paul-mannino/go-fuzzywuzzy v0.0.0-20200127021948-54652b135d0e
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/slack-go/slack v0.6.6
-	github.com/whyrusleeping/hellabot v0.0.0-20200817083746-271d68a20232
+	github.com/whyrusleeping/hellabot v0.0.0-20200821141615-1382ae598342
 	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc // indirect
 	golang.org/x/sys v0.0.0-20200817155316-9781c653f443 // indirect
 	gopkg.in/inconshreveable/log15.v2 v2.0.0-20200109203555-b30bc20e4fd1
+	gopkg.in/sorcix/irc.v1 v1.1.4 // indirect
 )
 
 go 1.13

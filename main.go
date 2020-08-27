@@ -847,7 +847,7 @@ func main() {
 // Most of this code stolen from Frytherer [https://github.com/Fryyyyy/Frytherer]
 var mainTrigger = hbot.Trigger{
 	Condition: func(bot *hbot.Bot, m *hbot.Message) bool {
-		return m.Command == "PRIVMSG" && !(greetingRegexp.MatchString(m.Content)) && ((!strings.Contains(m.To, "#") && !strings.Contains(m.Trailing, "VERSION")) || (strings.Contains(m.Content, "!") || strings.Contains(m.Content, "[[")))
+		return m.Command == "PRIVMSG" && !(greetingRegexp.MatchString(m.Content)) && ((!strings.Contains(m.To, "#") && !strings.Contains(m.Trailing(), "VERSION")) || (strings.Contains(m.Content, "!") || strings.Contains(m.Content, "[[")))
 	},
 	Action: func(irc *hbot.Bot, m *hbot.Message) bool {
 		defer recovery()
