@@ -398,6 +398,8 @@ func handleCommand(params *fryatogParams, c chan string) {
 				c <- getDudeRaid(cardTokens[2], cardTokens[3], conf.BattleNet.CurrentExpansion, conf.BattleNet.CurrentRaidTier)
 			} else if cardTokens[1] == "rep" {
 				c <- getDudeReps(cardTokens[2], cardTokens[3])
+			} else {
+				c <- ""
 			}
 		default:
 			c <- "!wowdude [raid/rep] <realm> <player>"
