@@ -466,7 +466,6 @@ func handleCommand(params *fryatogParams, c chan string) {
 			c <- strings.Join(handleAdvancedSearchQuery(params, cardTokens[1:]), "\n")
 			return
 		}
-		fallthrough
 
 	case cardTokens[0] == "uncard", cardTokens[0] == "vanguard", cardTokens[0] == "plane":
 		log.Debug("Special card query", "Input", message)
@@ -490,7 +489,7 @@ func handleCommand(params *fryatogParams, c chan string) {
 			return
 		}
 
-	case cardTokens[0] == "en", cardTokens[0] == "es", cardTokens[0] == "fr", cardTokens[0] == "de", cardTokens[0] == "it", cardTokens[0] == "pt", cardTokens[0] == "ja", cardTokens[0] == "ko", cardTokens[0] == "ru", cardTokens[0] == "zhs", cardTokens[0] == "zht":
+	case cardTokens[0] == "en", cardTokens[0] == "es", cardTokens[0] == "fr", cardTokens[0] == "de", cardTokens[0] == "it" && cardTokens[1] != "that", cardTokens[0] == "pt", cardTokens[0] == "ja", cardTokens[0] == "ko", cardTokens[0] == "ru", cardTokens[0] == "zhs", cardTokens[0] == "zht":
 		log.Debug("Asked for card in language", "Input", message)
 		// Before we search for the language, make sure it's not the actual name of a card
 		var found bool
@@ -516,7 +515,6 @@ func handleCommand(params *fryatogParams, c chan string) {
 				}
 			}
 		}
-		fallthrough
 
 	case cardTokens[0] == "wc" && params.isIRC:
 		log.Debug("Asked for redirecting a user to rules")
