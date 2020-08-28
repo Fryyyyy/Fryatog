@@ -20,7 +20,7 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 
 		case *slack.IMCreatedEvent:
 			log.Debug("New Slack IMCreatedEvent")
-			im := slack.IM{Conversation: slack.Conversation{ID: ev.Channel.ID, IsIM: true, User: ev.User}}
+			im := slack.Channel{GroupConversation: slack.GroupConversation{Conversation: slack.Conversation{ID: ev.Channel.ID, IsIM: true, User: ev.User}}}
 			ims = append(ims, im)
 
 		case *slack.MessageEvent:
@@ -33,7 +33,7 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 			text := strings.Replace(ev.Msg.Text, "&amp;", "&", -1)
 			text = strings.Replace(text, "’", "'", -1)
 			if len(ims) == 0 {
-				ims, err = api.GetIMChannels()
+				ims, _, err = api.GetConversations(&slack.GetConversationsParameters{Types: []string{"im"}})
 				if err != nil {
 					log.Warn("In Slack Message", "Couldn't get the IMs", err)
 				}
