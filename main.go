@@ -97,7 +97,7 @@ var (
 )
 
 // Is there a stable URL that always points to a text version of the most up to date CR ?
-// Fuck it I'll do it myself
+// Fuck it Volo will do it
 const crURL = "http://cr.vensersjournal.com"
 const crFile = "CR.txt"
 const cardCacheGob = "cardcache.gob"
