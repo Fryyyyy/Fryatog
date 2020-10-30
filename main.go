@@ -778,7 +778,8 @@ func main() {
 	hsIndex = hsClient.InitIndex(conf.Hearthstone.IndexName)
 
 	// Initialise Battlenet client
-	bNetClient = blizzard.NewClient(conf.BattleNet.ClientID, conf.BattleNet.ClientSecret, blizzard.US, blizzard.EnUS)
+	if (conf.BattleNet.ClientSecret != "") {
+		bNetClient = blizzard.NewClient(conf.BattleNet.ClientID, conf.BattleNet.ClientSecret, blizzard.US, blizzard.EnUS)
 	err = bNetClient.AccessTokenRequest()
 	if err != nil {
 		bNetClient = nil
@@ -796,7 +797,9 @@ func main() {
 	if err != nil {
 		log.Warn("Error retrieving Chieves", "Err", err)
 		raven.CaptureErrorAndWait(err, nil)
+	}	
 	}
+	
 
 	bot.AddTrigger(mainTrigger)
 	bot.AddTrigger(whoTrigger)

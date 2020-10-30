@@ -23,7 +23,7 @@ var (
 	//Pulling all regex here *should* make it all compile once and then be left alone
 
 	//Stuff pared from main.go
-	botCommandRegex      = regexp.MustCompile(`[!&]([^=!&?[)]+)|\[\[(.*?)\]\]`)
+	botCommandRegex      = regexp.MustCompile(`[!&]([^=!&?[)][^!&?[)]*)|\[\[(.*?)\]\]`)
 	singleQuotedWord     = regexp.MustCompile(`^(?:\"|\')\w+(?:\"|\')$`)
 	nonTextRegex         = regexp.MustCompile(`^[^\w]+$`)
 	wordEndingInBang     = regexp.MustCompile(`!(?:"|') |(?:\n)+`)
