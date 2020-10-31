@@ -161,6 +161,27 @@ func TestTokens(t *testing.T) {
 	}
 }
 
+func TestRegex(t *testing.T) {
+	tables := []struct {
+		input string
+		wantMatch bool
+		matchGroups []string
+	}{
+		{"!search pow=0 tou=17", true, []string{"!search pow=0 tou=17"}},
+		{"Player != Planeswalker", false, []string{}},
+		{"<MW> !!fract ident &treas nabb", true, []string{"!fract ident ", "&treas nabb"}},
+	}
+	for _, table := range tables {
+		got := botCommandRegex.FindAllString(table.input, -1)
+		if (table.wantMatch && !reflect.DeepEqual(got, table.matchGroups)) {
+			t.Errorf("%v didn't match as expected -- got %q -- want %q", table.input, got, table.matchGroups)
+		}
+		if (!table.wantMatch && len(table.matchGroups) > 0) {
+			t.Errorf("%v should not have matched, but did: %q", table.input, got)
+		}
+	}
+}
+
 func TestCardMetadata(t *testing.T) {
 	tables := []struct {
 		command string
