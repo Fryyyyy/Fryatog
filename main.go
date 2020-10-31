@@ -780,24 +780,25 @@ func main() {
 	// Initialise Battlenet client
 	if (conf.BattleNet.ClientSecret != "") {
 		bNetClient = blizzard.NewClient(conf.BattleNet.ClientID, conf.BattleNet.ClientSecret, blizzard.US, blizzard.EnUS)
-	err = bNetClient.AccessTokenRequest()
-	if err != nil {
-		bNetClient = nil
-		log.Warn("Error authenticating to Blizzard services", "Err", err)
-		raven.CaptureErrorAndWait(err, nil)
-	}
-	wowPlayerCache = cache.New(24*time.Hour, 1*time.Hour)
-	wowPlayerChieveCache = cache.New(24*time.Hour, 1*time.Hour)
-	wowRealms, _, err = bNetClient.WoWRealmIndex()
-	if err != nil {
-		log.Warn("Error retrieving Realms", "Err", err)
-		raven.CaptureErrorAndWait(err, nil)
-	}
-	wowChieves, _, err = bNetClient.WoWAchievementIndex()
-	if err != nil {
-		log.Warn("Error retrieving Chieves", "Err", err)
-		raven.CaptureErrorAndWait(err, nil)
-	}	
+		
+		err = bNetClient.AccessTokenRequest()
+		if err != nil {
+			bNetClient = nil
+			log.Warn("Error authenticating to Blizzard services", "Err", err)
+			raven.CaptureErrorAndWait(err, nil)
+		}
+		wowPlayerCache = cache.New(24*time.Hour, 1*time.Hour)
+		wowPlayerChieveCache = cache.New(24*time.Hour, 1*time.Hour)
+		wowRealms, _, err = bNetClient.WoWRealmIndex()
+		if err != nil {
+			log.Warn("Error retrieving Realms", "Err", err)
+			raven.CaptureErrorAndWait(err, nil)
+		}
+		wowChieves, _, err = bNetClient.WoWAchievementIndex()
+		if err != nil {
+			log.Warn("Error retrieving Chieves", "Err", err)
+			raven.CaptureErrorAndWait(err, nil)
+		}	
 	}
 	
 
