@@ -57,7 +57,7 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 			user, err := api.GetUserInfo(ev.Msg.User)
 			if err != nil {
 				log.Warn("New SlackMessage", "Error getting user info", err)
-				return
+				continue
 			}
 			var options []slack.RTMsgOption
 			if ev.ThreadTimestamp != "" {
