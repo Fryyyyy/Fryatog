@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/FuzzyStatic/blizzard/wowgd"
+	"github.com/FuzzyStatic/blizzard/v2/wowgd"
 )
 
 func TestDistinguishRealmFromPlayer(t *testing.T) {
