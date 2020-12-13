@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"expvar"
 	"flag"
@@ -13,8 +14,8 @@ import (
 	"syscall"
 	"time"
 
-	blizzard "github.com/FuzzyStatic/blizzard"
-	"github.com/FuzzyStatic/blizzard/wowgd"
+	blizzard "github.com/FuzzyStatic/blizzard/v2"
+	"github.com/FuzzyStatic/blizzard/v2/wowgd"
 	"github.com/algolia/algoliasearch-client-go/algolia/search"
 	raven "github.com/getsentry/raven-go"
 	lru "github.com/hashicorp/golang-lru"
@@ -54,6 +55,7 @@ type configuration struct {
 var (
 	bot          *hbot.Bot
 	conf         configuration
+	ctx          context.Context
 	slackClients []*slack.Client
 	ims          []slack.Channel
 
@@ -689,6 +691,8 @@ func main() {
 		raven.CaptureErrorAndWait(err, nil)
 	}
 
+	ctx = context.Background()
+
 	// Seed random number generator
 	rand.Seed(time.Now().UnixNano())
 
@@ -778,10 +782,10 @@ func main() {
 	hsIndex = hsClient.InitIndex(conf.Hearthstone.IndexName)
 
 	// Initialise Battlenet client
-	if (conf.BattleNet.ClientSecret != "") {
+	if conf.BattleNet.ClientSecret != "" {
 		bNetClient = blizzard.NewClient(conf.BattleNet.ClientID, conf.BattleNet.ClientSecret, blizzard.US, blizzard.EnUS)
-		
-		err = bNetClient.AccessTokenRequest()
+
+		err = bNetClient.AccessTokenRequest(ctx)
 		if err != nil {
 			bNetClient = nil
 			log.Warn("Error authenticating to Blizzard services", "Err", err)
@@ -789,18 +793,17 @@ func main() {
 		}
 		wowPlayerCache = cache.New(24*time.Hour, 1*time.Hour)
 		wowPlayerChieveCache = cache.New(24*time.Hour, 1*time.Hour)
-		wowRealms, _, err = bNetClient.WoWRealmIndex()
+		wowRealms, _, err = bNetClient.WoWRealmIndex(ctx)
 		if err != nil {
 			log.Warn("Error retrieving Realms", "Err", err)
 			raven.CaptureErrorAndWait(err, nil)
 		}
-		wowChieves, _, err = bNetClient.WoWAchievementIndex()
+		wowChieves, _, err = bNetClient.WoWAchievementIndex(ctx)
 		if err != nil {
 			log.Warn("Error retrieving Chieves", "Err", err)
 			raven.CaptureErrorAndWait(err, nil)
-		}	
+		}
 	}
-	
 
 	bot.AddTrigger(mainTrigger)
 	bot.AddTrigger(whoTrigger)

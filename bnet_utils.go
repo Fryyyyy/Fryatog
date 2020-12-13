@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/FuzzyStatic/blizzard/wowgd"
+	"github.com/FuzzyStatic/blizzard/v2/wowgd"
 )
 
 const corruptionR = 149

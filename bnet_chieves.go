@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/FuzzyStatic/blizzard/wowgd"
-	"github.com/FuzzyStatic/blizzard/wowp"
+	"github.com/FuzzyStatic/blizzard/v2/wowgd"
+	"github.com/FuzzyStatic/blizzard/v2/wowp"
 	raven "github.com/getsentry/raven-go"
 	log "gopkg.in/inconshreveable/log15.v2"
 )
@@ -19,7 +19,7 @@ func retrieveChievesForPlayer(realm, player string) (*wowp.CharacterAchievements
 	if c, ok := wowPlayerChieveCache.Get(realm + "-" + player); ok {
 		return c.(*wowp.CharacterAchievementsSummary), nil
 	}
-	cas, _, err := bNetClient.WoWCharacterAchievementsSummary(realm, player)
+	cas, _, err := bNetClient.WoWCharacterAchievementsSummary(ctx, realm, player)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func playerSingleChieveStatus(cas *wowp.CharacterAchievementsSummary, chieveName
 			log.Debug("playerSingleChieveStatus: Found chieve", "Chievo", a)
 			var ret []string
 			ret = append(ret, fmt.Sprintf("<http://www.wowhead.com/achievement=%d|%s>", a.ID, a.Achievement.Name))
-			if a.Criteria.IsCompleted {
+			if a.Criteria.IsCompleted || a.CompleteTimestamp != 0 {
 				ret = append(ret, ":fire: Achievement Unlocked! :fire:")
 			} else {
 				ret = append(ret, ":cry: Chievo not got :cry:")
@@ -150,7 +150,7 @@ func chieveFromID(chieveID int) *wowgd.Achievement {
 	if chieveID == 0 {
 		return nil
 	}
-	c, _, err := bNetClient.WoWAchievement(chieveID)
+	c, _, err := bNetClient.WoWAchievement(ctx, chieveID)
 	if err != nil {
 		raven.CaptureError(err, nil)
 		return nil

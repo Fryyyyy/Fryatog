@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/FuzzyStatic/blizzard/wowp"
+	"github.com/FuzzyStatic/blizzard/v2/wowp"
 	raven "github.com/getsentry/raven-go"
 	log "gopkg.in/inconshreveable/log15.v2"
 )
@@ -25,7 +25,7 @@ func getDudeRaid(input1, input2, expn, tier string) string {
 		return "Could not distinguish realm"
 	}
 	var ret []string
-	cr, _, err := bNetClient.WoWCharacterRaids(realm, player)
+	cr, _, err := bNetClient.WoWCharacterRaids(ctx, realm, player)
 	if err != nil {
 		log.Warn("GDR", "Err", err)
 		raven.CaptureError(err, nil)
@@ -58,19 +58,19 @@ func retrieveDude(player, realm string) (wowDude, error) {
 		return c.(wowDude), nil
 	}
 	var ret wowDude
-	cps, _, err := bNetClient.WoWCharacterProfileSummary(realm, player)
+	cps, _, err := bNetClient.WoWCharacterProfileSummary(ctx, realm, player)
 	if err != nil {
 		log.Warn("RD", "CPS", err)
 		raven.CaptureError(err, nil)
 		return ret, err
 	}
-	css, _, err := bNetClient.WoWCharacterStatisticsSummary(realm, player)
+	css, _, err := bNetClient.WoWCharacterStatisticsSummary(ctx, realm, player)
 	if err != nil {
 		log.Warn("RD", "CSS", err)
 		raven.CaptureError(err, nil)
 		return ret, err
 	}
-	ces, _, err := bNetClient.WoWCharacterEquipmentSummary(realm, player)
+	ces, _, err := bNetClient.WoWCharacterEquipmentSummary(ctx, realm, player)
 	if err != nil {
 		log.Warn("RD", "CES", err)
 		raven.CaptureError(err, nil)
@@ -85,6 +85,7 @@ func retrieveDude(player, realm string) (wowDude, error) {
 }
 
 func printWoWDude(input1, input2 string) string {
+	log.Debug("PWD", "Player", input1, "Realm", input2)
 	if bNetClient == nil {
 		return "WOW API not available"
 	}
@@ -119,6 +120,7 @@ func printWoWDude(input1, input2 string) string {
 }
 
 func getDudeReps(input1, input2 string) string {
+	log.Debug("Get reps", "Player", input1, "Realm", input2)
 	if bNetClient == nil {
 		return "WOW API not available"
 	}
@@ -127,7 +129,7 @@ func getDudeReps(input1, input2 string) string {
 		return "Could not distinguish realm"
 	}
 	var ret []string
-	reps, _, err := bNetClient.WoWCharacterReputationsSummary(realm, player)
+	reps, _, err := bNetClient.WoWCharacterReputationsSummary(ctx, realm, player)
 	if err != nil {
 		log.Warn("GDRep", "Err", err)
 		raven.CaptureError(err, nil)
