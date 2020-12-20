@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"os"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -155,6 +156,8 @@ func TestTokens(t *testing.T) {
 	}
 	for _, table := range tables {
 		got := tokeniseAndDispatchInput(&fryatogParams{m: &hbot.Message{Content: table.input}}, fakeGetCard, fakeGetCard, fakeGetRandomCard, fakeFindCards)
+		sort.Strings(got)
+		sort.Strings(table.output)
 		if !reflect.DeepEqual(got, table.output) {
 			t.Errorf("Incorrect output for [%v] -- got %q -- want %q", table.input, got, table.output)
 		}
@@ -163,8 +166,8 @@ func TestTokens(t *testing.T) {
 
 func TestRegex(t *testing.T) {
 	tables := []struct {
-		input string
-		wantMatch bool
+		input       string
+		wantMatch   bool
 		matchGroups []string
 	}{
 		{"!search pow=0 tou=17", true, []string{"!search pow=0 tou=17"}},
@@ -173,10 +176,10 @@ func TestRegex(t *testing.T) {
 	}
 	for _, table := range tables {
 		got := botCommandRegex.FindAllString(table.input, -1)
-		if (table.wantMatch && !reflect.DeepEqual(got, table.matchGroups)) {
+		if table.wantMatch && !reflect.DeepEqual(got, table.matchGroups) {
 			t.Errorf("%v didn't match as expected -- got %q -- want %q", table.input, got, table.matchGroups)
 		}
-		if (!table.wantMatch && len(table.matchGroups) > 0) {
+		if !table.wantMatch && len(table.matchGroups) > 0 {
 			t.Errorf("%v should not have matched, but did: %q", table.input, got)
 		}
 	}
