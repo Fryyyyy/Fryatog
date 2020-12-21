@@ -211,7 +211,7 @@ func statFight(p1, p2 wowDude, statName string) string {
 		return err.Error()
 	}
 	if p1qty > p2qty {
-		return fmt.Sprintf("%s\n[:white_check_mark:] %s : %s (%v) vs %s : %s %s (%v) [:x:]", statName, p1.cps.Name, p1desc, p1qty, p2.cps.Name, p2desc, p2qty)
+		return fmt.Sprintf("%s\n[:white_check_mark:] %s : %s (%v) vs %s : %s (%v) [:x:]", statName, p1.cps.Name, p1desc, p1qty, p2.cps.Name, p2desc, p2qty)
 	} else if p1qty < p2qty {
 		return fmt.Sprintf("%s\n[:x:] %s : %s (%v) vs %s : %s (%v) [:white_check_mark:]", p1name, p1.cps.Name, p1desc, p1qty, p2.cps.Name, p2desc, p2qty)
 	} else {
