@@ -390,6 +390,28 @@ func handleCommand(params *fryatogParams, c chan string) {
 		}
 		return
 
+	case cardTokens[0] == "wowstat" && !params.isIRC:
+		log.Debug("Slack-based Wow Stat", "Input", message)
+		switch len(cardTokens) {
+		// Just bare command
+		case 1:
+			c <- "!wowstat [realm] [player] <statistic name or random>"
+		default:
+			c <- handleStatInput(message[8:])
+		}
+		return
+
+	case cardTokens[0] == "wowstatfight" && !params.isIRC:
+		log.Debug("Slack-based Wow Stat Fight", "Input", message)
+		switch len(cardTokens) {
+		// Just bare command
+		case 1:
+			c <- "!wowstatfight [realm1] [player1] [realm2] [player2] <statistic name or random>"
+		default:
+			c <- handleStatFightInput(message[13:])
+		}
+		return
+
 	case cardTokens[0] == "wowdude" && !params.isIRC:
 		log.Debug("Slack-based Wow Dude", "Input", message)
 		switch len(cardTokens) {

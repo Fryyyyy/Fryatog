@@ -34,3 +34,19 @@ func distinguishRealmFromPlayer(input1, input2 string) (string, string, error) {
 	}
 	return "", "", fmt.Errorf("Realm not found")
 }
+
+// Given a WowDude with stats, give back all the available stat names.
+func populateWoWStats(wd wowDude) []string {
+	var ret []string
+	for _, cat := range wd.cas.Categories {
+		for _, sc := range cat.SubCategories {
+			for _, stat := range sc.Statistics {
+				ret = append(ret, stat.Name)
+			}
+		}
+		for _, stat := range cat.Statistics {
+			ret = append(ret, stat.Name)
+		}
+	}
+	return ret
+}

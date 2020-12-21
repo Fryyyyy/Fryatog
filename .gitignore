@@ -6,3 +6,4 @@ config.json*
 *.gob
 *.exe
 [fF]ryatog
+vendor/*

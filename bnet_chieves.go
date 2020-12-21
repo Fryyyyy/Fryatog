@@ -117,14 +117,13 @@ func formatChieveForSlack(a *wowgd.Achievement) string {
 }
 
 func handleChieveInput(input string) string {
-	cardTokens := strings.SplitN(input, " ", 3)
-	log.Debug("Handling Chieve Input", "Input", input, "Tokens", cardTokens)
-	realm, player, err := distinguishRealmFromPlayer(cardTokens[0], cardTokens[1])
+	tokens := strings.SplitN(input, " ", 3)
+	log.Debug("Handling Chieve Input", "Input", input, "Tokens", tokens)
+	realm, player, err := distinguishRealmFromPlayer(tokens[0], tokens[1])
 	if err != nil {
 		return formatChieveForSlack(chieveFromID(chieveNameToID(input)))
 	}
-	return chieveForPlayer(realm, player, cardTokens[2])
-
+	return chieveForPlayer(realm, player, tokens[2])
 }
 
 func chieveNameToID(chieveName string) int {

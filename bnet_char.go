@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/FuzzyStatic/blizzard/v2/wowp"
 	raven "github.com/getsentry/raven-go"
@@ -13,6 +15,7 @@ type wowDude struct {
 	cps *wowp.CharacterProfileSummary
 	css *wowp.CharacterStatisticsSummary
 	ces *wowp.CharacterEquipmentSummary
+	cas *wowp.CharacterAchievementsStatistics
 }
 
 func getDudeRaid(input1, input2, expn, tier string) string {
@@ -76,10 +79,17 @@ func retrieveDude(player, realm string) (wowDude, error) {
 		raven.CaptureError(err, nil)
 		return ret, err
 	}
+	cas, _, err := bNetClient.WoWCharacterAchievementsStatistics(ctx, realm, player)
+	if err != nil {
+		log.Warn("RD", "CAS", err)
+		raven.CaptureError(err, nil)
+		return ret, err
+	}
 	ret = wowDude{
 		cps: cps,
 		css: css,
 		ces: ces,
+		cas: cas,
 	}
 	return ret, nil
 }
@@ -117,6 +127,124 @@ func printWoWDude(input1, input2 string) string {
 		// TODO: Context (i.e Mythic, WQ, etc)
 	}
 	return strings.Join(ret, "\n")
+}
+
+func handleStatInput(input string) string {
+	tokens := strings.SplitN(input, " ", 3)
+	log.Debug("Handling Stat Input", "Input", input, "Tokens", tokens)
+	realm, player, err := distinguishRealmFromPlayer(tokens[0], tokens[1])
+	if err != nil {
+		return err.Error()
+	}
+	var statName string
+	if len(tokens) < 3 {
+		statName = "random"
+	} else {
+		statName = tokens[2]
+	}
+	p, err := retrieveDude(player, realm)
+	if err != nil {
+		return "Problem retrieving player"
+	}
+	statName, statDesc, statQty, err := getDudeStat(p, statName)
+	if err != nil {
+		return err.Error()
+	}
+	return fmt.Sprintf("%s : %s (%v)", statName, statDesc, statQty)
+}
+
+func handleStatFightInput(input string) string {
+	tokens := strings.SplitN(input, " ", 5)
+	if len(tokens) < 4 {
+		return "Invalid command"
+	}
+	var statName string
+	if len(tokens) == 4 {
+		statName = "random"
+	} else {
+		statName = tokens[4]
+	}
+	log.Debug("Handling Stat Fight Input", "Input", input, "Tokens", tokens)
+	if bNetClient == nil {
+		return "WOW API not available"
+	}
+	realm1, player1, err := distinguishRealmFromPlayer(tokens[0], tokens[1])
+	if err != nil {
+		return "Could not distinguish realm for Player 1"
+	}
+	p1, err := retrieveDude(player1, realm1)
+	if err != nil {
+		return "Problem retrieving player 1"
+	}
+	realm2, player2, err := distinguishRealmFromPlayer(tokens[2], tokens[3])
+	if err != nil {
+		return "Could not distinguish realm for Player 2"
+	}
+	p2, err := retrieveDude(player2, realm2)
+	if err != nil {
+		return "Problem retrieving player 2"
+	}
+	return statFight(p1, p2, statName)
+}
+
+func statFight(p1, p2 wowDude, statName string) string {
+	log.Debug("StatFight", "p1", p1.cps.Name, "p2", p2.cps.Name, "Name", statName)
+	if statName == "random" {
+		p1stats := populateWoWStats(p1)
+		p2stats := populateWoWStats(p2)
+		var commonStats []string
+		for _, s := range p1stats {
+			if stringSliceContains(p2stats, s) {
+				commonStats = append(commonStats, s)
+			}
+		}
+		rand.Seed(time.Now().Unix())
+		statName = commonStats[rand.Intn(len(commonStats))]
+		log.Debug("StatFight Randomised", "p1 Stat Len", len(p1stats), "p2 Stat Len ", len(p2stats), "Common len", len(commonStats), "Name", statName)
+	}
+	p1name, p1desc, p1qty, err := getDudeStat(p1, statName)
+	if err != nil {
+		return err.Error()
+	}
+	_, p2desc, p2qty, err := getDudeStat(p2, p1name)
+	if err != nil {
+		return err.Error()
+	}
+	if p1qty > p2qty {
+		return fmt.Sprintf("%s\n[:white_check_mark:] %s : %s (%v) vs %s : %s %s (%v) [:x:]", statName, p1.cps.Name, p1desc, p1qty, p2.cps.Name, p2desc, p2qty)
+	} else if p1qty < p2qty {
+		return fmt.Sprintf("%s\n[:x:] %s : %s (%v) vs %s : %s (%v) [:white_check_mark:]", p1name, p1.cps.Name, p1desc, p1qty, p2.cps.Name, p2desc, p2qty)
+	} else {
+		return fmt.Sprintf("%s\n[:interrobang:] TIE!! Both on %v", p1name, p1qty)
+	}
+}
+
+// Returns Stat Name, Stat Description, Stat Quantity and Error
+func getDudeStat(player wowDude, statName string) (string, string, float64, error) {
+	log.Debug("Get stat", "Player", player.cps.Name, "Stat", statName)
+	if bNetClient == nil {
+		return "", "", 0, fmt.Errorf("WOW API not available")
+	}
+	if statName == "random" {
+		stats := populateWoWStats(player)
+		rand.Seed(time.Now().Unix())
+		statName = stats[rand.Intn(len(stats))]
+	}
+	for _, cat := range player.cas.Categories {
+		for _, sc := range cat.SubCategories {
+			for _, stat := range sc.Statistics {
+				if strings.ToLower(stat.Name) == strings.ToLower(statName) {
+					return stat.Name, stat.Description, stat.Quantity, nil
+				}
+			}
+		}
+		for _, stat := range cat.Statistics {
+			if strings.ToLower(stat.Name) == strings.ToLower(statName) {
+				return stat.Name, stat.Description, stat.Quantity, nil
+			}
+		}
+	}
+	return "", "", 0, fmt.Errorf("Stat not found")
 }
 
 func getDudeReps(input1, input2 string) string {
