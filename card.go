@@ -637,6 +637,9 @@ func searchScryfallCard(cardTokens []string) ([]Card, error) {
 				}
 			}
 		}
+		if (csr.Warnings != nil) {
+			return []Card{}, fmt.Errorf(strings.Join(csr.Warnings, "; "))
+		}
 		switch {
 		case csr.TotalCards == 0:
 			return []Card{}, fmt.Errorf("No cards found")
