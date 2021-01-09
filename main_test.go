@@ -35,7 +35,6 @@ func fakeGetCard(cardname string, isLang bool) (Card, error) {
 			}
 			fmt.Printf("In FakeGetCard: %v %v\n", c.Name, c.Lang)
 			if (c.Lang != "en" && !isLang) {
-
 				return fakeGetCard(c.Name, false);
 			}
 			return c, nil
