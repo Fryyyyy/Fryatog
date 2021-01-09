@@ -109,7 +109,7 @@ const cardShortNameFile = "short_names.json"
 
 // CardGetter defines a function that retrieves a card's text.
 // Defining this type allows us to override it in testing, and not hit scryfall.com a million times.
-type CardGetter func(cardname string) (Card, error)
+type CardGetter func(cardname string, isLang bool) (Card, error)
 
 // RandomCardGetter defines a function that retrieves a random card's text.
 type RandomCardGetter func() (Card, error)
@@ -638,7 +638,7 @@ func handleCardMetadataQuery(params *fryatogParams, command string) string {
 func findCard(cardTokens []string, isLang bool, cardGetFunction CardGetter) (Card, error) {
 	var bestCardSoFar Card
 	for _, rc := range reduceCardSentence(cardTokens) {
-		card, err := cardGetFunction(rc)
+		card, err := cardGetFunction(rc, isLang)
 		log.Debug("Card Func gave us", "CardID", card.ID, "Err", err)
 		if err == nil {
 			log.Debug("Found card!", "Token", rc, "CardID", card.ID)

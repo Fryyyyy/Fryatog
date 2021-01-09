@@ -392,7 +392,7 @@ func (card *Card) cardGetLang(lang string) (Card, error) {
 	return c, fmt.Errorf("Language not found")
 }
 
-func fetchScryfallCardByFuzzyName(input string) (Card, error) {
+func fetchScryfallCardByFuzzyName(input string, isLang bool) (Card, error) {
 	var emptyCard Card
 	url := fmt.Sprintf(scryfallFuzzyAPIURL, url.QueryEscape(input))
 	log.Debug("fetchScryfallCard: Attempting to fetch", "URL", url)
@@ -409,6 +409,10 @@ func fetchScryfallCardByFuzzyName(input string) (Card, error) {
 			raven.CaptureError(err, nil)
 			return card, fmt.Errorf("Something went wrong parsing the card")
 		}
+		if (!isLang && card.Lang != "en") {
+			log.Debug("Got back a foreign card when it wasn't requested, let's try again")
+			return fetchScryfallCardByFuzzyName(card.Name, false)
+		}
 		if (card.BorderColor != "black" && card.BorderColor != "white" && card.BorderColor != "borderless") || strings.Contains(card.Layout, "vanguard") || strings.Contains(card.Layout, "token") || strings.Contains(card.Layout, "art_series") || card.SetType == "funny" {
 			return emptyCard, fmt.Errorf("Dumb card returned, keep trying")
 		}
@@ -418,7 +422,7 @@ func fetchScryfallCardByFuzzyName(input string) (Card, error) {
 	return card, fmt.Errorf("Card not found by Scryfall")
 }
 
-func fetchDumbScryfallCardByName(input string) (Card, error) {
+func fetchDumbScryfallCardByName(input string, isLang bool) (Card, error) {
 	var emptyCard Card
 	u, _ := url.Parse(scryfallSearchAPIURL)
 	q := u.Query()
@@ -517,7 +521,7 @@ func getCachedOrStoreCard(card *Card, ncn string) (Card, error) {
 	return *card, nil
 }
 
-func getScryfallCard(input string) (Card, error) {
+func getScryfallCard(input string, isLang bool) (Card, error) {
 	cardRequests.Add(1)
 	var card Card
 
@@ -539,18 +543,15 @@ func getScryfallCard(input string) (Card, error) {
 
 	log.Debug("Checking Scryfall for card", "Name", ncn)
 	// Try fuzzily matching the name
-	card, err = fetchScryfallCardByFuzzyName(input)
-	// Smol hack
-	if card.Lang != "en" && strings.HasPrefix(card.Name, "Flash") {
-		return card, fmt.Errorf("Potential foreign language fail")
-	}
+	card, err = fetchScryfallCardByFuzzyName(input, isLang)
+	
 	if err == nil {
 		return getCachedOrStoreCard(&card, ncn)
 	}
 	// No luck - try unique prefix
 	cardName := lookupUniqueNamePrefix(input)
 	if cardName != "" {
-		card, err = fetchScryfallCardByFuzzyName(cardName)
+		card, err = fetchScryfallCardByFuzzyName(cardName, isLang)
 		if err == nil {
 			return getCachedOrStoreCard(&card, ncn)
 		}
@@ -560,7 +561,7 @@ func getScryfallCard(input string) (Card, error) {
 	return card, fmt.Errorf("No card found")
 }
 
-func getDumbScryfallCard(input string) (Card, error) {
+func getDumbScryfallCard(input string, isLang bool) (Card, error) {
 	dumbCardRequests.Add(1)
 	var card Card
 	ncn := normaliseCardName(input)
@@ -572,7 +573,7 @@ func getDumbScryfallCard(input string) (Card, error) {
 	}
 
 	log.Debug("Checking Scryfall for card", "Name", ncn)
-	card, err = fetchDumbScryfallCardByName(input)
+	card, err = fetchDumbScryfallCardByName(input, isLang)
 	if err == nil {
 		return card, nil
 	}

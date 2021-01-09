@@ -14,7 +14,7 @@ import (
 	hbot "github.com/whyrusleeping/hellabot"
 )
 
-func fakeGetCard(cardname string) (Card, error) {
+func fakeGetCard(cardname string, isLang bool) (Card, error) {
 	r := rand.Intn(1000)
 	fmt.Printf("Trying to get card %v -- Sleeping %v ms\n", cardname, r)
 	time.Sleep(time.Duration(r) * time.Millisecond)
@@ -32,6 +32,11 @@ func fakeGetCard(cardname string) (Card, error) {
 			}
 			if err := json.NewDecoder(fi).Decode(&c); err != nil {
 				return c, fmt.Errorf("Something went wrong parsing the card: %s", err)
+			}
+			fmt.Printf("In FakeGetCard: %v %v\n", c.Name, c.Lang)
+			if (c.Lang != "en" && !isLang) {
+
+				return fakeGetCard(c.Name, false);
 			}
 			return c, nil
 		}
@@ -158,6 +163,21 @@ func TestTokens(t *testing.T) {
 		got := tokeniseAndDispatchInput(&fryatogParams{m: &hbot.Message{Content: table.input}}, fakeGetCard, fakeGetCard, fakeGetRandomCard, fakeFindCards)
 		sort.Strings(got)
 		sort.Strings(table.output)
+		if !reflect.DeepEqual(got, table.output) {
+			t.Errorf("Incorrect output for [%v] -- got %q -- want %q", table.input, got, table.output)
+		}
+	}
+}
+
+func TestLanguageRecursion(t *testing.T) {
+	tables := []struct {
+		input string
+		output []string
+	}{
+		{"Erebos' Titan", []string{"\x02Erebos's Titan\x0f {1}{B}{B}{B} · Creature — Giant · 5/5 · As long as your opponents control no creatures, Erebos's Titan has indestructible. \x1d(Damage and effects that say \"destroy\" don't destroy it.)\x0f \\ Whenever a creature card leaves an opponent's graveyard, you may discard a card. If you do, return Erebos's Titan from your graveyard to your hand. · ORI-M · Vin,Leg,Mod,Pio"}},
+	}
+	for _, table := range tables {
+		got := tokeniseAndDispatchInput(&fryatogParams{m: &hbot.Message{Content: table.input}}, fakeGetCard, fakeGetCard, fakeGetRandomCard, fakeFindCards)
 		if !reflect.DeepEqual(got, table.output) {
 			t.Errorf("Incorrect output for [%v] -- got %q -- want %q", table.input, got, table.output)
 		}
