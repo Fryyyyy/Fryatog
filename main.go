@@ -480,17 +480,20 @@ func handleCommand(params *fryatogParams, c chan string) {
 	case cardTokens[0] == "search":
 		log.Debug("Advanced search query", "Input", message)
 		// Before we search, make sure it's not the actual name of a card
-		var found bool
 		for _, x := range cardNames {
 			if normaliseCardName(x) == normaliseCardName(message) {
-				found = true
-				break
+				if card, err := findCard(cardTokens, false, params.cardGetFunction); err == nil {
+					if params.isIRC {
+						c <- card.formatCardForIRC()
+					} else {
+						c <- card.formatCardForSlack()
+					}
+					return
+				}
 			}
 		}
-		if !found {
-			c <- strings.Join(handleAdvancedSearchQuery(params, cardTokens[1:]), "\n")
-			return
-		}
+		c <- strings.Join(handleAdvancedSearchQuery(params, cardTokens[1:]), "\n")
+		return
 
 	case cardTokens[0] == "uncard", cardTokens[0] == "vanguard", cardTokens[0] == "plane":
 		log.Debug("Special card query", "Input", message)
