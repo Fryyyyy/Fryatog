@@ -176,7 +176,9 @@ type CardCatalog struct {
 
 // CardSearchResult stores the result of an advanced Card search API call
 type CardSearchResult struct {
-	Warnings   []string `json:warnings`
+	Warnings   []string `json:"warnings"`
+	Details    string   `json:"details"`
+	Status     int      `json:"status"`
 	Object     string   `json:"object"`
 	TotalCards int      `json:"total_cards"`
 	HasMore    bool     `json:"has_more"`

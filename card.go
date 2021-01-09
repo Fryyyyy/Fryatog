@@ -638,7 +638,7 @@ func searchScryfallCard(cardTokens []string) ([]Card, error) {
 			}
 		}
 		if (csr.Warnings != nil) {
-			return []Card{}, fmt.Errorf(strings.Join(csr.Warnings, "; "))
+			return []Card{}, fmt.Errorf(strings.Join(csr.Warnings, " "))
 		}
 		switch {
 		case csr.TotalCards == 0:
@@ -657,7 +657,16 @@ func searchScryfallCard(cardTokens []string) ([]Card, error) {
 			return []Card{}, fmt.Errorf("[" + strings.Join(names, "], [") + "]")
 		}
 	}
-	log.Error("searchScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
+	// This is the general "please learn scryfall syntax" reply
+	if resp.StatusCode == 400 {
+		if err := json.NewDecoder(resp.Body).Decode(&csr); err != nil {
+			raven.CaptureError(err, nil)
+			return []Card{}, fmt.Errorf("Something went wrong parsing the card search results")
+		}
+		log.Error("searchScryfallCard: Scryfall returned 400, handling")
+		return []Card{}, fmt.Errorf("%v (%v)", csr.Details, strings.Join(csr.Warnings, " "))
+	}
+	log.Error("searchScryfallCard: Scryfall returned a non-200, non-400", "Status Code", resp.StatusCode)
 	return []Card{}, fmt.Errorf("No cards found")
 }
 
