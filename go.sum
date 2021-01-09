@@ -35,6 +35,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/FuzzyStatic/blizzard v1.1.0 h1:kmpLWM4UtN82GPU991KbE3PDaHPexzGOFdQJNVi5xKk=
 github.com/FuzzyStatic/blizzard v1.1.0/go.mod h1:1BZXOKzqU6a/3c4cO3csfGkvCPAToEKtD9DApFgBPho=
+github.com/FuzzyStatic/blizzard v1.1.1-0.20201220225707-10809508c111 h1:3kn2XMdxN3xmzUsWKzCp4xG0OF3KFDjcWrSa+h9D/PY=
+github.com/FuzzyStatic/blizzard v1.1.1-0.20201220225707-10809508c111/go.mod h1:1BZXOKzqU6a/3c4cO3csfGkvCPAToEKtD9DApFgBPho=
 github.com/algolia/algoliasearch-client-go v0.0.0-20190409094142-b60d13f65ed3 h1:7d00rz9sX8paJVW/alOO6kalyI0rIELq6Ka+KlOgu+8=
 github.com/algolia/algoliasearch-client-go v0.0.0-20190409094142-b60d13f65ed3/go.mod h1:O3hhXUchKRH3qS/2tJ+/NGFwQL6Kv1IQ5xG0Qsxa5xU=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
