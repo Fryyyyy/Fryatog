@@ -47,6 +47,8 @@ var (
 		"Confiscate":                  "test_data/confiscate.json",
 		"Thermo-Alchemist":            "test_data/thermoalchemist.json",
 		"Wicked Guardian":             "test_data/wickedguardian.json",
+		"Erebos' Titan":	       "test_data/erebostitanDE.json",
+		"Erebos's Titan":	       "test_data/erebosstitan.json",
 	}
 )
 
