@@ -484,6 +484,7 @@ func handleCommand(params *fryatogParams, c chan string) {
 		for _, x := range cardNames {
 			if normaliseCardName(x) == normaliseCardName(message) {
 				found = true
+				break
 			}
 		}
 		if !found {
@@ -679,7 +680,7 @@ func main() {
 		panic(err)
 	}
 
-	cardNames, err = importCardNames(false)
+	cardNames, err = importCardNames(true)
 	if err != nil {
 		log.Warn("Error fetching card names", "Err", err)
 		raven.CaptureErrorAndWait(err, nil)
