@@ -47,8 +47,8 @@ var (
 		"Confiscate":                  "test_data/confiscate.json",
 		"Thermo-Alchemist":            "test_data/thermoalchemist.json",
 		"Wicked Guardian":             "test_data/wickedguardian.json",
-		"Erebos' Titan":	       "test_data/erebostitanDE.json",
-		"Erebos's Titan":	       "test_data/erebosstitan.json",
+		"Erebos' Titan":               "test_data/erebostitanDE.json",
+		"Erebos's Titan":              "test_data/erebosstitan.json",
 	}
 )
 
@@ -119,7 +119,7 @@ func (card *Card) fakeGetRulings(rulingNumber int) string {
 
 	err = card.sortRulings()
 	if err != nil {
-		return fmt.Sprintf("Something went wrong sorting the rulings")
+		return "Something went wrong sorting the rulings"
 	}
 
 	var ret []string
@@ -408,11 +408,18 @@ func TestCardCache(t *testing.T) {
 	nameToCardCache.Add("faithless", fakeFaithless)
 	// Try the real one
 	cc, err := checkCacheForCard("faithlesslooting")
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
 	if diff := cmp.Diff(cc, faithlessLooting); diff != "" {
 		t.Errorf("Incorrect card (-want +got):\n%s", diff)
 	}
+
 	// Try the fake one
 	cc, err = checkCacheForCard("faithless")
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
 	if diff := cmp.Diff(cc, faithlessLooting); diff != "" {
 		t.Errorf("Incorrect card (-want +got):\n%s", diff)
 	}

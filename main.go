@@ -80,9 +80,6 @@ var (
 
 	highlanderPoints = make(map[string]int)
 
-	// Store people who we know of as Ops
-	chanops = make(map[string]struct{})
-
 	// How often to dump the card cache
 	cacheDumpTimer = 10 * time.Minute
 
@@ -183,37 +180,6 @@ func isSenderAnOp(m *hbot.Message) bool {
 		}
 	}
 	return false
-}
-
-func handleWhoMessages(inputs [][]string) {
-	for _, input := range inputs {
-		log.Debug("Handling Who Middle", "len7", len(input) == 7, "whichChans", whichChans)
-		// Input:
-		// 0 Bot Nickname
-		// 1 Channel
-		// 2 User
-		// 3 Host
-		// 4 Server
-		// 5 User Nick
-		// 6 Modes
-		if len(input) == 7 {
-			log.Debug("Handling Who Middle", "hasAt", strings.Contains(input[6], "@"), "isInChan", stringSliceContains(whichChans, input[1]))
-			// Are they an op in one of our Base channels?
-			if strings.Contains(input[6], "@") && stringSliceContains(whichChans, input[1]) {
-				chanops[input[5]] = struct{}{}
-			}
-		}
-		log.Debug("Handling Who Message", "Chanops Result", chanops)
-	}
-}
-
-func getWho() {
-	log.Debug("Horton hears")
-	// Clear existing chanops
-	chanops = make(map[string]struct{})
-	for _, c := range whichChans {
-		bot.Send(fmt.Sprintf("WHO %s", c))
-	}
 }
 
 // tokeniseAndDispatchInput splits the given user-supplied string into a number of commands
@@ -328,9 +294,7 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 		if message == "" {
 			continue
 		}
-		if strings.HasPrefix(message, "card ") {
-			message = message[5:]
-		}
+		message = strings.TrimPrefix(message, "card ")
 
 		// Longest possible card name query is ~30 chars
 
@@ -562,7 +526,6 @@ func handleCommand(params *fryatogParams, c chan string) {
 	}
 	// If we got here, no cards found.
 	c <- ""
-	return
 }
 
 func sendRulesRedirectText(cardTokens []string) string {
@@ -751,6 +714,10 @@ func main() {
 		log.Debug("DEBUG MODE")
 		// Make cache small in Debug mode, just for Volo
 		nameToCardCache, err = lru.NewARC(2)
+		if err != nil {
+			raven.CaptureErrorAndWait(err, nil)
+			panic(err)
+		}
 		whichChans = conf.DevChannels
 		whichNick = conf.DevNick
 		nonSSLServ := flag.String("server", "irc.freenode.net:6667", "hostname and port for irc server to connect to")

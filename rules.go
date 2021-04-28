@@ -77,10 +77,11 @@ func importRules(forceFetch bool) error {
 
 	// Parse it.
 	f, err := os.Open(crFile)
-	defer f.Close()
 	if err != nil {
 		return err
 	}
+	defer f.Close()
+
 	// WOTC doesn't serve UTF-8. 😒
 	//r := charmap.Windows1252.NewDecoder().Reader(f)
 	//scanner := bufio.NewScanner(f)

@@ -9,19 +9,14 @@ import (
 )
 
 func runSlack(rtm *slack.RTM, api *slack.Client) {
-	var err error
 	for msg := range rtm.IncomingEvents {
+		// log.Debug("New Slack Event", msg.Data)
 		switch ev := msg.Data.(type) {
 		case *slack.HelloEvent:
 			// Ignore hello
 
 		case *slack.ConnectedEvent:
 			log.Debug("Slack ConnectedEvent", "Infos", ev.Info, "Connection counter", ev.ConnectionCount)
-
-		case *slack.IMCreatedEvent:
-			log.Debug("New Slack IMCreatedEvent")
-			im := slack.Channel{GroupConversation: slack.GroupConversation{Conversation: slack.Conversation{ID: ev.Channel.ID, IsIM: true, User: ev.User}}}
-			ims = append(ims, im)
 
 		case *slack.MessageEvent:
 			//log.Debug("New Slack MessageEvent", "Event", ev)
@@ -32,19 +27,15 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 			}
 			text := strings.Replace(ev.Msg.Text, "&amp;", "&", -1)
 			text = strings.Replace(text, "’", "'", -1)
-			if len(ims) == 0 {
-				ims, _, err = api.GetConversations(&slack.GetConversationsParameters{Types: []string{"im"}})
-				if err != nil {
-					log.Warn("In Slack Message", "Couldn't get the IMs", err)
-				}
-			}
+
 			var isIM bool
-			for _, imc := range ims {
-				if ev.Channel == imc.Conversation.ID {
-					isIM = true
-					break
-				}
+			channel, _, _, err := api.OpenConversation(&slack.OpenConversationParameters{ChannelID: ev.Channel})
+			if err != nil {
+				log.Debug("New SlackMessage", "Error getting conversation", err)
+			} else {
+				isIM = channel.IsIM
 			}
+
 			if !(strings.Contains(text, "!") || strings.Contains(text, "[[")) && !isIM {
 				continue
 			}
@@ -85,7 +76,7 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 
 		default:
 			// Ignore other events..
-			// fmt.Printf("Unexpected: %v\n", msg.Data)
+			// log.Debug("Unexpected: %v\n", msg.Data)
 		}
 	}
 }

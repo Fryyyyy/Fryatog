@@ -45,9 +45,6 @@ var (
 	ruleRegexp     = regexp.MustCompile(`((?:\d)+\.(?:\w{1,4}))`)
 	greetingRegexp = regexp.MustCompile(`(?i)^h(ello|i)( *)(\!|\.|\?)*( *)$`)
 
-	foundKeywordAbilityRegexp = regexp.MustCompile(`701.\d+\b`)
-	foundKeywordActionRegexp  = regexp.MustCompile(`702.\d+\b`)
-
 	//Stuff pared from card.go
 	reminderRegexp = regexp.MustCompile(`\((.*?)\)`)
 	nonAlphaRegex  = regexp.MustCompile(`\W+`)
@@ -171,7 +168,6 @@ func getExitChannel() chan os.Signal {
 		syscall.SIGTERM,
 		syscall.SIGINT,
 		syscall.SIGQUIT,
-		syscall.SIGKILL,
 		syscall.SIGHUP,
 	)
 	return c

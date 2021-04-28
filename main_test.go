@@ -34,8 +34,8 @@ func fakeGetCard(cardname string, isLang bool) (Card, error) {
 				return c, fmt.Errorf("Something went wrong parsing the card: %s", err)
 			}
 			fmt.Printf("In FakeGetCard: %v %v\n", c.Name, c.Lang)
-			if (c.Lang != "en" && !isLang) {
-				return fakeGetCard(c.Name, false);
+			if c.Lang != "en" && !isLang {
+				return fakeGetCard(c.Name, false)
 			}
 			return c, nil
 		}
@@ -170,7 +170,7 @@ func TestTokens(t *testing.T) {
 
 func TestLanguageRecursion(t *testing.T) {
 	tables := []struct {
-		input string
+		input  string
 		output []string
 	}{
 		{"Erebos' Titan", []string{"\x02Erebos's Titan\x0f {1}{B}{B}{B} · Creature — Giant · 5/5 · As long as your opponents control no creatures, Erebos's Titan has indestructible. \x1d(Damage and effects that say \"destroy\" don't destroy it.)\x0f \\ Whenever a creature card leaves an opponent's graveyard, you may discard a card. If you do, return Erebos's Titan from your graveyard to your hand. · ORI-M · Vin,Leg,Mod,Pio"}},
@@ -192,6 +192,7 @@ func TestRegex(t *testing.T) {
 		{"!search pow=0 tou=17", true, []string{"!search pow=0 tou=17"}},
 		{"Player != Planeswalker", false, []string{}},
 		{"<MW> !!fract ident &treas nabb", true, []string{"!fract ident ", "&treas nabb"}},
+		{"!Fork. it creates", true, []string{"!Fork"}},
 	}
 	for _, table := range tables {
 		got := botCommandRegex.FindAllString(table.input, -1)

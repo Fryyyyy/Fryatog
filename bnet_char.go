@@ -35,9 +35,9 @@ func getDudeRaid(input1, input2, expn, tier string) string {
 		return "Could not retrieve raids"
 	}
 	for _, ex := range cr.Expansions {
-		if strings.ToLower(ex.Expansion.Name) == strings.ToLower(expn) {
+		if strings.EqualFold(strings.ToLower(ex.Expansion.Name), strings.ToLower(expn)) {
 			for _, i := range ex.Instances {
-				if strings.ToLower(i.Instance.Name) == strings.ToLower(tier) {
+				if strings.EqualFold(strings.ToLower(i.Instance.Name), strings.ToLower(tier)) {
 					ret = append(ret, fmt.Sprintf("%s - %s", ex.Expansion.Name, i.Instance.Name))
 					for _, m := range i.Modes {
 						t := ""
@@ -233,13 +233,13 @@ func getDudeStat(player wowDude, statName string) (string, string, float64, erro
 	for _, cat := range player.cas.Categories {
 		for _, sc := range cat.SubCategories {
 			for _, stat := range sc.Statistics {
-				if strings.ToLower(stat.Name) == strings.ToLower(statName) {
+				if strings.EqualFold(strings.ToLower(stat.Name), strings.ToLower(statName)) {
 					return stat.Name, stat.Description, stat.Quantity, nil
 				}
 			}
 		}
 		for _, stat := range cat.Statistics {
-			if strings.ToLower(stat.Name) == strings.ToLower(statName) {
+			if strings.EqualFold(strings.ToLower(stat.Name), strings.ToLower(statName)) {
 				return stat.Name, stat.Description, stat.Quantity, nil
 			}
 		}

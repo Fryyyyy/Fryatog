@@ -89,7 +89,6 @@ func (card *Card) getExtraMetadata(inputURL string) {
 		return
 	}
 	log.Info("GetExtraMetadata: Scryfall returned a non-200", "Status Code", resp.StatusCode)
-	return
 }
 
 // Get all possible most recent reminder texts for a card, \n separated
@@ -207,7 +206,7 @@ func (card *Card) formatCardForSlack() string {
 		s = append(s, fmt.Sprintf("*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=%v|%v>*", card.MultiverseIds[0], nco(card.PrintedName, card.Name)))
 	}
 	s = append(s, card.CommonCard.getCardOrFaceAsString("slack")...)
-	if card.Reserved == true {
+	if card.Reserved {
 		s = append(s, "· [RL] ·")
 	}
 	if points, ok := highlanderPoints[normaliseCardName(card.Name)]; ok {
@@ -238,7 +237,7 @@ func (card *Card) formatCardForIRC() string {
 	s = append(s, fmt.Sprintf("\x02%s\x0F", nco(card.PrintedName, card.Name)))
 	s = append(s, card.CommonCard.getCardOrFaceAsString("irc")...)
 	s = append(s, fmt.Sprintf("· %s ·", card.formatExpansions()))
-	if card.Reserved == true {
+	if card.Reserved {
 		s = append(s, "[RL] ·")
 	}
 	s = append(s, card.formatLegalities())
@@ -409,7 +408,7 @@ func fetchScryfallCardByFuzzyName(input string, isLang bool) (Card, error) {
 			raven.CaptureError(err, nil)
 			return card, fmt.Errorf("Something went wrong parsing the card")
 		}
-		if (!isLang && card.Lang != "en") {
+		if !isLang && card.Lang != "en" {
 			log.Debug("Got back a foreign card when it wasn't requested, let's try again")
 			return fetchScryfallCardByFuzzyName(card.Name, false)
 		}
@@ -544,7 +543,7 @@ func getScryfallCard(input string, isLang bool) (Card, error) {
 	log.Debug("Checking Scryfall for card", "Name", ncn)
 	// Try fuzzily matching the name
 	card, err = fetchScryfallCardByFuzzyName(input, isLang)
-	
+
 	if err == nil {
 		return getCachedOrStoreCard(&card, ncn)
 	}
@@ -703,12 +702,12 @@ func importCardNames(forceFetch bool) ([]string, error) {
 	}
 	// Parse it.
 	f, err := os.Open(namesFile)
-	defer f.Close()
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("Error opening cardNames file", "Error", err)
 		return []string{}, err
 	}
+	defer f.Close()
 	var catalog CardCatalog
 	if err := json.NewDecoder(f).Decode(&catalog); err != nil {
 		raven.CaptureError(err, nil)
@@ -764,12 +763,12 @@ func importHighlanderPoints(forceFetch bool) error {
 	}
 	// Parse it.
 	f, err := os.Open(pointsFile)
-	defer f.Close()
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("Error opening points file", "Error", err)
 		return err
 	}
+	defer f.Close()
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		lineFields := strings.Fields(scanner.Text())
