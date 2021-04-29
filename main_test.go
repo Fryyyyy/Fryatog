@@ -192,7 +192,7 @@ func TestRegex(t *testing.T) {
 		{"!search pow=0 tou=17", true, []string{"!search pow=0 tou=17"}},
 		{"Player != Planeswalker", false, []string{}},
 		{"<MW> !!fract ident &treas nabb", true, []string{"!fract ident ", "&treas nabb"}},
-		{"!Fork. it creates", true, []string{"!Fork"}},
+		{"!Fork. it creates", true, []string{"!Fork. "}},
 	}
 	for _, table := range tables {
 		got := botCommandRegex.FindAllString(table.input, -1)

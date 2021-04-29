@@ -213,7 +213,7 @@ func TestPrintCardForSlack(t *testing.T) {
 		{"Tarmogoyf", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=456783|Tarmogoyf>* :mana-1::mana-G: · Creature — Lhurgoyf · \xC2\xAD*/1+\xC2\xAD* · Tarmogoyf's power is equal to the number of card types among cards in all graveyards and its toughness is equal to that number plus 1."},
 		{"Sarkhan the Masterless Plus", "*<https://scryfall.com/card/war/143%E2%98%85/ja/sarkhan-the-masterless?utm_source=api|Sarkhan the Masterless>* :mana-3::mana-R::mana-R: · Legendary Planeswalker — Sarkhan · [5] Whenever a creature attacks you or a planeswalker you control, each Dragon you control deals 1 damage to that creature. \\ +1: Until end of turn, each planeswalker you control becomes a 4/4 red Dragon creature and gains flying. \\ −3: Create a 4/4 red Dragon creature token with flying."},
 		{"Fire//Ice No Multiverse", "*<https://scryfall.com/card/wc01/ar128/fire-ice?utm_source=api|Fire>* :mana-1::mana-R: · Instant · Fire deals 2 damage divided as you choose among one or two targets.\n*<https://scryfall.com/card/wc01/ar128/fire-ice?utm_source=api|Ice>* :mana-1::mana-U: · Instant · Tap target permanent. \\ Draw a card."},
-		{"Ancestral Recall", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=382841|Ancestral Recall>* :mana-U: · Instant · Target player draws three cards. · [RL] · [:point_right: 4 :point_left:]"},
+		{"Ancestral Recall", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=382841|Ancestral Recall>* :mana-U: · Instant · Target player draws three cards. · [RL] · [:point_right: 5 :point_left:]"},
 	}
 	for _, table := range tables {
 		fi, err := os.Open(RealCards[table.cardname])
