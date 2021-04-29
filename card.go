@@ -412,7 +412,7 @@ func fetchScryfallCardByFuzzyName(input string, isLang bool) (Card, error) {
 			log.Debug("Got back a foreign card when it wasn't requested, let's try again")
 			return fetchScryfallCardByFuzzyName(card.Name, false)
 		}
-		if (card.BorderColor != "black" && card.BorderColor != "white" && card.BorderColor != "borderless") || strings.Contains(card.Layout, "vanguard") || strings.Contains(card.Layout, "token") || strings.Contains(card.Layout, "art_series") || card.SetType == "funny" {
+		if (card.BorderColor != "black" && card.BorderColor != "white" && card.BorderColor != "borderless") || strings.Contains(card.Layout, "vanguard") || strings.Contains(card.Layout, "token") || strings.Contains(card.Layout, "art_series") || card.SetType == "funny" || card.Set == "fjmp" {
 			return emptyCard, fmt.Errorf("Dumb card returned, keep trying")
 		}
 		return card, nil
