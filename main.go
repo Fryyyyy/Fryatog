@@ -120,6 +120,7 @@ type fryatogParams struct {
 	slackm                string
 	isIRC                 bool
 	message               string
+	fullInput             string
 	cardGetFunction       CardGetter
 	dumbCardGetFunction   CardGetter
 	randomCardGetFunction RandomCardGetter
@@ -161,6 +162,7 @@ func printHelp() string {
 	ret = append(ret, "!url <mtr/ipg/cr/jar> to bring up the links to policy documents")
 	ret = append(ret, "!roll <X> to roll X-sided die; !roll <XdY> to roll X Y-sided dice")
 	ret = append(ret, "!coin to flip a coin (heads/tails)")
+	ret = append(ret, "https://github.com/Fryyyyy/Fryatog/issues for bugs & feature requests")
 	return strings.Join(ret, " · ")
 }
 
@@ -308,7 +310,7 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 		}
 
 		log.Debug("Dispatching", "index", commands)
-		params := fryatogParams{message: message, isIRC: isIRC, cardGetFunction: cardGetFunction, dumbCardGetFunction: dumbCardGetFunction, randomCardGetFunction: randomCardGetFunction, cardFindFunction: cardFindFunction}
+		params := fryatogParams{message: message, fullInput: input, isIRC: isIRC, cardGetFunction: cardGetFunction, dumbCardGetFunction: dumbCardGetFunction, randomCardGetFunction: randomCardGetFunction, cardFindFunction: cardFindFunction}
 		go handleCommand(&params, c)
 		commands++
 	}
@@ -442,7 +444,7 @@ func handleCommand(params *fryatogParams, c chan string) {
 		return
 
 	case cardTokens[0] == "search":
-		log.Debug("Advanced search query", "Input", message)
+		log.Debug("Advanced search query", "Message", message, "Input", params.fullInput)
 		// Before we search, make sure it's not the actual name of a card
 		for _, x := range cardNames {
 			if normaliseCardName(x) == normaliseCardName(message) {
@@ -455,6 +457,11 @@ func handleCommand(params *fryatogParams, c chan string) {
 					return
 				}
 			}
+		}
+		// If the search is the one and only thing
+		if strings.HasPrefix(params.fullInput, "!search") && strings.Count(params.fullInput, "!") == 1 {
+			log.Debug("Setting Full Input")
+			cardTokens = strings.Fields(params.fullInput)
 		}
 		c <- strings.Join(handleAdvancedSearchQuery(params, cardTokens[1:]), "\n")
 		return
