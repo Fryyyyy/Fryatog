@@ -563,6 +563,7 @@ func handleCardMetadataQuery(params *fryatogParams, command string) string {
 		err          error
 		rulingNumber int
 	)
+	command = strings.ToLower(command)
 	if command == "reminder" {
 		c, err := findCard(strings.Fields(params.message)[1:], false, params.cardGetFunction)
 		if err != nil {
@@ -586,7 +587,7 @@ func handleCardMetadataQuery(params *fryatogParams, command string) string {
 			log.Debug("In a Ruling Query", "Couldn't find card name", params.message)
 			return ""
 		}
-		if strings.HasPrefix(params.message, "ruling") {
+		if strings.HasPrefix(strings.ToLower(params.message), "ruling") {
 			// If there is no number, set to 0.
 			if fass[0][1] == "" && fass[0][4] == "" {
 				rulingNumber = 0
