@@ -48,6 +48,10 @@ type configuration struct {
 		CurrentRaidTier  string   `json:"CurrentRaidTier"`
 		Reputations      []string `json:"Reputations"`
 	} `json:"BattleNet"`
+	PoE struct {
+		League           string   `json:"League"`
+		WantedCurrencies []string `json:"WantedCurrencies"`
+	} `json:"PoE"`
 	IRC   bool `json:"IRC"`
 	Slack bool `json:"Slack"`
 }
@@ -57,7 +61,6 @@ var (
 	conf         configuration
 	ctx          context.Context
 	slackClients []*slack.Client
-	ims          []slack.Channel
 
 	// Caches
 	nameToCardCache      *lru.ARCCache
@@ -394,6 +397,11 @@ func handleCommand(params *fryatogParams, c chan string) {
 		default:
 			c <- "!wowdude [raid/rep] <realm> <player>"
 		}
+		return
+
+	case cardTokens[0] == "poecurrency" && !params.isIRC:
+		log.Debug("Slack based PoE Currency", "Input", message)
+		c <- handlePoeCurrencyQuery()
 		return
 
 	case cardTokens[0] == "icc" && (len(cardTokens) == 4 || len(cardTokens) == 2) && !params.isIRC:
