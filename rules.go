@@ -203,6 +203,10 @@ func tryFindSeeMoreRule(input string) string {
 			return "\n" + handleRulesQuery(matches[0][1]+".2")
 		}
 
+		if strings.Contains(input, "Destroy") {
+			return "\n" + handleRulesQuery(matches[0][1]+"b")
+		}
+
 		if len(matches) > 0 {
 			return "\n" + handleRulesQuery(matches[0][1])
 		}
