@@ -141,33 +141,6 @@ func (card *Card) fakeGetRulings(rulingNumber int) string {
 	return strings.Join(ret, "\n")
 }
 
-func fakeSearchResults(input CardSearchResult) ([]Card, error) {
-	if input.Status == 400 {
-		return []Card{}, fmt.Errorf("%v (%v)", input.Details, strings.Join(input.Warnings, " "))
-	}
-
-	if (input.Warnings != nil) {
-		return []Card{}, fmt.Errorf(strings.Join(input.Warnings, " "))
-	}
-	switch {
-	case input.TotalCards == 0:
-		return []Card{}, fmt.Errorf("No cards found")
-	case input.TotalCards <= 2:
-		minLen := min(2, len(input.Data))
-		return input.Data[0:minLen], nil
-	case input.TotalCards > 5:
-		return []Card{}, fmt.Errorf("Too many cards returned (%v > 5)", input.TotalCards)
-	default:
-		// Between 3 and 5 cards
-		var names []string
-		for _, c := range input.Data {
-			names = append(names, c.Name)
-		}
-		return []Card{}, fmt.Errorf("[" + strings.Join(names, "], [") + "]")
-	}
-	return []Card{}, fmt.Errorf("No cards found")
-}
-
 func TestPrintCardForIRC(t *testing.T) {
 	tables := []struct {
 		cardname string
@@ -507,7 +480,6 @@ func TestSearchResultHandling(t *testing.T) {
 		wanterr  bool
 	}{
 		{"test_data/searchtest-warnings.json", "Invalid expression “is:slick” was ignored. Checking if cards are “slick” is not supported", true},
-		{"test_data/searchtest-badsearch.json", "All of your terms were ignored. (Invalid expression “n:gleemax” was ignored. Unknown keyword “n”.)", true},
 		{"test_data/searchtest-oneresult.json", "Gleemax", false},
 		{"test_data/searchtest-toomanyresults.json", "Too many cards returned (7 > 5)", true},
 	}
@@ -521,7 +493,7 @@ func TestSearchResultHandling(t *testing.T) {
 			t.Errorf("Something went wrong parsing the search results: %s", err)
 		}
 
-		got, err := fakeSearchResults(csr)
+		got, err := ParseAndFormatSearchResults(csr)
 		if (err != nil) != table.wanterr {
 			t.Errorf("Unexpected error: %v", err)
 		} 
