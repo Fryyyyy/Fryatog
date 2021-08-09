@@ -481,3 +481,36 @@ func TestLangs(t *testing.T) {
 		}
 	}
 }
+
+func TestSearchResultHandling(t *testing.T) {
+	tables := []struct {
+		jsonFile string
+		output   string
+		wanterr  bool
+	}{
+		{"test_data/searchtest-warnings.json", "Invalid expression “is:slick” was ignored. Checking if cards are “slick” is not supported", true},
+		{"test_data/searchtest-oneresult.json", "Gleemax", false},
+		{"test_data/searchtest-toomanyresults.json", "Too many cards returned (7 > 5)", true},
+	}
+	for _, table := range tables {
+		fi, err := os.Open(table.jsonFile)
+		if err != nil {
+			t.Errorf("Unable to open %v", table.jsonFile)
+		}
+		var csr CardSearchResult
+		if err := json.NewDecoder(fi).Decode(&csr); err != nil {
+			t.Errorf("Something went wrong parsing the search results: %s", err)
+		}
+
+		got, err := ParseAndFormatSearchResults(csr)
+		if (err != nil) != table.wanterr {
+			t.Errorf("Unexpected error: %v", err)
+		} 
+		if table.wanterr && err.Error() != table.output {
+			t.Errorf("Incorrect output -- got %s -- want %s", err, table.output)
+		}
+		if len(got) > 0 && got[0].Name != table.output {
+			t.Errorf("Incorrect output -- got %s -- want %s", got[0].Name, table.output)
+		}
+	}
+}

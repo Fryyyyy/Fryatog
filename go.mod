@@ -1,7 +1,7 @@
 module github.com/fryyyyy/fryatog
 
 require (
-	github.com/FuzzyStatic/blizzard v1.2.2
+	github.com/FuzzyStatic/blizzard v1.1.1-0.20201220225707-10809508c111
 	github.com/algolia/algoliasearch-client-go v0.0.0-20190409094142-b60d13f65ed3
 	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054 // indirect
 	github.com/getsentry/raven-go v0.2.0
