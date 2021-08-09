@@ -176,11 +176,14 @@ type CardCatalog struct {
 
 // CardSearchResult stores the result of an advanced Card search API call
 type CardSearchResult struct {
-	Object     string `json:"object"`
-	TotalCards int    `json:"total_cards"`
-	HasMore    bool   `json:"has_more"`
-	NextPage   string `json:"next_page"`
-	Data       []Card `json:"data"`
+	Warnings   []string `json:"warnings"`
+	Details    string   `json:"details"`
+	Status     int      `json:"status"`
+	Object     string   `json:"object"`
+	TotalCards int      `json:"total_cards"`
+	HasMore    bool     `json:"has_more"`
+	NextPage   string   `json:"next_page"`
+	Data       []Card   `json:"data"`
 }
 
 // ShortCardName stores a dict reference that matches common card shorthands (bob, steve, etc)

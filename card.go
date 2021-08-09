@@ -412,7 +412,7 @@ func fetchScryfallCardByFuzzyName(input string, isLang bool) (Card, error) {
 			log.Debug("Got back a foreign card when it wasn't requested, let's try again")
 			return fetchScryfallCardByFuzzyName(card.Name, false)
 		}
-		if (card.BorderColor != "black" && card.BorderColor != "white" && card.BorderColor != "borderless") || strings.Contains(card.Layout, "vanguard") || strings.Contains(card.Layout, "token") || strings.Contains(card.Layout, "art_series") || card.SetType == "funny" || card.Set == "fjmp" {
+		if (card.BorderColor != "black" && card.BorderColor != "white" && card.BorderColor != "borderless") || strings.Contains(card.Layout, "vanguard") || (strings.Contains(card.Layout, "token") && !(strings.Contains(card.TypeLine, "Dungeon"))) || strings.Contains(card.Layout, "art_series") || card.SetType == "funny" || card.Set == "fjmp" {
 			return emptyCard, fmt.Errorf("Dumb card returned, keep trying")
 		}
 		return card, nil
@@ -618,6 +618,7 @@ func searchScryfallCard(cardTokens []string) ([]Card, error) {
 		return []Card{}, fmt.Errorf("Something went wrong fetching card search results")
 	}
 	defer resp.Body.Close()
+
 	var csr CardSearchResult
 	if resp.StatusCode == 200 {
 		if err := json.NewDecoder(resp.Body).Decode(&csr); err != nil {
@@ -625,37 +626,54 @@ func searchScryfallCard(cardTokens []string) ([]Card, error) {
 			return []Card{}, fmt.Errorf("Something went wrong parsing the card search results")
 		}
 		log.Debug("searchScryfallCard", "Total cards found", csr.TotalCards)
-		if len(csr.Data) <= 5 {
-			for _, c := range csr.Data {
-				x := c
-				cNcn := normaliseCardName(c.Name)
-				// Sneakily add all these to the Cache
-				if _, ok := nameToCardCache.Peek(cNcn); !ok {
-					go func(cp *Card, cNcn string) {
-						getCachedOrStoreCard(cp, cNcn)
-					}(&x, cNcn)
-				}
-			}
+		return ParseAndFormatSearchResults(csr)
+	}
+	// This is the general "please learn scryfall syntax" reply
+	if resp.StatusCode == 400 {
+		if err := json.NewDecoder(resp.Body).Decode(&csr); err != nil {
+			raven.CaptureError(err, nil)
+			return []Card{}, fmt.Errorf("Something went wrong parsing the card search results")
 		}
-		switch {
-		case csr.TotalCards == 0:
-			return []Card{}, fmt.Errorf("No cards found")
-		case csr.TotalCards <= 2:
-			minLen := min(2, len(csr.Data))
-			return csr.Data[0:minLen], nil
-		case csr.TotalCards > 5:
-			return []Card{}, fmt.Errorf("Too many cards returned (%v > 5)", csr.TotalCards)
-		default:
-			// Between 3 and 5 cards
-			var names []string
-			for _, c := range csr.Data {
-				names = append(names, c.Name)
+		log.Error("searchScryfallCard: Scryfall returned 400, handling")
+		return []Card{}, fmt.Errorf("%v (%v)", csr.Details, strings.Join(csr.Warnings, " "))
+	}
+
+	log.Error("searchScryfallCard: Scryfall returned a non-200, non-400", "Status Code", resp.StatusCode)
+	return []Card{}, fmt.Errorf("No cards found")
+}
+
+func ParseAndFormatSearchResults(csr CardSearchResult) ([]Card, error) {
+	if len(csr.Data) <= 5 {
+		for _, c := range csr.Data {
+			x := c
+			cNcn := normaliseCardName(c.Name)
+			// Sneakily add all these to the Cache
+			if _, ok := nameToCardCache.Peek(cNcn); !ok {
+				go func(cp *Card, cNcn string) {
+					getCachedOrStoreCard(cp, cNcn)
+				}(&x, cNcn)
 			}
-			return []Card{}, fmt.Errorf("[" + strings.Join(names, "], [") + "]")
 		}
 	}
-	log.Error("searchScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
-	return []Card{}, fmt.Errorf("No cards found")
+	if (csr.Warnings != nil) {
+		return []Card{}, fmt.Errorf(strings.Join(csr.Warnings, " "))
+	}
+	switch {
+	case csr.TotalCards == 0:
+		return []Card{}, fmt.Errorf("No cards found")
+	case csr.TotalCards <= 2:
+		minLen := min(2, len(csr.Data))
+		return csr.Data[0:minLen], nil
+	case csr.TotalCards > 5:
+		return []Card{}, fmt.Errorf("Too many cards returned (%v > 5)", csr.TotalCards)
+	default:
+		// Between 3 and 5 cards
+		var names []string
+		for _, c := range csr.Data {
+			names = append(names, c.Name)
+		}
+		return []Card{}, fmt.Errorf("[" + strings.Join(names, "], [") + "]")
+	}
 }
 
 func fetchCardNames() error {
