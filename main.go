@@ -48,6 +48,10 @@ type configuration struct {
 		CurrentRaidTier  string   `json:"CurrentRaidTier"`
 		Reputations      []string `json:"Reputations"`
 	} `json:"BattleNet"`
+	PoE struct {
+		League           string   `json:"League"`
+		WantedCurrencies []string `json:"WantedCurrencies"`
+	} `json:"PoE"`
 	IRC   bool `json:"IRC"`
 	Slack bool `json:"Slack"`
 }
@@ -57,7 +61,6 @@ var (
 	conf         configuration
 	ctx          context.Context
 	slackClients []*slack.Client
-	ims          []slack.Channel
 
 	// Caches
 	nameToCardCache      *lru.ARCCache
@@ -79,9 +82,6 @@ var (
 	shortCardNames = make(map[string]string)
 
 	highlanderPoints = make(map[string]int)
-
-	// Store people who we know of as Ops
-	chanops = make(map[string]struct{})
 
 	// How often to dump the card cache
 	cacheDumpTimer = 10 * time.Minute
@@ -109,7 +109,7 @@ const cardShortNameFile = "short_names.json"
 
 // CardGetter defines a function that retrieves a card's text.
 // Defining this type allows us to override it in testing, and not hit scryfall.com a million times.
-type CardGetter func(cardname string) (Card, error)
+type CardGetter func(cardname string, isLang bool) (Card, error)
 
 // RandomCardGetter defines a function that retrieves a random card's text.
 type RandomCardGetter func() (Card, error)
@@ -123,6 +123,7 @@ type fryatogParams struct {
 	slackm                string
 	isIRC                 bool
 	message               string
+	fullInput             string
 	cardGetFunction       CardGetter
 	dumbCardGetFunction   CardGetter
 	randomCardGetFunction RandomCardGetter
@@ -164,6 +165,7 @@ func printHelp() string {
 	ret = append(ret, "!url <mtr/ipg/cr/jar> to bring up the links to policy documents")
 	ret = append(ret, "!roll <X> to roll X-sided die; !roll <XdY> to roll X Y-sided dice")
 	ret = append(ret, "!coin to flip a coin (heads/tails)")
+	ret = append(ret, "https://github.com/Fryyyyy/Fryatog/issues for bugs & feature requests")
 	return strings.Join(ret, " · ")
 }
 
@@ -183,37 +185,6 @@ func isSenderAnOp(m *hbot.Message) bool {
 		}
 	}
 	return false
-}
-
-func handleWhoMessages(inputs [][]string) {
-	for _, input := range inputs {
-		log.Debug("Handling Who Middle", "len7", len(input) == 7, "whichChans", whichChans)
-		// Input:
-		// 0 Bot Nickname
-		// 1 Channel
-		// 2 User
-		// 3 Host
-		// 4 Server
-		// 5 User Nick
-		// 6 Modes
-		if len(input) == 7 {
-			log.Debug("Handling Who Middle", "hasAt", strings.Contains(input[6], "@"), "isInChan", stringSliceContains(whichChans, input[1]))
-			// Are they an op in one of our Base channels?
-			if strings.Contains(input[6], "@") && stringSliceContains(whichChans, input[1]) {
-				chanops[input[5]] = struct{}{}
-			}
-		}
-		log.Debug("Handling Who Message", "Chanops Result", chanops)
-	}
-}
-
-func getWho() {
-	log.Debug("Horton hears")
-	// Clear existing chanops
-	chanops = make(map[string]struct{})
-	for _, c := range whichChans {
-		bot.Send(fmt.Sprintf("WHO %s", c))
-	}
 }
 
 // tokeniseAndDispatchInput splits the given user-supplied string into a number of commands
@@ -328,9 +299,7 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 		if message == "" {
 			continue
 		}
-		if strings.HasPrefix(message, "card ") {
-			message = message[5:]
-		}
+		message = strings.TrimPrefix(message, "card ")
 
 		// Longest possible card name query is ~30 chars
 
@@ -344,7 +313,7 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 		}
 
 		log.Debug("Dispatching", "index", commands)
-		params := fryatogParams{message: message, isIRC: isIRC, cardGetFunction: cardGetFunction, dumbCardGetFunction: dumbCardGetFunction, randomCardGetFunction: randomCardGetFunction, cardFindFunction: cardFindFunction}
+		params := fryatogParams{message: message, fullInput: input, isIRC: isIRC, cardGetFunction: cardGetFunction, dumbCardGetFunction: dumbCardGetFunction, randomCardGetFunction: randomCardGetFunction, cardFindFunction: cardFindFunction}
 		go handleCommand(&params, c)
 		commands++
 	}
@@ -430,6 +399,11 @@ func handleCommand(params *fryatogParams, c chan string) {
 		}
 		return
 
+	case cardTokens[0] == "poecurrency" && !params.isIRC:
+		log.Debug("Slack based PoE Currency", "Input", message)
+		c <- handlePoeCurrencyQuery()
+		return
+
 	case cardTokens[0] == "icc" && (len(cardTokens) == 4 || len(cardTokens) == 2) && !params.isIRC:
 		log.Debug("Slack-based ICC", "Input", message)
 		var p []string
@@ -478,18 +452,27 @@ func handleCommand(params *fryatogParams, c chan string) {
 		return
 
 	case cardTokens[0] == "search":
-		log.Debug("Advanced search query", "Input", message)
+		log.Debug("Advanced search query", "Message", message, "Input", params.fullInput)
 		// Before we search, make sure it's not the actual name of a card
-		var found bool
 		for _, x := range cardNames {
 			if normaliseCardName(x) == normaliseCardName(message) {
-				found = true
+				if card, err := findCard(cardTokens, false, params.cardGetFunction); err == nil {
+					if params.isIRC {
+						c <- card.formatCardForIRC()
+					} else {
+						c <- card.formatCardForSlack()
+					}
+					return
+				}
 			}
 		}
-		if !found {
-			c <- strings.Join(handleAdvancedSearchQuery(params, cardTokens[1:]), "\n")
-			return
+		// If the search is the one and only thing
+		if strings.HasPrefix(params.fullInput, "!search") && strings.Count(params.fullInput, "!") == 1 {
+			log.Debug("Setting Full Input")
+			cardTokens = strings.Fields(params.fullInput)
 		}
+		c <- strings.Join(handleAdvancedSearchQuery(params, cardTokens[1:]), "\n")
+		return
 
 	case cardTokens[0] == "uncard", cardTokens[0] == "vanguard", cardTokens[0] == "plane":
 		log.Debug("Special card query", "Input", message)
@@ -558,7 +541,6 @@ func handleCommand(params *fryatogParams, c chan string) {
 	}
 	// If we got here, no cards found.
 	c <- ""
-	return
 }
 
 func sendRulesRedirectText(cardTokens []string) string {
@@ -589,6 +571,7 @@ func handleCardMetadataQuery(params *fryatogParams, command string) string {
 		err          error
 		rulingNumber int
 	)
+	command = strings.ToLower(command)
 	if command == "reminder" {
 		c, err := findCard(strings.Fields(params.message)[1:], false, params.cardGetFunction)
 		if err != nil {
@@ -612,7 +595,7 @@ func handleCardMetadataQuery(params *fryatogParams, command string) string {
 			log.Debug("In a Ruling Query", "Couldn't find card name", params.message)
 			return ""
 		}
-		if strings.HasPrefix(params.message, "ruling") {
+		if strings.HasPrefix(strings.ToLower(params.message), "ruling") {
 			// If there is no number, set to 0.
 			if fass[0][1] == "" && fass[0][4] == "" {
 				rulingNumber = 0
@@ -638,7 +621,7 @@ func handleCardMetadataQuery(params *fryatogParams, command string) string {
 func findCard(cardTokens []string, isLang bool, cardGetFunction CardGetter) (Card, error) {
 	var bestCardSoFar Card
 	for _, rc := range reduceCardSentence(cardTokens) {
-		card, err := cardGetFunction(rc)
+		card, err := cardGetFunction(rc, isLang)
 		log.Debug("Card Func gave us", "CardID", card.ID, "Err", err)
 		if err == nil {
 			log.Debug("Found card!", "Token", rc, "CardID", card.ID)
@@ -679,7 +662,7 @@ func main() {
 		panic(err)
 	}
 
-	cardNames, err = importCardNames(false)
+	cardNames, err = importCardNames(true)
 	if err != nil {
 		log.Warn("Error fetching card names", "Err", err)
 		raven.CaptureErrorAndWait(err, nil)
@@ -747,6 +730,10 @@ func main() {
 		log.Debug("DEBUG MODE")
 		// Make cache small in Debug mode, just for Volo
 		nameToCardCache, err = lru.NewARC(2)
+		if err != nil {
+			raven.CaptureErrorAndWait(err, nil)
+			panic(err)
+		}
 		whichChans = conf.DevChannels
 		whichNick = conf.DevNick
 		nonSSLServ := flag.String("server", "irc.freenode.net:6667", "hostname and port for irc server to connect to")

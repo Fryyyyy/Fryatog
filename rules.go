@@ -77,10 +77,11 @@ func importRules(forceFetch bool) error {
 
 	// Parse it.
 	f, err := os.Open(crFile)
-	defer f.Close()
 	if err != nil {
 		return err
 	}
+	defer f.Close()
+
 	// WOTC doesn't serve UTF-8. 😒
 	//r := charmap.Windows1252.NewDecoder().Reader(f)
 	//scanner := bufio.NewScanner(f)
@@ -200,6 +201,10 @@ func tryFindSeeMoreRule(input string) string {
 
 		if strings.Contains(input, "Monarch") {
 			return "\n" + handleRulesQuery(matches[0][1]+".2")
+		}
+
+		if strings.Contains(input, "Destroy") {
+			return "\n" + handleRulesQuery(matches[0][1]+"b")
 		}
 
 		if len(matches) > 0 {

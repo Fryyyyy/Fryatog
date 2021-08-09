@@ -7,6 +7,13 @@ import (
 )
 
 func TestBetterGetRule(t *testing.T) {
+	// Clear and import rules
+	rules = make(map[string][]string)
+	err := importRules(false)
+	if err != nil {
+		t.Errorf("Didn't expect an error -- got %v", err)
+	}
+
 	tables := []struct {
 		input  string
 		output string
@@ -26,11 +33,12 @@ func TestBetterGetRule(t *testing.T) {
 		{"702.20", "<b>702.20b.</b> Attacking doesn't cause creatures with vigilance to tap. (See rule 508, \"Declare Attackers Step.\")"},
 		{"def Banding", "<b>Banding, \"Bands with Other\"</b>: Banding is a keyword ability that modifies the rules for declaring attackers and assigning combat damage. \"Bands with other\" is a specialized version of the ability. See rule 702.22, \"Banding.\"\n<b>702.22c.</b> As a player declares attackers, they may declare that one or more attacking creatures with banding and up to one attacking creature without banding (even if it has \"bands with other\") are all in a \"band.\" They may also declare that one or more attacking [quality] creatures with \"bands with other [quality]\" and any number of other attacking [quality] creatures are all in a band. A player may declare as many attacking bands as they want, but each creature may be a member of only one of them. (Defending players can't declare bands but may use banding in a different way; see rule 702.22j.)"},
 		{"702.22.", "<b>702.22c.</b> As a player declares attackers, they may declare that one or more attacking creatures with banding and up to one attacking creature without banding (even if it has \"bands with other\") are all in a \"band.\" They may also declare that one or more attacking [quality] creatures with \"bands with other [quality]\" and any number of other attacking [quality] creatures are all in a band. A player may declare as many attacking bands as they want, but each creature may be a member of only one of them. (Defending players can't declare bands but may use banding in a different way; see rule 702.22j.)"},
-		{"205.3m.", "<b>205.3m.</b> <i>[This subtype list is too long for chat. Please see https://www.vensersjournal.com/205.3m ]</i>" },
+		{"205.3m.", "<b>205.3m.</b> <i>[This subtype list is too long for chat. Please see https://www.vensersjournal.com/205.3m ]</i>"},
 		{"define source", "<b>Source of Damage</b>: The object that dealt that damage. See rule 609.7.\n<b>609.7a.</b> If an effect requires a player to choose a source of damage, they may choose a permanent; a spell on the stack (including a permanent spell); any object referred to by an object on the stack, by a replacement or prevention effect that's waiting to apply, or by a delayed triggered ability that's waiting to trigger (even if that object is no longer in the zone it used to be in); or a face-up object in the command zone. A source doesn't need to be capable of dealing damage to be a legal choice. The source is chosen when the effect is created. If the player chooses a permanent, the effect will apply to the next damage dealt by that permanent, regardless of whether it's combat damage or damage dealt as the result of a spell or ability. If the player chooses a permanent spell, the effect will apply to any damage dealt by that spell and any damage dealt by the permanent that spell becomes when it resolves."},
 		{"define mana abilities", "<b>Mana Ability</b>: An activated or triggered ability that could create mana and doesn't use the stack. See rule 605, \"Mana Abilities.\"\n<b>605.1a.</b> An activated ability is a mana ability if it meets all of the following criteria: it doesn't require a target (see rule 115.6), it could add mana to a player's mana pool when it resolves, and it's not a loyalty ability. (See rule 606, \"Loyalty Abilities.\")"},
 		{"define legend rule", "<b>Legend Rule</b>: A state-based action that causes a player who controls two or more legendary permanents with the same name to put all but one into their owners' graveyards. See rule 704.5j.\n<b>704.5j.</b> If a player controls two or more legendary permanents with the same name, that player chooses one of them, and the rest are put into their owners' graveyards. This is called the \"legend rule.\""},
 		{"define monarch", "<b>Monarch</b>: A designation a player can have. Some effects instruct a player to become the monarch. The monarch draws a card at the beginning of their end step. Dealing combat damage to the monarch steals the title from that player. See rule 720, \"The Monarch.\"\n<b>720.2.</b> There are two inherent triggered abilities associated with being the monarch. These triggered abilities have no source and are controlled by the player who was the monarch at the time the abilities triggered. This is an exception to rule 113.8. The full texts of these abilities are \"At the beginning of the monarch's end step, that player draws a card\" and \"Whenever a creature deals combat damage to the monarch, its controller becomes the monarch.\""},
+		{"define destroy", "<b>Destroy</b>: To move a permanent from the battlefield to its owner's graveyard. See rule 701.7, \"Destroy.\"\n<b>701.7b.</b> The only ways a permanent can be destroyed are as a result of an effect that uses the word \"destroy\" or as a result of the state-based actions that check for lethal damage (see rule 704.5g) or damage from a source with deathtouch (see rule 704.5h). If a permanent is put into its owner's graveyard for any other reason, it hasn't been \"destroyed.\""},
 	}
 	for _, table := range tables {
 		got := handleRulesQuery(table.input)
@@ -54,10 +62,18 @@ func TestAbilityWords(t *testing.T) {
 }
 
 func TestGetRule(t *testing.T) {
-	err := importAbilityWords()
+	// Clear and import rules
+	rules = make(map[string][]string)
+	err := importRules(false)
 	if err != nil {
 		t.Errorf("Didn't expect an error -- got %v", err)
 	}
+
+	err = importAbilityWords()
+	if err != nil {
+		t.Errorf("Didn't expect an error -- got %v", err)
+	}
+
 	tables := []struct {
 		input  string
 		output string

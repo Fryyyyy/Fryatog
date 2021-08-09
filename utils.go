@@ -23,7 +23,7 @@ var (
 	//Pulling all regex here *should* make it all compile once and then be left alone
 
 	//Stuff pared from main.go
-	botCommandRegex      = regexp.MustCompile(`[!&]([^=!&?[)][^!&?[)]*)|\[\[(.*?)\]\]`)
+	botCommandRegex      = regexp.MustCompile(`[!&]([^=!&?[)][^!&?[)]+)\.\s|[!&]([^=!&?[)][^!&?[)]+)|\[\[(.*?)\]\]`)
 	singleQuotedWord     = regexp.MustCompile(`^(?:\"|\')\w+(?:\"|\')$`)
 	nonTextRegex         = regexp.MustCompile(`^[^\w]+$`)
 	wordEndingInBang     = regexp.MustCompile(`!(?:"|') |(?:\n)+`)
@@ -44,9 +44,6 @@ var (
 	// Used in multiple functions.
 	ruleRegexp     = regexp.MustCompile(`((?:\d)+\.(?:\w{1,4}))`)
 	greetingRegexp = regexp.MustCompile(`(?i)^h(ello|i)( *)(\!|\.|\?)*( *)$`)
-
-	foundKeywordAbilityRegexp = regexp.MustCompile(`701.\d+\b`)
-	foundKeywordActionRegexp  = regexp.MustCompile(`702.\d+\b`)
 
 	//Stuff pared from card.go
 	reminderRegexp = regexp.MustCompile(`\((.*?)\)`)
@@ -171,7 +168,6 @@ func getExitChannel() chan os.Signal {
 		syscall.SIGTERM,
 		syscall.SIGINT,
 		syscall.SIGQUIT,
-		syscall.SIGKILL,
 		syscall.SIGHUP,
 	)
 	return c

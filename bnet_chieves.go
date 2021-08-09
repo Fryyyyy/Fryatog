@@ -45,7 +45,7 @@ func chieveForPlayer(realm, player, chieveName string) string {
 func playerSingleChieveStatus(cas *wowp.CharacterAchievementsSummary, chieveName string) string {
 	log.Debug("Handling Chieve Player Status")
 	for _, a := range cas.Achievements {
-		if strings.ToLower(a.Achievement.Name) == strings.ToLower(chieveName) {
+		if strings.EqualFold(strings.ToLower(a.Achievement.Name), strings.ToLower(chieveName)) {
 			log.Debug("playerSingleChieveStatus: Found chieve", "Chievo", a)
 			var ret []string
 			ret = append(ret, fmt.Sprintf("<http://www.wowhead.com/achievement=%d|%s>", a.ID, a.Achievement.Name))
@@ -107,9 +107,7 @@ func formatChieveForSlack(a *wowgd.Achievement) string {
 	}
 	var ret []string
 	ret = append(ret, fmt.Sprintf("%s - %s\n", a.Name, a.Description))
-	for _, v := range mapCriteriaToStrings(a.Criteria.ChildCriteria) {
-		ret = append(ret, v)
-	}
+	ret = append(ret, mapCriteriaToStrings(a.Criteria.ChildCriteria)...)
 	if len(a.RewardDescription) > 0 {
 		ret = append(ret, fmt.Sprintf(":trophy: %s :trophy:", a.RewardDescription))
 	}
@@ -133,7 +131,7 @@ func chieveNameToID(chieveName string) int {
 	}
 
 	for _, a := range wowChieves.Achievements {
-		if strings.ToLower(a.Name) == strings.ToLower(chieveName) {
+		if strings.EqualFold(strings.ToLower(a.Name), strings.ToLower(chieveName)) {
 			log.Debug("Chieve Name to ID", "Name", chieveName, "Chievo Found", a.ID)
 			return a.ID
 		}
@@ -210,7 +208,7 @@ func mapCriteriaToName(cc wowgd.ChildCriteria) map[int]string {
 				ret[c.ID] = ret[c.ID] + fmt.Sprintf(" [%%s/%d]", c.Amount)
 			}
 		} else {
-			ret[c.ID] = fmt.Sprintf("%s", c.Description)
+			ret[c.ID] = c.Description
 			if c.Amount > 1 {
 				ret[c.ID] = ret[c.ID] + fmt.Sprintf(" [%%s/%d]", c.Amount)
 			}
