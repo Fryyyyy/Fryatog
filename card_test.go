@@ -514,3 +514,23 @@ func TestSearchResultHandling(t *testing.T) {
 		}
 	}
 }
+
+func TestCoerceRealNamesFromForeignHiccups(t *testing.T) {
+	tables := []struct {
+		input string
+		output   string
+	}{
+		{"Uro,", "Uro, Titan of Nature's Wrath" },
+		{"Uro",  "Uro, Titan of Nature's Wrath" },
+		{"uro",  "Uro, Titan of Nature's Wrath" },
+	}
+	for _, table := range tables {
+		got, err := HandleForeignCardOverlapCases(table.input)
+		if err != nil {
+			t.Errorf("Something broke: %s", err)
+		}
+		if got != table.output {
+			t.Errorf("Incorrect output -- got %s -- want %s", got, table.output)
+		}
+	}
+}
