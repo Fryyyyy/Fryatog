@@ -2,6 +2,10 @@
     "DSN": "https://sentry.io",
     "Password": "",
     "DevMode": true,
+    "Server": {
+        "SSL": "irc.libera.chat:6697",
+        "NonSSL": "irc.libera.chat:6667"
+    },
     "ProdChannels": [
         "#magicjudges-policy",
         "#magicjudges-rules",
