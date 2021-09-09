@@ -426,7 +426,7 @@ func fetchScryfallCardByFuzzyName(input string, isLang bool) (Card, error) {
 }
 
 func handleForeignCardOverlapCases(input string) string {
-	log.Debug("Handling foreign card overlap for '%s'", input)
+	log.Debug(fmt.Sprintf("Handling foreign card overlap for '%s'", input))
 	if uroRegex.MatchString(input) {
 		log.Debug("\tThey probably wanted Uro, Titan of Nature's Wrath")
 		return "Uro, Titan of Nature's Wrath"
