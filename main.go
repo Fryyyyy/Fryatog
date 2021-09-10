@@ -30,6 +30,10 @@ type configuration struct {
 	DSN          string   `json:"DSN"`
 	Password     string   `json:"Password"`
 	DevMode      bool     `json:"DevMode"`
+	Server       struct {
+		SSL 	string `json:SSL`
+		NonSSL  string `json:NonSSL`
+	}
 	ProdChannels []string `json:"ProdChannels"`
 	DevChannels  []string `json:"DevChannels"`
 	Ops          []string `json:"Ops"`
@@ -736,7 +740,7 @@ func main() {
 		}
 		whichChans = conf.DevChannels
 		whichNick = conf.DevNick
-		nonSSLServ := flag.String("server", "irc.freenode.net:6667", "hostname and port for irc server to connect to")
+		nonSSLServ := flag.String("server", conf.Server.NonSSL, "hostname and port for irc server to connect to")
 		nick := flag.String("nick", conf.DevNick, "nickname for the bot")
 		bot, err = hbot.NewBot(*nonSSLServ, *nick, hijackSession, devChannels, noSSLOptions, timeOut)
 
@@ -746,7 +750,7 @@ func main() {
 	} else {
 		whichChans = conf.ProdChannels
 		whichNick = conf.ProdNick
-		sslServ := flag.String("server", "irc.freenode.net:6697", "hostname and port for irc server to connect to")
+		sslServ := flag.String("server", conf.Server.SSL, "hostname and port for irc server to connect to")
 		nick := flag.String("nick", conf.ProdNick, "nickname for the bot")
 		bot, err = hbot.NewBot(*sslServ, *nick, noHijackSession, prodChannels, yesSSLOptions, saslOptions, timeOut)
 
