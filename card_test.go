@@ -517,8 +517,8 @@ func TestSearchResultHandling(t *testing.T) {
 
 func TestCoerceRealNamesFromForeignHiccups(t *testing.T) {
 	tables := []struct {
-		input string
-		output   string
+		input  string
+		output string
 	}{
 		{"Uro,", "Uro, Titan of Nature's Wrath" },
 		{"Uro",  "Uro, Titan of Nature's Wrath" },
