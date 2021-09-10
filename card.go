@@ -419,7 +419,7 @@ func fetchScryfallCardByFuzzyName(input string, isLang bool) (Card, error) {
 		if (card.BorderColor != "black" && card.BorderColor != "white" && card.BorderColor != "borderless") || strings.Contains(card.Layout, "vanguard") || (strings.Contains(card.Layout, "token") && !(strings.Contains(card.TypeLine, "Dungeon"))) || strings.Contains(card.Layout, "art_series") || card.SetType == "funny" || card.Set == "fjmp" {
 			return emptyCard, fmt.Errorf("Dumb card returned, keep trying")
 		}
-		return card, nil 
+		return card, nil
 	}
 	log.Info("fetchScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
 	return card, fmt.Errorf("Card not found by Scryfall")
