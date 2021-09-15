@@ -534,3 +534,30 @@ func TestCoerceRealNamesFromForeignHiccups(t *testing.T) {
 		}
 	}
 }
+
+func TestIsDumbCard(t *testing.T) {
+	tables := []struct {
+		jsonFile string
+		output   bool
+	}{
+		{"test_data/handydandyclonemachine.json", true},
+		{"test_data/thehero.json", true},
+		{"test_data/bushitenderfoot.json", false},
+		{"test_data/faithlesslooting.json", false},
+	}
+	for _, table := range tables {
+		fi, err := os.Open(table.jsonFile)
+		if err != nil {
+			t.Errorf("Unable to open %v", table.jsonFile)
+		}
+		var card Card
+		if err := json.NewDecoder(fi).Decode(&card); err != nil {
+			t.Errorf("Something went wrong parsing the search results: %s", err)
+		}
+
+		got := IsDumbCard(card)
+		if got != table.output {
+			t.Errorf("Incorrect output for %s -- got %v -- want %v",card.Name, got, table.output)
+		}
+	}
+}

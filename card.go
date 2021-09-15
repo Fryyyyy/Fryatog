@@ -416,7 +416,7 @@ func fetchScryfallCardByFuzzyName(input string, isLang bool) (Card, error) {
 			}
 			return fetchScryfallCardByFuzzyName(card.Name, false)
 		}
-		if (card.BorderColor != "black" && card.BorderColor != "white" && card.BorderColor != "borderless") || strings.Contains(card.Layout, "vanguard") || (strings.Contains(card.Layout, "token") && !(strings.Contains(card.TypeLine, "Dungeon"))) || strings.Contains(card.Layout, "art_series") || card.SetType == "funny" || card.Set == "fjmp" {
+		if IsDumbCard(card) {
 			return emptyCard, fmt.Errorf("Dumb card returned, keep trying")
 		}
 		return card, nil
@@ -432,6 +432,16 @@ func HandleForeignCardOverlapCases(input string) (string, error) {
 		return "Uro, Titan of Nature's Wrath", nil
 	}
 	return "", nil
+}
+
+func IsDumbCard(card Card) bool {
+	return (card.BorderColor != "black" && card.BorderColor != "white" && card.BorderColor != "borderless") || 
+	strings.Contains(card.Layout, "vanguard") || 
+	(strings.Contains(card.Layout, "token") && !(strings.Contains(card.TypeLine, "Dungeon"))) || 
+	strings.Contains(card.Layout, "art_series") || 
+	card.SetType == "funny" || 
+	card.Set == "fjmp" ||
+	strings.Contains(card.Set, "thp")
 }
 
 func fetchDumbScryfallCardByName(input string, isLang bool) (Card, error) {
