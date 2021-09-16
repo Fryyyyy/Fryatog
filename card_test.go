@@ -514,3 +514,50 @@ func TestSearchResultHandling(t *testing.T) {
 		}
 	}
 }
+
+func TestCoerceRealNamesFromForeignHiccups(t *testing.T) {
+	tables := []struct {
+		input  string
+		output string
+	}{
+		{"Uro,", "Uro, Titan of Nature's Wrath" },
+		{"Uro",  "Uro, Titan of Nature's Wrath" },
+		{"uro",  "Uro, Titan of Nature's Wrath" },
+	}
+	for _, table := range tables {
+		got, err := HandleForeignCardOverlapCases(table.input)
+		if err != nil {
+			t.Errorf("Something broke: %s", err)
+		}
+		if got != table.output {
+			t.Errorf("Incorrect output -- got %s -- want %s", got, table.output)
+		}
+	}
+}
+
+func TestIsDumbCard(t *testing.T) {
+	tables := []struct {
+		jsonFile string
+		output   bool
+	}{
+		{"test_data/handydandyclonemachine.json", true},
+		{"test_data/thehero.json", true},
+		{"test_data/bushitenderfoot.json", false},
+		{"test_data/faithlesslooting.json", false},
+	}
+	for _, table := range tables {
+		fi, err := os.Open(table.jsonFile)
+		if err != nil {
+			t.Errorf("Unable to open %v", table.jsonFile)
+		}
+		var card Card
+		if err := json.NewDecoder(fi).Decode(&card); err != nil {
+			t.Errorf("Something went wrong parsing the search results: %s", err)
+		}
+
+		got := IsDumbCard(card)
+		if got != table.output {
+			t.Errorf("Incorrect output for %s -- got %v -- want %v",card.Name, got, table.output)
+		}
+	}
+}

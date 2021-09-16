@@ -50,8 +50,11 @@ var (
 	nonAlphaRegex  = regexp.MustCompile(`\W+`)
 	emojiRegex     = regexp.MustCompile(`{\d+}|{[A-Z]}|{\d\/[A-Z]}|{[A-Z]\/[A-Z]}`)
 
-	//Super rudimentary policy regex to parse e.g '4.8' into 4-8 for link generation
+	// Super rudimentary policy regex to parse e.g '4.8' into 4-8 for link generation
 	policyRegex = regexp.MustCompile(`[^0-9]+`)
+
+	// We PROBABLY want Uro, not Aurochs
+	uroRegex = regexp.MustCompile(`^[Uu]ro,?$`)
 
 	// Metrics
 	totalLines             = expvar.NewInt("bot_totalLines")
