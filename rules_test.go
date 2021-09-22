@@ -31,7 +31,7 @@ func TestBetterGetRule(t *testing.T) {
 		{"def Forecast", "<b>Forecast</b>: A keyword ability that allows an activated ability to be activated from a player's hand. See rule 702.57, \"Forecast.\"\n<b>702.57b.</b> A forecast ability may be activated only during the upkeep step of the card's owner and only once each turn. The controller of the forecast ability reveals the card with that ability from their hand as the ability is activated. That player plays with that card revealed in their hand until it leaves the player's hand or until a step or phase that isn't an upkeep step begins, whichever comes first."},
 		{"def Vigilance", "<b>Vigilance</b>: A keyword ability that lets a creature attack without tapping. See rule 702.20, \"Vigilance.\"\n<b>702.20b.</b> Attacking doesn't cause creatures with vigilance to tap. (See rule 508, \"Declare Attackers Step.\")"},
 		{"702.20", "<b>702.20b.</b> Attacking doesn't cause creatures with vigilance to tap. (See rule 508, \"Declare Attackers Step.\")"},
-		{"def Banding", "<b>Banding, \"Bands with Other\"</b>: Banding is a keyword ability that modifies the rules for declaring attackers and assigning combat damage. \"Bands with other\" is a specialized version of the ability. See rule 702.22, \"Banding.\"\n<b>702.22c.</b> As a player declares attackers, they may declare that one or more attacking creatures with banding and up to one attacking creature without banding (even if it has \"bands with other\") are all in a \"band.\" They may also declare that one or more attacking [quality] creatures with \"bands with other [quality]\" and any number of other attacking [quality] creatures are all in a band. A player may declare as many attacking bands as they want, but each creature may be a member of only one of them. (Defending players can't declare bands but may use banding in a different way; see rule 702.22j.)"},
+		{"def Banding", "<b>Banding</b>: Banding is a keyword ability that modifies the rules for declaring attackers and assigning combat damage. \"Bands with other\" is a specialized version of the ability. See rule 702.22, \"Banding.\"\n<b>702.22c.</b> As a player declares attackers, they may declare that one or more attacking creatures with banding and up to one attacking creature without banding (even if it has \"bands with other\") are all in a \"band.\" They may also declare that one or more attacking [quality] creatures with \"bands with other [quality]\" and any number of other attacking [quality] creatures are all in a band. A player may declare as many attacking bands as they want, but each creature may be a member of only one of them. (Defending players can't declare bands but may use banding in a different way; see rule 702.22j.)"},
 		{"702.22.", "<b>702.22c.</b> As a player declares attackers, they may declare that one or more attacking creatures with banding and up to one attacking creature without banding (even if it has \"bands with other\") are all in a \"band.\" They may also declare that one or more attacking [quality] creatures with \"bands with other [quality]\" and any number of other attacking [quality] creatures are all in a band. A player may declare as many attacking bands as they want, but each creature may be a member of only one of them. (Defending players can't declare bands but may use banding in a different way; see rule 702.22j.)"},
 		{"205.3m.", "<b>205.3m.</b> <i>[This subtype list is too long for chat. Please see https://www.vensersjournal.com/205.3m ]</i>"},
 		{"define source", "<b>Source of Damage</b>: The object that dealt that damage. See rule 609.7.\n<b>609.7a.</b> If an effect requires a player to choose a source of damage, they may choose a permanent; a spell on the stack (including a permanent spell); any object referred to by an object on the stack, by a replacement or prevention effect that's waiting to apply, or by a delayed triggered ability that's waiting to trigger (even if that object is no longer in the zone it used to be in); or a face-up object in the command zone. A source doesn't need to be capable of dealing damage to be a legal choice. The source is chosen when the effect is created. If the player chooses a permanent, the effect will apply to the next damage dealt by that permanent, regardless of whether it's combat damage or damage dealt as the result of a spell or ability. If the player chooses a permanent spell, the effect will apply to any damage dealt by that spell and any damage dealt by the permanent that spell becomes when it resolves."},
@@ -98,22 +98,36 @@ func TestGetRule(t *testing.T) {
 		{"r 999.99", "Rule not found"},
 		{"cr 999.99", "Rule not found"},
 		{"rule 999.99", "Rule not found"},
-		{"def CLOWNS", ""},
-		{"define CLOWNS", ""},
-		{"define bury", "<b>Bury</b>: A term that meant \"put [a permanent] into its owner's graveyard.\" In general, cards that were printed with the term \"bury\" have received errata in the Oracle card reference to read, \"Destroy [a permanent]. It can't be regenerated,\" or \"Sacrifice [a permanent].\""},
+		{"define bury", "<b>Bury (Obsolete)</b>: A term that meant \"put [a permanent] into its owner's graveyard.\" In general, cards that were printed with the term \"bury\" have received errata in the Oracle card reference to read, \"Destroy [a permanent]. It can't be regenerated,\" or \"Sacrifice [a permanent].\""},
 		{"define adsorb", "<b>Absorb</b>: A keyword ability that prevents damage. See rule 702.64, \"Absorb.\"\n<b>702.64a.</b> Absorb is a static ability. \"Absorb N\" means \"If a source would deal damage to this creature, prevent N of that damage.\""},
 		{"define deaftouch", "<b>Deathtouch</b>: A keyword ability that causes damage dealt by an object to be especially effective. See rule 702.2, \"Deathtouch.\"\n<b>702.2b.</b> A creature with toughness greater than 0 that's been dealt damage by a source with deathtouch since the last time state-based actions were checked is destroyed as a state-based action. See rule 704."},
 		{"define die", "<b>Dies</b>: A creature or planeswalker \"dies\" if it is put into a graveyard from the battlefield. See rule 700.4."},
 		{"define detain", "<b>Detain</b>: A keyword action that temporarily stops a permanent from attacking, blocking, or having its activated abilities activated. See rule 701.29, \"Detain.\"\n<b>701.29a.</b> Certain spells and abilities can detain a permanent. Until the next turn of the controller of that spell or ability, that permanent can't attack or block and its activated abilities can't be activated."},
 		{"ex 603.7a", "<b>[603.7a] Example:</b> Part of an effect reads \"When this creature leaves the battlefield,\" but the creature in question leaves the battlefield before the spell or ability creating the effect resolves. In this case, the delayed ability never triggers.\n<b>[603.7a] Example:</b> If an effect reads \"When this creature becomes untapped\" and the named creature becomes untapped before the effect resolves, the ability waits for the next time that creature untaps."},
-		{"def strive", "<b>Strive</b>: Strive lets you pay additional mana to allow a spell to have additional targets. [Unofficial]"},
-		{"def Strive", "<b>Strive</b>: Strive lets you pay additional mana to allow a spell to have additional targets. [Unofficial]"},
-		{"def wiLL of Athe Councel", "<b>Will Of The Council</b>: Will of the Council lets players vote on an outcome and the outcome/s with the highest number of votes happens. [Unofficial]"},
+		{"def strive", "<b>strive</b>: Strive lets you pay additional mana to allow a spell to have additional targets. [Unofficial]"},
+		{"def Strive", "<b>strive</b>: Strive lets you pay additional mana to allow a spell to have additional targets. [Unofficial]"},
+		{"def wiLL of Athe Councel", "<b>will of the council</b>: Will of the Council lets players vote on an outcome and the outcome/s with the highest number of votes happens. [Unofficial]"},
 		{"def cycle", "<b>Cycling</b>: A keyword ability that lets a card be discarded and replaced with a new card. See rule 702.29, \"Cycling.\"\n<b>702.29a.</b> Cycling is an activated ability that functions only while the card with cycling is in a player's hand. \"Cycling [cost]\" means \"[Cost], Discard this card: Draw a card.\""},
 		{"def Active Player, Nonactive Player", "<b>Active Player, Nonactive Player Order</b>: A system that determines the order by which players make choices if multiple players are instructed to make choices at the same time. See rule 101.4. This rule is modified for games using the shared team turns option; see rule 805.6.\n<b>101.4.</b> If multiple players would make choices and/or take actions at the same time, the active player (the player whose turn it is) makes any choices required, then the next player in turn order (usually the player seated to the active player's left) makes any choices required, followed by the remaining nonactive players in turn order. Then the actions happen simultaneously. This rule is often referred to as the \"Active Player, Nonactive Player (APNAP) order\" rule."},
 	}
 	for _, table := range tables {
 		got := handleRulesQuery(table.input)
+		if diff := cmp.Diff(table.output, got); diff != "" {
+			t.Errorf("Incorrect output --\ngot  %s\nwant %s", got, table.output)
+		}
+	}
+}
+
+func TestGlossaryCoercion(t *testing.T) {
+	tables := []struct {
+		input  string
+		output string
+	}{
+		{"source", "source of damage"},
+		{"cda", "characteristic-defining ability"},
+	}
+	for _, table := range tables {
+		got := TryCoerceGlossaryQuery(table.input)
 		if diff := cmp.Diff(table.output, got); diff != "" {
 			t.Errorf("Incorrect output --\ngot  %s\nwant %s", got, table.output)
 		}
