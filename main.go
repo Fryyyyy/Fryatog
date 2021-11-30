@@ -165,7 +165,7 @@ func printHelp() string {
 	ret = append(ret, "!ruling <cardname> [ruling number] to bring up Gatherer rulings")
 	ret = append(ret, "!rule <rulename> to bring up a Comprehensive Rule entry")
 	ret = append(ret, "!define <glossary> to bring up the definition of a term")
-	ret = append(ret, "!uncard/vanguard/plane <cardname> to bring up normally filtered out cards")
+	ret = append(ret, "!uncard/vanguard/plane/scheme <cardname> to bring up normally filtered out cards")
 	ret = append(ret, "!url <mtr/ipg/cr/jar> to bring up the links to policy documents")
 	ret = append(ret, "!roll <X> to roll X-sided die; !roll <XdY> to roll X Y-sided dice")
 	ret = append(ret, "!coin to flip a coin (heads/tails)")
@@ -478,7 +478,7 @@ func handleCommand(params *fryatogParams, c chan string) {
 		c <- strings.Join(handleAdvancedSearchQuery(params, cardTokens[1:]), "\n")
 		return
 
-	case cardTokens[0] == "uncard", cardTokens[0] == "vanguard", cardTokens[0] == "plane":
+	case cardTokens[0] == "uncard", cardTokens[0] == "vanguard", cardTokens[0] == "plane", cardTokens[0] == "scheme":
 		log.Debug("Special card query", "Input", message)
 		if card, err := findCard(cardTokens[1:], false, params.dumbCardGetFunction); err == nil {
 			if params.isIRC {
