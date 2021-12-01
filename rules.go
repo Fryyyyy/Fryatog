@@ -12,11 +12,11 @@ import (
 	"strings"
 
 	raven "github.com/getsentry/raven-go"
-	fuzzy "github.com/paul-mannino/go-fuzzywuzzy"
 	log "gopkg.in/inconshreveable/log15.v2"
 )
 
 const voloRulesEndpointURL = "https://slack.vensersjournal.com/rule/"
+const voloGlossaryEndpointURL = "https://slack.vensersjournal.com/glossary/"
 const voloExamplesEndpointURL = "https://slack.vensersjournal.com/example/"
 const voloSpecificRuleEndpointURL = "https://www.vensersjournal.com/"
 
@@ -34,6 +34,12 @@ type Rule struct {
 	RuleText        string `json:"ruleText"`
 	RawExampleTexts string `json:"exampleText"`
 	ExampleTexts    []string
+}
+
+// Rule stores the result of Glossary queries from Volo's API
+type GlossaryTerm struct {
+	Term            string `json:"term"`
+	Definition      string `json:"definition"`
 }
 
 func importAbilityWords() error {
@@ -188,7 +194,7 @@ func importRules(forceFetch bool) error {
 func tryFindSeeMoreRule(input string) string {
 	if strings.Contains(input, "See rule") && !strings.Contains(input, "See rules") && !strings.Contains(input, "and rule") {
 		matches := seeRuleRegexp.FindAllStringSubmatch(input, -1)
-		if strings.Contains(input, "Source of Damage") {
+		if strings.Contains(input, "The object that dealt that damage") {
 			return "\n" + handleRulesQuery(matches[0][1]+"a")
 		}
 		// Doing a couple things here:
@@ -271,55 +277,45 @@ func handleExampleQuery(input string) string {
 func handleGlossaryQuery(input string) string {
 	defineRequests.Add(1)
 	split := strings.SplitN(input, " ", 2)
-	log.Debug("In handleRulesQuery", "Define matched on", split)
-	query := strings.ToLower(split[1])
-	var defineText string
 
-	v, ok := rules[query]
-	if ok {
-		log.Debug("Rules exact match")
-		defineText = strings.Join(v, "\n")
+	log.Debug("In handleGlossaryQuery", "Define matched on", split)
+	query := TryCoerceGlossaryQuery(strings.ToLower(split[1]))
+	
+	url := voloGlossaryEndpointURL + query
+	log.Debug("findGlossary: Attempting to fetch", "URL", url)
+	resp, err := http.Get(url)
+	if err != nil {
+		raven.CaptureError(err, nil)
+		log.Debug("HTTP request to Volo Glossary Endpoint failed", "Error", err)
+		return ""
+	}
+	defer resp.Body.Close()
+	var foundGlossaryTerm GlossaryTerm
+	if resp.StatusCode == 200 {
+		if err := json.NewDecoder(resp.Body).Decode(&foundGlossaryTerm); err != nil {
+			raven.CaptureError(err, nil)
+			log.Debug("Failed decoding the response", "Error", err)
+			return ""
+		}
 	} else {
-		a, ok := abilityWords[query]
-		if ok {
-			log.Debug("Ability word exact match")
-			return "<b>" + strings.Title(query) + "</b>: " + a
-		}
-
-		if query == "source" {
-			query = "source of damage"
-		}
-		if query == "cda" {
-			query = "characteristic-defining ability"
-		}
-
-		customScorer := func(s1, s2 string) int {
-			return fuzzy.Ratio(s1, s2)
-		}
-		if bestGuess, err := fuzzy.ExtractOne(query, rulesKeys, customScorer); err != nil {
-			log.Info("InExact rules match", "Error", err)
-		} else {
-			log.Debug("InExact rules match", "Guess", bestGuess)
-			if bestGuess.Score > 60 {
-				defineText = strings.Join(rules[bestGuess.Match], "\n")
-			}
-		}
-		if defineText == "" {
-			if bestGuess, err := fuzzy.ExtractOne(query, abilityWordKeys, customScorer); err != nil {
-				log.Info("InExact aw match", "Error", err)
-			} else {
-				log.Debug("InExact aw match", "Guess", bestGuess)
-				if bestGuess.Score > 60 {
-					return "<b>" + strings.Title(bestGuess.Match) + "</b>: " + abilityWords[bestGuess.Match]
-				}
-			}
-		}
+		return ""
 	}
+
 	// Some crappy workaround/s
-	if !strings.HasPrefix(defineText, "<b>Dies</b>:") {
-		defineText += tryFindSeeMoreRule(defineText)
+	if foundGlossaryTerm.Term != "Dies" {
+		foundGlossaryTerm.Definition += tryFindSeeMoreRule(foundGlossaryTerm.Definition)
 	}
-	return strings.TrimSpace(defineText)
+	return fmt.Sprintf("<b>%s</b>: %s", foundGlossaryTerm.Term, strings.TrimSpace(foundGlossaryTerm.Definition))
+}
+
+func TryCoerceGlossaryQuery(query string) string {
+	if query == "cda" {
+		query = "characteristic-defining ability"
+	}
+	if query == "source" {
+		query = "source of damage"
+	}
+	return query;
 }
 
 func handleRulesQuery(input string) string {
