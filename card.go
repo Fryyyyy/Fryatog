@@ -437,6 +437,7 @@ func HandleForeignCardOverlapCases(input string) (string, error) {
 func IsDumbCard(card Card) bool {
 	return (card.BorderColor != "black" && card.BorderColor != "white" && card.BorderColor != "borderless") || 
 	strings.Contains(card.Layout, "vanguard") || 
+	strings.Contains(card.Layout, "scheme") || 
 	(strings.Contains(card.Layout, "token") && !(strings.Contains(card.TypeLine, "Dungeon"))) || 
 	strings.Contains(card.Layout, "art_series") || 
 	card.SetType == "funny" || 
