@@ -140,19 +140,22 @@ func (card *Card) getFlavourText() string {
 // It's ~fine, but in a perfect world if I request the flavour text of the
 // back side that's all I'd get back.
 func getDfcFlavourText(card *Card) string {
-	dfcFlavour := "";
-	dfcFlavour += card.CardFaces[0].FlavourText
+	dfcFlavour := ""
+	var parts []string
+	
+	for _, s := range card.CardFaces {
+		flavour := s.FlavourText;
+		if (len(flavour) > 0) {
+			parts = append(parts, flavour)
+		}
+	}
+	dfcFlavour = strings.Join(parts, ` \\ `);
 
-	backFlavour := card.CardFaces[1].FlavourText
-
-      if (len(dfcFlavour) == 0 ) {
-		return noFlavourText
-       }
-       
-      if len(backFlavour) > 0 {
-		dfcFlavour += ` \\ ` + backFlavour;
-      }
-      return dfcFlavour
+	if (len(dfcFlavour) > 0 ) {
+		return dfcFlavour
+	}
+	
+	return noFlavourText
 }
 
 func (cc CommonCard) getCardOrFaceAsString(mode string) []string {
