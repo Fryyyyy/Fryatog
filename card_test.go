@@ -49,6 +49,9 @@ var (
 		"Wicked Guardian":             "test_data/wickedguardian.json",
 		"Erebos' Titan":               "test_data/erebostitanDE.json",
 		"Erebos's Titan":              "test_data/erebosstitan.json",
+		"Halvar, God of Battle":       "test_data/halvargodofbattle.json",
+		"Cosima, God of the Voyage":   "test_data/cosimagodofthevoyage.json",
+		"Kindly Ancestor":             "test_data/kindlyancestor.json",
 	}
 )
 
@@ -264,6 +267,10 @@ func TestGetFlavour(t *testing.T) {
 	}{
 		{"Ponder", "Tomorrow belongs to those who prepare for it today."},
 		{"Poison-Tip Archer", "Flavour text not found"},
+		{"Cosima, God of the Voyage", "Flavour text not found"}, // DFC no flavour text at all
+		{"Halvar, God of Battle", "It cuts through the Cosmos itself, carving new Omenpaths between the realms."}, // DFC flavour back only
+		{"Jace, Vryn's Prodigy", `"People's thoughts just come to me. Sometimes I don't know if it's them or me thinking."`}, // DFC flavour front only
+		{"Kindly Ancestor", `"You look cold, dearie." \\ "Thank you, Grandmother. I love you too."`}, // DFC flavour both sides
 	}
 	for _, table := range tables {
 		fi, err := os.Open(RealCards[table.cardname])

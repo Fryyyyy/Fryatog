@@ -26,6 +26,8 @@ const scryfallRandomAPIURL = "https://api.scryfall.com/cards/random"
 const scryfallSearchAPIURL = "https://api.scryfall.com/cards/search"
 const highlanderPointsURL = "http://decklist.mtgpairings.info/js/cards/highlander.txt"
 
+const noFlavourText = "Flavour text not found"
+
 // TODO: Also CardFaces
 func (card *Card) getExtraMetadata(inputURL string) {
 	log.Debug("Getting Metadata")
@@ -128,7 +130,32 @@ func (card *Card) getFlavourText() string {
 	if len(card.Metadata.PreviousFlavourTexts) > 0 {
 		return card.Metadata.PreviousFlavourTexts[0]
 	}
-	return "Flavour text not found"
+	if isDfc(card) {
+		return getDfcFlavourText(card);
+	}
+	return noFlavourText
+}
+
+// TODO: This isn't great right now since it gets both sides' flavour text.
+// It's ~fine, but in a perfect world if I request the flavour text of the
+// back side that's all I'd get back.
+func getDfcFlavourText(card * Card) string {
+	dfcFlavour := "";
+	dfcFlavour += card.CardFaces[0].FlavourText
+
+	backFlavour := card.CardFaces[1].FlavourText
+
+	if (len(dfcFlavour) > 0 && len(backFlavour) > 0) {
+		dfcFlavour += ` \\ `
+	}
+	if (len(backFlavour) > 0) {
+		dfcFlavour += backFlavour;
+	}
+	if (len(dfcFlavour) == 0 ) {
+		return noFlavourText
+	} else {
+		return dfcFlavour
+	}
 }
 
 func (cc CommonCard) getCardOrFaceAsString(mode string) []string {
