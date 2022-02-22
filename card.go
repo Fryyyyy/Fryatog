@@ -145,17 +145,14 @@ func getDfcFlavourText(card *Card) string {
 
 	backFlavour := card.CardFaces[1].FlavourText
 
-	if (len(dfcFlavour) > 0 && len(backFlavour) > 0) {
-		dfcFlavour += ` \\ `
-	}
-	if (len(backFlavour) > 0) {
-		dfcFlavour += backFlavour;
-	}
-	if (len(dfcFlavour) == 0 ) {
+      if (len(dfcFlavour) == 0 ) {
 		return noFlavourText
-	} else {
-		return dfcFlavour
-	}
+       }
+       
+      if len(backFlavour) > 0 {
+		dfcFlavour += ` \\ ` + backFlavour;
+      }
+      return dfcFlavour
 }
 
 func (cc CommonCard) getCardOrFaceAsString(mode string) []string {
