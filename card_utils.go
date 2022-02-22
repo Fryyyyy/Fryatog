@@ -66,6 +66,7 @@ type CardFace struct {
 	CommonCard
 	Object         string `json:"object"`
 	Name           string `json:"name"`
+	FlavourText    string `json:"flavor_text,omitempty"`
 	PrintedName    string `json:"printed_name,omitempty"`
 	Watermark      string `json:"watermark"`
 	Artist         string `json:"artist"`
@@ -360,4 +361,8 @@ func importShortCardNames() error {
 	}
 	log.Debug("Populated shortNames", "Length", len(shortCardNames))
 	return nil
+}
+
+func isDfc(card *Card) bool {
+	return card.Layout == "modal_dfc" || card.Layout == "transform"
 }
