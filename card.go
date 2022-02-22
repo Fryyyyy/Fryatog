@@ -139,7 +139,7 @@ func (card *Card) getFlavourText() string {
 // TODO: This isn't great right now since it gets both sides' flavour text.
 // It's ~fine, but in a perfect world if I request the flavour text of the
 // back side that's all I'd get back.
-func getDfcFlavourText(card * Card) string {
+func getDfcFlavourText(card *Card) string {
 	dfcFlavour := "";
 	dfcFlavour += card.CardFaces[0].FlavourText
 
