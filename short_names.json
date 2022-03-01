@@ -30,12 +30,15 @@
     "fullname": "Prodigal Sorcerer"
   }, {
     "shortname": "asmo",
-	"fullname": "Asmoranomardicadaistinaculdacar"
+    "fullname": "Asmoranomardicadaistinaculdacar"
   }, {
     "shortname": "asmor",
-	"fullname": "Asmoranomardicadaistinaculdacar"
+    "fullname": "Asmoranomardicadaistinaculdacar"
   }, {
     "shortname": "skittles",
-	"fullname": "Skithiryx, the Blight Dragon"
+    "fullname": "Skithiryx, the Blight Dragon"
+  }, {
+    "shortname": "blastoise",
+    "fullname": "Kappa Cannoneer"
   }
 ]
