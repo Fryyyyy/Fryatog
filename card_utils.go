@@ -258,24 +258,26 @@ func (card *Card) formatExpansions() string {
 
 func (card *Card) formatLegalities() string {
 	var ret []string
-	formatLegality(card.Legalities.Vintage, "Vin", &ret)
-	formatLegality(card.Legalities.Commander, "Cmr", &ret)
-	formatLegality(card.Legalities.Legacy, "Leg", &ret)
-	formatLegality(card.Legalities.Modern, "Mod", &ret)
-	formatLegality(card.Legalities.Pioneer, "Pio", &ret)
-	formatLegality(card.Legalities.Standard, "Std", &ret)
-	return strings.Join(ret, ",")
+	ret = append(ret, formatLegality(card.Legalities.Vintage, "Vin"))
+	ret = append(ret, formatLegality(card.Legalities.Commander, "Cmr"))
+	ret = append(ret, formatLegality(card.Legalities.Legacy, "Leg"))
+	ret = append(ret, formatLegality(card.Legalities.Modern, "Mod"))
+	ret = append(ret, formatLegality(card.Legalities.Pioneer, "Pio"))
+	ret = append(ret, formatLegality(card.Legalities.Standard, "Std"))
+	return strings.Join(removeEmptyStrings(ret), ",")
 }
 
-func formatLegality(input string, shortFormat string, ret *[]string) {
+func formatLegality(input string, shortFormat string) string {
+	ret := ""
 	switch input {
 	case "legal":
-		*ret = append(*ret, shortFormat)
+		ret = shortFormat
 	case "restricted":
-		*ret = append(*ret, fmt.Sprintf("%s%s", shortFormat, "Res"))
+		ret = fmt.Sprintf("%s%s", shortFormat, "Res")
 	case "banned":
-		*ret = append(*ret, fmt.Sprintf("%s%s", shortFormat, "Ban"))
+		ret = fmt.Sprintf("%s%s", shortFormat, "Ban")
 	}
+	return ret
 }
 
 func lookupUniqueNamePrefix(input string) string {
