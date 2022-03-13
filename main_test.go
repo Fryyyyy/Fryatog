@@ -173,7 +173,7 @@ func TestLanguageRecursion(t *testing.T) {
 		input  string
 		output []string
 	}{
-		{"Erebos' Titan", []string{"\x02Erebos's Titan\x0f {1}{B}{B}{B} · Creature — Giant · 5/5 · As long as your opponents control no creatures, Erebos's Titan has indestructible. \x1d(Damage and effects that say \"destroy\" don't destroy it.)\x0f \\ Whenever a creature card leaves an opponent's graveyard, you may discard a card. If you do, return Erebos's Titan from your graveyard to your hand. · ORI-M · Vin,Leg,Mod,Pio"}},
+		{"Erebos' Titan", []string{"\x02Erebos's Titan\x0f {1}{B}{B}{B} · Creature — Giant · 5/5 · As long as your opponents control no creatures, Erebos's Titan has indestructible. \x1d(Damage and effects that say \"destroy\" don't destroy it.)\x0f \\ Whenever a creature card leaves an opponent's graveyard, you may discard a card. If you do, return Erebos's Titan from your graveyard to your hand. · ORI-M · Vin,Cmr,Leg,Mod,Pio"}},
 	}
 	for _, table := range tables {
 		got := tokeniseAndDispatchInput(&fryatogParams{m: &hbot.Message{Content: table.input}}, fakeGetCard, fakeGetCard, fakeGetRandomCard, fakeFindCards)
@@ -242,7 +242,7 @@ func TestCardSearchRealResults(t *testing.T) {
 		input  []string
 		output []string
 	}{
-		{[]string{"Search for Azcanta"}, []string{"\x02Search for Azcanta\x0F {1}{U} · Legendary Enchantment · At the beginning of your upkeep, look at the top card of your library. You may put it into your graveyard. Then if you have seven or more cards in your graveyard, you may transform Search for Azcanta. · XLN-R · Vin,Leg,Mod,Std\n\x02Azcanta, the Sunken Ruin\x0F · Legendary Land · (Transforms from Search for Azcanta.) \\ {T}: Add {U}. \\ {2}{U}, {T}: Look at the top four cards of your library. You may reveal a noncreature, nonland card from among them and put it into your hand. Put the rest on the bottom of your library in any order."}},
+		{[]string{"Search for Azcanta"}, []string{"\x02Search for Azcanta\x0F {1}{U} · Legendary Enchantment · At the beginning of your upkeep, look at the top card of your library. You may put it into your graveyard. Then if you have seven or more cards in your graveyard, you may transform Search for Azcanta. · XLN-R · Vin,Cmr,Leg,Mod,Std\n\x02Azcanta, the Sunken Ruin\x0F · Legendary Land · (Transforms from Search for Azcanta.) \\ {T}: Add {U}. \\ {2}{U}, {T}: Look at the top four cards of your library. You may reveal a noncreature, nonland card from among them and put it into your hand. Put the rest on the bottom of your library in any order."}},
 	}
 	for _, table := range tables {
 		got, err := fakeFindRealCard(table.input)

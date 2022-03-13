@@ -105,6 +105,16 @@ func stringSliceContains(s []string, e string) bool {
 	return false
 }
 
+func removeEmptyStrings(s []string) []string {
+	var r []string
+	for _, str := range s {
+		if str != "" {
+			r = append(r, str)
+		}
+	}
+	return r
+}
+
 func wordWrap(text string, lineWidth int) string {
 	words := strings.Fields(strings.TrimSpace(text))
 	if len(words) == 0 {
