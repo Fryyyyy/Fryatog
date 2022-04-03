@@ -31,8 +31,8 @@ type configuration struct {
 	Password     string   `json:"Password"`
 	DevMode      bool     `json:"DevMode"`
 	Server       struct {
-		SSL 	string `json:SSL`
-		NonSSL  string `json:NonSSL`
+		SSL      string `json:"SSL"`
+		NonSSL   string `json:"NonSSL"`
 	}
 	ProdChannels []string `json:"ProdChannels"`
 	DevChannels  []string `json:"DevChannels"`

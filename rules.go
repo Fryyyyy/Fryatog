@@ -163,9 +163,9 @@ func importRules(forceFetch bool) error {
 				if lastRule != "" {
 					rules[lastRule] = append(rules[lastRule], " "+strings.TrimSpace(line))
 				}
-			} else {
+			} /* else {
 				// log.Debug("In scanner", "Rules mode: Ignored line", line)
-			}
+			} */
 		} else {
 			// log.Debug("In scanner", "Glossary mode:", line)
 			if line == "" {
