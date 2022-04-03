@@ -17,7 +17,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/slack-go/slack v0.9.0
 	github.com/stretchr/testify v1.7.0 // indirect
-	github.com/whyrusleeping/hellabot v0.0.0-20200821141615-1382ae598342
+	github.com/whyrusleeping/hellabot v0.0.0-20220131094808-3d595078da57
 	golang.org/x/net v0.0.0-20210427231257-85d9c07bbe3a // indirect
 	golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c // indirect
 	golang.org/x/sys v0.0.0-20210426230700-d19ff857e887 // indirect

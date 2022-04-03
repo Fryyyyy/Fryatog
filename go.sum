@@ -181,6 +181,8 @@ github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5Cc
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/whyrusleeping/hellabot v0.0.0-20200821141615-1382ae598342 h1:b0iE1GG/MOLSbg6LxG7tPZ7qbXEkOSku1/coD/LF38A=
 github.com/whyrusleeping/hellabot v0.0.0-20200821141615-1382ae598342/go.mod h1:g3f61CcN5csyM0R/e0xF2FX8gKiuGHREi3ostG6FWlQ=
+github.com/whyrusleeping/hellabot v0.0.0-20220131094808-3d595078da57 h1:sN+pknnqQso850cwopazXsLehxEFbQvHGmIHDUmC/v8=
+github.com/whyrusleeping/hellabot v0.0.0-20220131094808-3d595078da57/go.mod h1:g3f61CcN5csyM0R/e0xF2FX8gKiuGHREi3ostG6FWlQ=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
