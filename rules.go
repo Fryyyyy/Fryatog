@@ -192,6 +192,14 @@ func importRules(forceFetch bool) error {
 }
 
 func tryFindSeeMoreRule(input string) string {
+	log.Debug("TFSMR: This is input", "Input", input)
+	if strings.Contains(input, "A keyword ability that lets a player attach an Equipment") {
+		matches := seeRuleRegexp.FindAllStringSubmatch(input, -1)
+		log.Debug("FindAll matches:", "matches", matches)
+		log.Debug("0 2 is", "stuff", matches[1][1])
+		return "\n" + handleRulesQuery(matches[1][1]+"a")
+	}
+
 	if strings.Contains(input, "See rule") && !strings.Contains(input, "See rules") && !strings.Contains(input, "and rule") {
 		matches := seeRuleRegexp.FindAllStringSubmatch(input, -1)
 		if strings.Contains(input, "The object that dealt that damage") {
