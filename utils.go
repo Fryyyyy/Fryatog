@@ -37,7 +37,7 @@ var (
 
 	ruleParseRegex = regexp.MustCompile(`^(?P<ruleno>\d+\.\w{1,4})\.? (?P<ruletext>.*)`)
 
-	seeRuleRegexp = regexp.MustCompile(`See rule (\d+\.{0,1}\d*\w?)`)
+	seeRuleRegexp = regexp.MustCompile(`rule (\d+\.{0,1}\d*\w?)`)
 
 	noPunctuationRegex = regexp.MustCompile(`\W$`)
 
