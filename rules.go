@@ -16,7 +16,7 @@ import (
 )
 
 const rulesEndpointURL = "https://api.academyruins.com/rule/"
-const glossaryEndpointURL = "https://slack.vensersjournal.com/glossary/"
+const glossaryEndpointURL = "https://api.academyruins.com/glossary/"
 const examplesEndpointURL = "https://api.academyruins.com/example/"
 const specificRuleEndpointURL = "https://yawgatog.com/resources/magic-rules/#R"
 
