@@ -15,10 +15,10 @@ import (
 	log "gopkg.in/inconshreveable/log15.v2"
 )
 
-const voloRulesEndpointURL = "https://slack.vensersjournal.com/rule/"
-const voloGlossaryEndpointURL = "https://slack.vensersjournal.com/glossary/"
-const voloExamplesEndpointURL = "https://slack.vensersjournal.com/example/"
-const voloSpecificRuleEndpointURL = "https://www.vensersjournal.com/"
+const rulesEndpointURL = "https://api.academyruins.com/rule/"
+const glossaryEndpointURL = "https://api.academyruins.com/glossary/"
+const examplesEndpointURL = "https://api.academyruins.com/example/"
+const specificRuleEndpointURL = "https://yawgatog.com/resources/magic-rules/#R"
 
 var tooLongRules = []string{"205.3i", "205.3j", "205.3m", "205.3n"}
 
@@ -28,15 +28,14 @@ type AbilityWord struct {
 	Description string `json:"description"`
 }
 
-// Rule stores the result of Rules queries from Volo's API
+// Rule stores the result of Rules queries from API
 type Rule struct {
 	RuleNumber      string `json:"ruleNumber"`
 	RuleText        string `json:"ruleText"`
-	RawExampleTexts string `json:"exampleText"`
-	ExampleTexts    []string
+	ExampleTexts  []string `json:"examples"`
 }
 
-// Rule stores the result of Glossary queries from Volo's API
+// Rule stores the result of Glossary queries from API
 type GlossaryTerm struct {
 	Term            string `json:"term"`
 	Definition      string `json:"definition"`
@@ -230,9 +229,9 @@ func findRule(input string, which string) (Rule, error) {
 	var endpoint string
 	switch which {
 	case "example":
-		endpoint = voloExamplesEndpointURL
+		endpoint = examplesEndpointURL
 	case "rule":
-		endpoint = voloRulesEndpointURL
+		endpoint = rulesEndpointURL
 	default:
 		log.Error("findRule", "Called with unknown mode", which)
 		return Rule{}, errors.New("Unknown mode")
@@ -243,7 +242,7 @@ func findRule(input string, which string) (Rule, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		raven.CaptureError(err, nil)
-		log.Debug("HTTP request to Volo Rules Endpoint failed", "Error", err)
+		log.Debug("HTTP request to Rules Endpoint failed", "Error", err)
 		return Rule{}, err
 	}
 	defer resp.Body.Close()
@@ -262,20 +261,19 @@ func findRule(input string, which string) (Rule, error) {
 func handleExampleQuery(input string) string {
 	exampleRequests.Add(1)
 	foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
-	log.Debug("In handleExampleQuery (Volo)", "Example matched on", foundRuleNum)
+	log.Debug("In handleExampleQuery", "Example matched on", foundRuleNum)
 
 	foundExample, err := findRule(foundRuleNum, "example")
 
-	if err != nil || foundExample.RawExampleTexts == "" {
+	if err != nil || foundExample.ExampleTexts == nil {
 		return "Example not found"
 	}
 
-	foundExample.ExampleTexts = strings.Split(foundExample.RawExampleTexts, "\n")
 	var formattedExample []string
 	exampleNumber := "<b>[" + foundExample.RuleNumber + "] Example:</b> "
 
 	for _, e := range foundExample.ExampleTexts {
-		formattedExample = append(formattedExample, exampleNumber+e[9:]+"\n")
+		formattedExample = append(formattedExample, exampleNumber+e+"\n")
 	}
 	return strings.TrimSpace(strings.Join(formattedExample, ""))
 }
@@ -287,12 +285,12 @@ func handleGlossaryQuery(input string) string {
 	log.Debug("In handleGlossaryQuery", "Define matched on", split)
 	query := TryCoerceGlossaryQuery(strings.ToLower(split[1]))
 	
-	url := voloGlossaryEndpointURL + query
+	url := glossaryEndpointURL + query
 	log.Debug("findGlossary: Attempting to fetch", "URL", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		raven.CaptureError(err, nil)
-		log.Debug("HTTP request to Volo Glossary Endpoint failed", "Error", err)
+		log.Debug("HTTP request to Glossary Endpoint failed", "Error", err)
 		return ""
 	}
 	defer resp.Body.Close()
@@ -325,7 +323,7 @@ func TryCoerceGlossaryQuery(query string) string {
 }
 
 func handleRulesQuery(input string) string {
-	log.Debug("in handleRulesQuery (Volo)", "Input", input)
+	log.Debug("in handleRulesQuery", "Input", input)
 
 	// Hit examples first so it doesn't get consumed as a rule
 	if (strings.HasPrefix(input, "ex") || strings.HasPrefix(input, "example")) && ruleRegexp.MatchString(input) {
@@ -336,9 +334,10 @@ func handleRulesQuery(input string) string {
 		rulesRequests.Add(1)
 		foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
 
-		log.Debug("In handleRulesQuery (Volo)", "Rules matched on", foundRuleNum)
+		log.Debug("In handleRulesQuery", "Rules matched on", foundRuleNum)
 		if stringSliceContains(tooLongRules, foundRuleNum) {
-			return fmt.Sprintf("<b>%s.</b> <i>[This subtype list is too long for chat. Please see %s ]</i>", foundRuleNum, voloSpecificRuleEndpointURL+foundRuleNum)
+			foundRuleFragment := strings.Replace(foundRuleNum, ".", "", -1)
+			return fmt.Sprintf("<b>%s.</b> <i>[This subtype list is too long for chat. Please see %s ]</i>", foundRuleNum, specificRuleEndpointURL+foundRuleFragment)
 		}
 
 		foundRule, err := findRule(foundRuleNum, "rule")
