@@ -268,7 +268,7 @@ func handleExampleQuery(input string) string {
 	fss := ruleExampleRegexp.FindStringSubmatch(input)
 	foundRuleNum = fss[2]
 	if fss[1] == "" {
-		exampleIndex = -1
+		exampleIndex = 0
 	} else {
 		exampleIndex, err = strconv.Atoi(fss[1])
 		if err != nil {
