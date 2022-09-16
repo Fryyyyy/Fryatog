@@ -27,12 +27,12 @@ import (
 
 // Configuration lists the configurable parameters, stored in config.json
 type configuration struct {
-	DSN          string   `json:"DSN"`
-	Password     string   `json:"Password"`
-	DevMode      bool     `json:"DevMode"`
-	Server       struct {
-		SSL      string `json:"SSL"`
-		NonSSL   string `json:"NonSSL"`
+	DSN      string `json:"DSN"`
+	Password string `json:"Password"`
+	DevMode  bool   `json:"DevMode"`
+	Server   struct {
+		SSL    string `json:"SSL"`
+		NonSSL string `json:"NonSSL"`
 	}
 	ProdChannels []string `json:"ProdChannels"`
 	DevChannels  []string `json:"DevChannels"`
@@ -76,11 +76,6 @@ var (
 	whichNick  string
 	whoChan    chan []string
 
-	// Rules & Glossary dictionary.
-	rules           = make(map[string][]string)
-	rulesKeys       []string
-	abilityWords    = make(map[string]string)
-	abilityWordKeys []string
 	// Card names catalog
 	cardNames      []string
 	shortCardNames = make(map[string]string)
@@ -107,7 +102,6 @@ const crURL = "https://api.academyruins.com/link/cr"
 const crFile = "CR.txt"
 const cardCacheGob = "cardcache.gob"
 const configFile = "config.json"
-const abilityWordFile = "ability_words.json"
 const cardShortNameFile = "short_names.json"
 
 // CardGetter defines a function that retrieves a card's text.
@@ -658,12 +652,6 @@ func main() {
 	raven.SetDSN(conf.DSN)
 
 	var err error
-	// Bail out of everything if we can't have the rules.
-	if err = importRules(false); err != nil {
-		log.Warn("Error importing the rules", "Err", err)
-		raven.CaptureErrorAndWait(err, nil)
-		panic(err)
-	}
 
 	cardNames, err = importCardNames(true)
 	if err != nil {
@@ -683,13 +671,6 @@ func main() {
 	err = importHighlanderPoints(true)
 	if err != nil {
 		log.Warn("Error importing Highlander points", "Err", err)
-		raven.CaptureErrorAndWait(err, nil)
-	}
-
-	// Initialise Ability Words
-	err = importAbilityWords()
-	if err != nil {
-		log.Warn("Error importing ability words", "Err", err)
 		raven.CaptureErrorAndWait(err, nil)
 	}
 

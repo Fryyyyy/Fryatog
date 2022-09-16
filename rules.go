@@ -1,14 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 
 	raven "github.com/getsentry/raven-go"
@@ -22,172 +18,17 @@ const specificRuleEndpointURL = "https://yawgatog.com/resources/magic-rules/#R"
 
 var tooLongRules = []string{"205.3i", "205.3j", "205.3m", "205.3n"}
 
-// AbilityWord stores a quick description of Ability Words, which have no inherent rules meaning
-type AbilityWord struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
-
 // Rule stores the result of Rules queries from API
 type Rule struct {
-	RuleNumber      string `json:"ruleNumber"`
-	RuleText        string `json:"ruleText"`
-	ExampleTexts  []string `json:"examples"`
+	RuleNumber   string   `json:"ruleNumber"`
+	RuleText     string   `json:"ruleText"`
+	ExampleTexts []string `json:"examples"`
 }
 
 // Rule stores the result of Glossary queries from API
 type GlossaryTerm struct {
-	Term            string `json:"term"`
-	Definition      string `json:"definition"`
-}
-
-func importAbilityWords() error {
-	log.Debug("In importAbilityWords")
-	content, err := ioutil.ReadFile(abilityWordFile)
-	if err != nil {
-		raven.CaptureError(err, nil)
-		log.Warn("Error opening abilityWords file", "Error", err)
-		return err
-	}
-	var tempAbilityWords []AbilityWord
-	err = json.Unmarshal(content, &tempAbilityWords)
-	if err != nil {
-		raven.CaptureError(err, nil)
-		log.Warn("Unable to parse abilityWords file", "Error", err)
-		return err
-	}
-	for _, aw := range tempAbilityWords {
-		abilityWords[aw.Name] = aw.Description
-		abilityWordKeys = append(abilityWordKeys, aw.Name)
-	}
-	log.Debug("Populated abilityWords", "Length", len(abilityWords))
-	return nil
-}
-
-func importRules(forceFetch bool) error {
-	log.Debug("In importRules", "Force?", forceFetch)
-	if forceFetch {
-		if err := fetchRulesFile(); err != nil {
-			log.Warn("Error fetching rules file", "Error", err)
-			return err
-		}
-	}
-
-	if _, err := os.Stat(crFile); err != nil {
-		if err := fetchRulesFile(); err != nil {
-			log.Warn("Error fetching rules file", "Error", err)
-			return err
-		}
-	}
-
-	// Parse it.
-	f, err := os.Open(crFile)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	// WOTC doesn't serve UTF-8. 😒
-	//r := charmap.Windows1252.NewDecoder().Reader(f)
-	//scanner := bufio.NewScanner(f)
-
-	// OR DOES IT
-	reader := bufio.NewReader(f)
-	var (
-		metGlossary  bool
-		metCredits   bool
-		lastRule     string
-		lastGlossary string
-		rulesMode    = true
-	)
-
-	// Clear rules map
-	rules = make(map[string][]string)
-
-	// Begin rules parsing
-	for {
-		line, err := reader.ReadString('\r')
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "reading standard input:", err)
-		}
-		line = strings.Replace(line, "\r", "", -1)
-		line = strings.Replace(line, "\n", "", -1)
-		if rulesMode && line == "" {
-			continue
-		}
-		// Clean up line
-		line = strings.Replace(line, "“", `"`, -1)
-		line = strings.Replace(line, "”", `"`, -1)
-		line = strings.Replace(line, "’", `'`, -1)
-		// "Glossary" in the T.O.C
-		if line == "Glossary" {
-			// log.Debug("Glossary")
-			if !metGlossary {
-				metGlossary = true
-			} else {
-				// Done with the rules, let's start Glossary mode.
-				rulesMode = false
-			}
-		} else if line == "Credits" {
-			// log.Debug("Credits")
-			if !metCredits {
-				metCredits = true
-			} else {
-				// Done!
-				for key := range rules {
-					rulesKeys = append(rulesKeys, key)
-				}
-				return nil
-			}
-		} else if rulesMode {
-			if ruleParseRegex.MatchString(line) {
-				rm := ruleParseRegex.FindAllStringSubmatch(line, -1)
-				// log.Debug("In scanner. Rules Mode: found rule", "Rule number", rm[0][0], "Rule name", rm[0][1])
-				if _, ok := rules[rm[0][1]]; ok {
-					log.Warn("In scanner", "Already had a rule!", line, "Existing rule", rules[rm[0][1]])
-				}
-				rules[rm[0][1]] = append(rules[rm[0][1]], rm[0][2])
-				lastRule = rm[0][1]
-			} else if strings.HasPrefix(line, "Example: ") {
-				if lastRule != "" {
-					rules["ex"+lastRule] = append(rules["ex"+lastRule], line)
-				} else {
-					log.Warn("In scanner", "Got example without rule", line)
-				}
-			} else if strings.HasPrefix(line, "     ") {
-				// log.Debug("In scanner", "Follow on rule?", line)
-				if lastRule != "" {
-					rules[lastRule] = append(rules[lastRule], " "+strings.TrimSpace(line))
-				}
-			} /* else {
-				// log.Debug("In scanner", "Rules mode: Ignored line", line)
-			} */
-		} else {
-			// log.Debug("In scanner", "Glossary mode:", line)
-			if line == "" {
-				lastGlossary = ""
-			} else if lastGlossary != "" {
-				if strings.Contains(lastGlossary, "(Obsolete)") {
-					// including the leading " " here so we don't end up having "thing " in the indices
-					lastGlossary = strings.Replace(lastGlossary, " (Obsolete)", "", -1)
-				}
-				if strings.Contains(lastGlossary, ",") {
-					gl := strings.Split(lastGlossary, ",")
-					for _, g := range gl {
-						rules[strings.ToLower(g)] = append(rules[strings.ToLower(g)], fmt.Sprintf("<b>%s</b>: %s", lastGlossary, line))
-					}
-				} else {
-					rules[strings.ToLower(lastGlossary)] = append(rules[strings.ToLower(lastGlossary)], fmt.Sprintf("<b>%s</b>: %s", lastGlossary, line))
-				}
-			} else {
-				lastGlossary = line
-			}
-		}
-	}
-	return nil
+	Term       string `json:"term"`
+	Definition string `json:"definition"`
 }
 
 func tryFindSeeMoreRule(input string) string {
@@ -284,7 +125,7 @@ func handleGlossaryQuery(input string) string {
 
 	log.Debug("In handleGlossaryQuery", "Define matched on", split)
 	query := TryCoerceGlossaryQuery(strings.ToLower(split[1]))
-	
+
 	url := glossaryEndpointURL + query
 	log.Debug("findGlossary: Attempting to fetch", "URL", url)
 	resp, err := http.Get(url)
@@ -319,7 +160,7 @@ func TryCoerceGlossaryQuery(query string) string {
 	if query == "source" {
 		query = "source of damage"
 	}
-	return query;
+	return query
 }
 
 func handleRulesQuery(input string) string {

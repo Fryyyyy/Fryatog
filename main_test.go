@@ -108,13 +108,6 @@ func TestPolicy(t *testing.T) {
 }
 
 func TestTokens(t *testing.T) {
-	// Clear and import rules
-	rules = make(map[string][]string)
-	err := importRules(false)
-
-	if err != nil {
-		t.Errorf("Didn't expect an error -- got %v", err)
-	}
 	var emptyStringSlice []string
 	var testCardExpected = "\x02CARD\x0F ·  · · TESTSET-T · "
 	var testRandomCardExpected = "\x02RANDOMCARD\x0F ·  · · RANDOMTESTSET-R · "

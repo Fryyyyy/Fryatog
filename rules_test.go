@@ -7,13 +7,6 @@ import (
 )
 
 func TestBetterGetRule(t *testing.T) {
-	// Clear and import rules
-	rules = make(map[string][]string)
-	err := importRules(false)
-	if err != nil {
-		t.Errorf("Didn't expect an error -- got %v", err)
-	}
-
 	tables := []struct {
 		input  string
 		output string
@@ -49,32 +42,7 @@ func TestBetterGetRule(t *testing.T) {
 	}
 }
 
-func TestAbilityWords(t *testing.T) {
-	err := importAbilityWords()
-	if err != nil {
-		t.Errorf("Didn't expect an error -- got %v", err)
-	}
-	if len(abilityWords) < 30 {
-		t.Errorf("Too few ability words -- got %v", len(abilityWords))
-	}
-	if len(abilityWords["strive"]) < 30 {
-		t.Errorf("Length of e.g strive was too short -- got %v", len(abilityWords["strive"]))
-	}
-}
-
 func TestGetRule(t *testing.T) {
-	// Clear and import rules
-	rules = make(map[string][]string)
-	err := importRules(false)
-	if err != nil {
-		t.Errorf("Didn't expect an error -- got %v", err)
-	}
-
-	err = importAbilityWords()
-	if err != nil {
-		t.Errorf("Didn't expect an error -- got %v", err)
-	}
-
 	tables := []struct {
 		input  string
 		output string
@@ -130,33 +98,6 @@ func TestGlossaryCoercion(t *testing.T) {
 	for _, table := range tables {
 		got := TryCoerceGlossaryQuery(table.input)
 		if diff := cmp.Diff(table.output, got); diff != "" {
-			t.Errorf("Incorrect output --\ngot  %s\nwant %s", got, table.output)
-		}
-	}
-}
-
-func TestRules(t *testing.T) {
-	// Clear and import rules
-	rules = make(map[string][]string)
-	err := importRules(false)
-
-	if err != nil {
-		t.Errorf("Didn't expect an error -- got %v", err)
-	}
-	tables := []struct {
-		input  string
-		output []string
-	}{
-		{"100.1a", []string{"A two-player game is a game that begins with only two players."}},
-		{"absorb", []string{"<b>Absorb</b>: A keyword ability that prevents damage. See rule 702.64, \"Absorb.\""}},
-		{"ex101.2", []string{`Example: If one effect reads "You may play an additional land this turn" and another reads "You can't play lands this turn," the effect that precludes you from playing lands wins.`}},
-		{"205.3i", []string{`Lands have their own unique set of subtypes; these subtypes are called land types. The land types are Desert, Forest, Gate, Island, Lair, Locus, Mine, Mountain, Plains, Power-Plant, Swamp, Tower, and Urza's.`, ` Of that list, Forest, Island, Mountain, Plains, and Swamp are the basic land types. See rule 305.6.`}},
-		{"205.4c", []string{`Any land with the supertype "basic" is a basic land. Any land that doesn't have this supertype is a nonbasic land, even if it has a basic land type.`, ` Cards printed in sets prior to the Eighth Edition core set didn't use the word "basic" to indicate a basic land. Cards from those sets with the following names are basic lands and have received errata in the Oracle card reference accordingly: Forest, Island, Mountain, Plains, Swamp, Snow-Covered Forest, Snow-Covered Island, Snow-Covered Mountain, Snow-Covered Plains, and Snow-Covered Swamp.`}},
-		{"509.1b", []string{`The defending player checks each creature they control to see whether it's affected by any restrictions (effects that say a creature can't block, or that it can't block unless some condition is met). If any restrictions are being disobeyed, the declaration of blockers is illegal.`, ` A restriction may be created by an evasion ability (a static ability an attacking creature has that restricts what can block it). If an attacking creature gains or loses an evasion ability after a legal block has been declared, it doesn't affect that block. Different evasion abilities are cumulative.`}},
-	}
-	for _, table := range tables {
-		got := rules[table.input]
-		if diff := cmp.Diff(got, table.output); diff != "" {
 			t.Errorf("Incorrect output --\ngot  %s\nwant %s", got, table.output)
 		}
 	}
