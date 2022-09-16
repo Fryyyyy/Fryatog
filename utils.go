@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"expvar"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"os/signal"
 	"regexp"
@@ -225,27 +223,6 @@ func readConfig() configuration {
 	}
 	log.Debug("Conf", "Parsed as", conf)
 	return conf
-}
-
-func fetchRulesFile() error {
-	// Fetch it
-	out, err := os.Create(crFile)
-	if err != nil {
-		return err
-	}
-
-	resp, err := http.Get(crURL)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return err
-	}
-	out.Close()
-	return nil
 }
 
 func dumpCardCacheTimer(conf *configuration, cache *lru.ARCCache) {
