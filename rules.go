@@ -266,11 +266,11 @@ func handleExampleQuery(input string) string {
 	)
 	exampleRequests.Add(1)
 	fss := ruleExampleRegexp.FindStringSubmatch(input)
-	foundRuleNum = fss[2]
-	if fss[1] == "" {
+	foundRuleNum = fss[2] + fss[3] + fss[5]
+	if fss[1] == "" && fss[4] == "" {
 		exampleIndex = 0
 	} else {
-		exampleIndex, err = strconv.Atoi(fss[1])
+		exampleIndex, err = strconv.Atoi(fss[1] + fss[4])
 		if err != nil {
 			return "Unable to parse example number"
 		}
