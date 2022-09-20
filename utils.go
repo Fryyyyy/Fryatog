@@ -41,9 +41,11 @@ var (
 
 	noPunctuationRegex = regexp.MustCompile(`\W$`)
 
+	ruleRegexpLiteral = `(\d+\.\d{1,3}[a-zA-Z]?)`
 	// Used in multiple functions.
-	ruleRegexp     = regexp.MustCompile(`((?:\d)+\.(?:\w{1,4}))`)
-	greetingRegexp = regexp.MustCompile(`(?i)^h(ello|i)( *)(\!|\.|\?)*( *)$`)
+	ruleRegexp        = regexp.MustCompile(ruleRegexpLiteral)
+	ruleExampleRegexp = regexp.MustCompile(`(\d+) ` + ruleRegexpLiteral + `|` + ruleRegexpLiteral + ` (\d+)` + `|` + ruleRegexpLiteral)
+	greetingRegexp    = regexp.MustCompile(`(?i)^h(ello|i)( *)(\!|\.|\?)*( *)$`)
 
 	//Stuff pared from card.go
 	reminderRegexp = regexp.MustCompile(`\((.*?)\)`)
