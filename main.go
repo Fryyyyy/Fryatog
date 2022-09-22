@@ -97,9 +97,6 @@ var (
 	wowChieves           *wowgd.AchievementIndex
 )
 
-// a stable URL that always points to a text version of the most up to date CR
-const crURL = "https://api.academyruins.com/link/cr"
-const crFile = "CR.txt"
 const cardCacheGob = "cardcache.gob"
 const configFile = "config.json"
 const cardShortNameFile = "short_names.json"

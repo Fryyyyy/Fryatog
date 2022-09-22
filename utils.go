@@ -33,17 +33,15 @@ var (
 
 	gathererRulingRegex = regexp.MustCompile(`^(?:(?P<start_number>\d+) ?(?P<name>.+)|(?P<name2>.*?) ?(?P<end_number>\d+).*?|(?P<name3>.+))`)
 
-	ruleParseRegex = regexp.MustCompile(`^(?P<ruleno>\d+\.\w{1,4})\.? (?P<ruletext>.*)`)
-
 	seeRuleRegexp = regexp.MustCompile(`rule (\d+\.{0,1}\d*\w?)`)
 
 	noPunctuationRegex = regexp.MustCompile(`\W$`)
 
 	// Used in multiple functions.
-  ruleRegexpLiteral = `(\d+\.\d{1,3}[a-zA-Z]?)`
+	ruleRegexpLiteral = `(\d+\.\d{1,3}[a-zA-Z]?)`
 	ruleRegexp        = regexp.MustCompile(ruleRegexpLiteral)
 	ruleExampleRegexp = regexp.MustCompile(`(\d+) ` + ruleRegexpLiteral + `|` + ruleRegexpLiteral + ` (\d+)` + `|` + ruleRegexpLiteral)
-  
+
 	greetingRegexp = regexp.MustCompile(`(?i)^h(ello|i)( *)(\!|\.|\?)*( *)$`)
 
 	//Stuff pared from card.go
