@@ -40,7 +40,10 @@ var (
 	noPunctuationRegex = regexp.MustCompile(`\W$`)
 
 	// Used in multiple functions.
-	ruleRegexp     = regexp.MustCompile(`((?:\d)+\.(?:\w{1,4}))`)
+  ruleRegexpLiteral = `(\d+\.\d{1,3}[a-zA-Z]?)`
+	ruleRegexp        = regexp.MustCompile(ruleRegexpLiteral)
+	ruleExampleRegexp = regexp.MustCompile(`(\d+) ` + ruleRegexpLiteral + `|` + ruleRegexpLiteral + ` (\d+)` + `|` + ruleRegexpLiteral)
+  
 	greetingRegexp = regexp.MustCompile(`(?i)^h(ello|i)( *)(\!|\.|\?)*( *)$`)
 
 	//Stuff pared from card.go

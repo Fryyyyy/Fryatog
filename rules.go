@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
+	"strconv"
 	raven "github.com/getsentry/raven-go"
 	log "gopkg.in/inconshreveable/log15.v2"
 )
@@ -100,8 +100,22 @@ func findRule(input string, which string) (Rule, error) {
 }
 
 func handleExampleQuery(input string) string {
+	var (
+		foundRuleNum string
+		exampleIndex int
+		err			 error
+	)
 	exampleRequests.Add(1)
-	foundRuleNum := ruleRegexp.FindAllStringSubmatch(input, -1)[0][1]
+	fss := ruleExampleRegexp.FindStringSubmatch(input)
+	foundRuleNum = fss[2] + fss[3] + fss[5]
+	if fss[1] == "" && fss[4] == "" {
+		exampleIndex = 0
+	} else {
+		exampleIndex, err = strconv.Atoi(fss[1] + fss[4])
+		if err != nil {
+			return "Unable to parse example number"
+		}
+	}
 	log.Debug("In handleExampleQuery", "Example matched on", foundRuleNum)
 
 	foundExample, err := findRule(foundRuleNum, "example")
@@ -110,10 +124,19 @@ func handleExampleQuery(input string) string {
 		return "Example not found"
 	}
 
+	if len(foundExample.ExampleTexts) < exampleIndex {
+		return fmt.Sprintf("Too few examples for rule found (wanted %d, got %d)", exampleIndex, len(foundExample.ExampleTexts))
+	}
+
+	textsToPrint := foundExample.ExampleTexts
+	if exampleIndex > 0 {
+		textsToPrint = []string{textsToPrint[exampleIndex-1]}
+	}
+
 	var formattedExample []string
 	exampleNumber := "<b>[" + foundExample.RuleNumber + "] Example:</b> "
 
-	for _, e := range foundExample.ExampleTexts {
+	for _, e := range textsToPrint {
 		formattedExample = append(formattedExample, exampleNumber+e+"\n")
 	}
 	return strings.TrimSpace(strings.Join(formattedExample, ""))
