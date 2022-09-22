@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"expvar"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"os/signal"
 	"regexp"
@@ -35,17 +33,16 @@ var (
 
 	gathererRulingRegex = regexp.MustCompile(`^(?:(?P<start_number>\d+) ?(?P<name>.+)|(?P<name2>.*?) ?(?P<end_number>\d+).*?|(?P<name3>.+))`)
 
-	ruleParseRegex = regexp.MustCompile(`^(?P<ruleno>\d+\.\w{1,4})\.? (?P<ruletext>.*)`)
-
 	seeRuleRegexp = regexp.MustCompile(`rule (\d+\.{0,1}\d*\w?)`)
 
 	noPunctuationRegex = regexp.MustCompile(`\W$`)
 
-	ruleRegexpLiteral = `(\d+\.\d{1,3}[a-zA-Z]?)`
 	// Used in multiple functions.
+	ruleRegexpLiteral = `(\d+\.\d{1,3}[a-zA-Z]?)`
 	ruleRegexp        = regexp.MustCompile(ruleRegexpLiteral)
 	ruleExampleRegexp = regexp.MustCompile(`(\d+) ` + ruleRegexpLiteral + `|` + ruleRegexpLiteral + ` (\d+)` + `|` + ruleRegexpLiteral)
-	greetingRegexp    = regexp.MustCompile(`(?i)^h(ello|i)( *)(\!|\.|\?)*( *)$`)
+
+	greetingRegexp = regexp.MustCompile(`(?i)^h(ello|i)( *)(\!|\.|\?)*( *)$`)
 
 	//Stuff pared from card.go
 	reminderRegexp = regexp.MustCompile(`\((.*?)\)`)
@@ -227,27 +224,6 @@ func readConfig() configuration {
 	}
 	log.Debug("Conf", "Parsed as", conf)
 	return conf
-}
-
-func fetchRulesFile() error {
-	// Fetch it
-	out, err := os.Create(crFile)
-	if err != nil {
-		return err
-	}
-
-	resp, err := http.Get(crURL)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return err
-	}
-	out.Close()
-	return nil
 }
 
 func dumpCardCacheTimer(conf *configuration, cache *lru.ARCCache) {
