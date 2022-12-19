@@ -142,7 +142,7 @@ func (card *Card) getFlavourText() string {
 func getDfcFlavourText(card *Card) string {
 	dfcFlavour := ""
 	var parts []string
-	
+
 	for _, s := range card.CardFaces {
 		flavour := s.FlavourText;
 		if (len(flavour) > 0) {
@@ -154,7 +154,7 @@ func getDfcFlavourText(card *Card) string {
 	if (len(dfcFlavour) > 0 ) {
 		return dfcFlavour
 	}
-	
+
 	return noFlavourText
 }
 
@@ -462,14 +462,19 @@ func HandleForeignCardOverlapCases(input string) (string, error) {
 }
 
 func IsDumbCard(card Card) bool {
-	return (card.BorderColor != "black" && card.BorderColor != "white" && card.BorderColor != "borderless") || 
-	strings.Contains(card.Layout, "vanguard") || 
-	strings.Contains(card.Layout, "scheme") || 
-	(strings.Contains(card.Layout, "token") && !(strings.Contains(card.TypeLine, "Dungeon"))) || 
-	strings.Contains(card.Layout, "art_series") || 
-	card.SetType == "funny" || 
-	card.Set == "fjmp" ||
-	strings.Contains(card.Set, "thp")
+	releaseTime, err := time.Parse("2006-01-02", card.ReleasedAt)
+	if err != nil {
+		// if a card doesn't have a release date, it's probably a preview(?)
+		log.Warn("IsDumbCard: Release date not parsed properly", "Error", err)
+		return false
+	}
+
+	// Dumb cards are "Not Legal" (not legal, banned, nor restricted) in any format (we test vintage for simplicity)
+	// Preview cards are not legal anywhere until their release by default, so they cannot be counted as dumb
+	// We also make an exception for Dungeons, which are available in the normal search despite technically being tokens
+	return card.Legalities.Vintage == "not_legal" &&
+		(card.Reprint || releaseTime.Before(time.Now())) &&
+		!strings.Contains(card.TypeLine, "Dungeon")
 }
 
 func fetchDumbScryfallCardByName(input string, isLang bool) (Card, error) {
