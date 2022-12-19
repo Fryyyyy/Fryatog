@@ -550,7 +550,7 @@ func TestIsDumbCard(t *testing.T) {
 		{"test_data/handydandyclonemachine.json", true},
 		{"test_data/thehero.json", true},
 		{"test_data/ignitethecloneforge.json", true},
-		{"test_data/scooch.json", true}
+		{"test_data/scooch.json", true},
 		{"test_data/bushitenderfoot.json", false},
 		{"test_data/faithlesslooting.json", false},
 		{"test_data/myrathemagnificent.json", false},
