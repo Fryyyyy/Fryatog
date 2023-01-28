@@ -1,6 +1,7 @@
 .gitignore
 dsn.txt
 CR.txt
+points.txt
 names.json
 config.json*
 *.gob
