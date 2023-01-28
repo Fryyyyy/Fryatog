@@ -43,13 +43,13 @@ func fakeGetCard(cardname string, isLang bool) (Card, error) {
 	return Card{Name: "CARD", Set: "TestSet", Rarity: "TestRare", ID: cardname}, nil
 }
 
-func fakeGetRandomCard() (Card, error) {
+func fakeGetRandomCard(_ []string) (Card, error) {
 	return Card{Name: "RANDOMCARD", Set: "RandomTestSet", Rarity: "RandomTestRare", ID: "randomCard"}, nil
 }
 
 func fakeFindCards(tokens []string) ([]Card, error) {
-	card1, _ := fakeGetRandomCard()
-	card2, _ := fakeGetRandomCard()
+	card1, _ := fakeGetRandomCard(tokens)
+	card2, _ := fakeGetRandomCard(tokens)
 	return []Card{card1, card2}, nil
 }
 
@@ -141,6 +141,8 @@ func TestTokens(t *testing.T) {
 		{"To", []string{""}},
 		{"Too", []string{testCardExpected}},
 		{"random", []string{testRandomCardExpected}},
+		{"!random color:blue", []string{testRandomCardExpected}},
+		{"!momir 5", []string{testRandomCardExpected}},
 		{"!rule of law", []string{testCardExpected}},
 		// {"Hello! I was wondering if Selvala, Explorer Returned flip triggers work. If I use Selvala and two nonlands are revealed, is that two triggers of life & mana gain", emptyStringSlice}, -- WONTFIX https://github.com/Fryyyyy/Fryatog/issues/42
 		{"!search o:test", []string{testRandomCardExpected + "\n" + testRandomCardExpected}},
