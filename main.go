@@ -106,7 +106,7 @@ const cardShortNameFile = "short_names.json"
 type CardGetter func(cardname string, isLang bool) (Card, error)
 
 // RandomCardGetter defines a function that retrieves a random card's text.
-type RandomCardGetter func() (Card, error)
+type RandomCardGetter func(cardTokens []string) (Card, error)
 
 // MultipleCardGetter defines a function that retrieves a bunch of cards.
 type MultipleCardGetter func(searchTokens []string) ([]Card, error)
@@ -479,15 +479,29 @@ func handleCommand(params *fryatogParams, c chan string) {
 			return
 		}
 
-	case message == "random":
+	case cardTokens[0] == "random":
 		log.Debug("Asked for random card")
-		if card, err := getRandomCard(params.randomCardGetFunction); err == nil {
+		if card, err := getRandomCard(cardTokens[1:], params.randomCardGetFunction); err == nil {
 			if params.isIRC {
 				c <- card.formatCardForIRC()
 			} else {
 				c <- card.formatCardForSlack()
 			}
 			return
+		}
+
+	case cardTokens[0] == "momir":
+		log.Debug("Asked for a Momir card")
+		if len(cardTokens) >= 2 {
+			query := []string{"type:creature", "mv=" + cardTokens[1]}
+			if card, err := getRandomCard(query, params.randomCardGetFunction); err == nil {
+				if params.isIRC {
+					c <- card.formatCardForIRC()
+				} else {
+					c <- card.formatCardForSlack()
+				}
+				return
+			}
 		}
 
 	case cardTokens[0] == "en", cardTokens[0] == "es", cardTokens[0] == "fr", cardTokens[0] == "de", cardTokens[0] == "it" && cardTokens[1] != "that", cardTokens[0] == "pt", cardTokens[0] == "ja", cardTokens[0] == "ko", cardTokens[0] == "ru", cardTokens[0] == "zhs", cardTokens[0] == "zht":
@@ -634,8 +648,8 @@ func findCard(cardTokens []string, isLang bool, cardGetFunction CardGetter) (Car
 	return Card{}, fmt.Errorf("Card not found")
 }
 
-func getRandomCard(randomCardGetFunction RandomCardGetter) (Card, error) {
-	card, err := randomCardGetFunction()
+func getRandomCard(cardTokens []string, randomCardGetFunction RandomCardGetter) (Card, error) {
+	card, err := randomCardGetFunction(cardTokens)
 	if err == nil {
 		log.Debug("Found card!", "CardID", card.ID)
 		return card, nil

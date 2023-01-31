@@ -131,7 +131,7 @@ func (card *Card) getFlavourText() string {
 		return card.Metadata.PreviousFlavourTexts[0]
 	}
 	if isDfc(card) {
-		return getDfcFlavourText(card);
+		return getDfcFlavourText(card)
 	}
 	return noFlavourText
 }
@@ -144,14 +144,14 @@ func getDfcFlavourText(card *Card) string {
 	var parts []string
 
 	for _, s := range card.CardFaces {
-		flavour := s.FlavourText;
-		if (len(flavour) > 0) {
+		flavour := s.FlavourText
+		if len(flavour) > 0 {
 			parts = append(parts, flavour)
 		}
 	}
-	dfcFlavour = strings.Join(parts, ` \\ `);
+	dfcFlavour = strings.Join(parts, ` \\ `)
 
-	if (len(dfcFlavour) > 0 ) {
+	if len(dfcFlavour) > 0 {
 		return dfcFlavour
 	}
 
@@ -635,11 +635,18 @@ func getDumbScryfallCard(input string, isLang bool) (Card, error) {
 	return card, fmt.Errorf("No card found")
 }
 
-func getRandomScryfallCard() (Card, error) {
+func getRandomScryfallCard(cardTokens []string) (Card, error) {
 	randomRequests.Add(1)
 	var card Card
-	log.Debug("GetRandomScryfallCard: Attempting to fetch", "URL", scryfallRandomAPIURL)
-	resp, err := http.Get(scryfallRandomAPIURL)
+	u, _ := url.Parse(scryfallRandomAPIURL)
+	if len(cardTokens) > 0 {
+		q := u.Query()
+		q.Set("q", strings.Join(cardTokens, " "))
+		u.RawQuery = q.Encode()
+	}
+
+	log.Debug("GetRandomScryfallCard: Attempting to fetch", "URL", u.String())
+	resp, err := http.Get(u.String())
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Error("getRandomScryfallCard: The HTTP request failed", "Error", err)
@@ -711,7 +718,7 @@ func ParseAndFormatSearchResults(csr CardSearchResult) ([]Card, error) {
 			}
 		}
 	}
-	if (csr.Warnings != nil) {
+	if csr.Warnings != nil {
 		return []Card{}, fmt.Errorf(strings.Join(csr.Warnings, " "))
 	}
 	switch {
