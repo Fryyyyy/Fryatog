@@ -11,9 +11,9 @@ import (
 	log "gopkg.in/inconshreveable/log15.v2"
 )
 
-const rulesEndpointURL = "https://api.academyruins.com/rule/"
-const glossaryEndpointURL = "https://api.academyruins.com/glossary/"
-const examplesEndpointURL = "https://api.academyruins.com/example/"
+const rulesEndpointURL = "https://api.academyruins.com/cr/"
+const glossaryEndpointURL = "https://api.academyruins.com/cr/glossary/"
+const examplesEndpointURL = "https://api.academyruins.com/cr/example/"
 const specificRuleEndpointURL = "https://yawgatog.com/resources/magic-rules/#R"
 
 var tooLongRules = []string{"205.3i", "205.3j", "205.3m", "205.3n"}
