@@ -28,8 +28,8 @@ func formatCurrencyForSlack(pnc PoeNinjaCurrency) string {
 		var extra string
 		curName := strings.ToLower(strings.Replace(strings.Replace(c, " Orb", "", -1), " ", "", -1))
 		if curName == "mirrorofkalandra" {
-			mirrorInEx := currencies[curName] / currencies["exalted"]
-			extra = fmt.Sprintf(" %.3f :exalted:", mirrorInEx)
+			mirrorInDiv := currencies[curName] / currencies["divine"]
+			extra = fmt.Sprintf(" %.3f :divine:", mirrorInDiv)
 		}
 		currencyString = fmt.Sprintf(":%s: : %.3f :chaos:%s", curName, currencies[curName], extra)
 		ret = append(ret, currencyString)
@@ -39,7 +39,7 @@ func formatCurrencyForSlack(pnc PoeNinjaCurrency) string {
 
 func handlePoeCurrencyQuery() string {
 	url := fmt.Sprintf(poeNinjaCurrencyEndpoint, conf.PoE.League)
-	log.Debug("findRule: Attempting to fetch", "URL", url)
+	log.Debug("handlePoeCurrency: Attempting to fetch", "URL", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		raven.CaptureError(err, nil)
