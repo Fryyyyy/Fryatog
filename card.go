@@ -706,7 +706,10 @@ func searchScryfallCard(cardTokens []string) ([]Card, error) {
 }
 
 func ParseAndFormatSearchResults(csr CardSearchResult) ([]Card, error) {
-	if len(csr.Data) <= 5 {
+	fullyShownThreshold := 2 // limit for how many results are fully displayed (inclusive)
+	shownThreshold := 20 // limit for how many results are listed as names (inclusive)
+
+	if len(csr.Data) <= shownThreshold {
 		for _, c := range csr.Data {
 			x := c
 			cNcn := normaliseCardName(c.Name)
@@ -724,13 +727,13 @@ func ParseAndFormatSearchResults(csr CardSearchResult) ([]Card, error) {
 	switch {
 	case csr.TotalCards == 0:
 		return []Card{}, fmt.Errorf("No cards found")
-	case csr.TotalCards <= 2:
-		minLen := min(2, len(csr.Data))
+	case csr.TotalCards <= fullyShownThreshold:
+		minLen := min(fullyShownThreshold, len(csr.Data))
 		return csr.Data[0:minLen], nil
-	case csr.TotalCards > 5:
-		return []Card{}, fmt.Errorf("Too many cards returned (%v > 5)", csr.TotalCards)
+	case csr.TotalCards > shownThreshold:
+		return []Card{}, fmt.Errorf("Too many cards returned (%v > %v)", csr.TotalCards, shownThreshold)
 	default:
-		// Between 3 and 5 cards
+		// Between fullyShownThreshold and shownThreshold number of cards
 		var names []string
 		for _, c := range csr.Data {
 			names = append(names, c.Name)
