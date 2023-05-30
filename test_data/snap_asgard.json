@@ -1,0 +1,22 @@
+{
+    "card": [
+        {
+            "id": 284,
+            "name": "Asgard",
+            "type": "Location",
+            "cost": null,
+            "power": null,
+            "ability": "After turn 4, whoever is winning here draws 2 cards.",
+            "date_added": "2022-05-21 23:38:05",
+            "status": null,
+            "variants": null,
+            "pretty_url": "asgard-284",
+            "method": null,
+            "slug": "Asgard"
+        }
+    ],
+    "paging": {
+        "total_items": 1,
+        "total_pages": 1
+    }
+}
