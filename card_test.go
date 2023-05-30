@@ -194,7 +194,7 @@ func TestPrintCardForIRC(t *testing.T) {
 
 func TestPrintCardForSlack(t *testing.T) {
 	highlanderPoints = make(map[string]int)
-	err := importHighlanderPoints(false)
+	err := importHighlanderPoints(true)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
@@ -267,10 +267,10 @@ func TestGetFlavour(t *testing.T) {
 	}{
 		{"Ponder", "Tomorrow belongs to those who prepare for it today."},
 		{"Poison-Tip Archer", "Flavour text not found"},
-		{"Cosima, God of the Voyage", "Flavour text not found"}, // DFC no flavour text at all
-		{"Halvar, God of Battle", "It cuts through the Cosmos itself, carving new Omenpaths between the realms."}, // DFC flavour back only
+		{"Cosima, God of the Voyage", "Flavour text not found"},                                                              // DFC no flavour text at all
+		{"Halvar, God of Battle", "It cuts through the Cosmos itself, carving new Omenpaths between the realms."},            // DFC flavour back only
 		{"Jace, Vryn's Prodigy", `"People's thoughts just come to me. Sometimes I don't know if it's them or me thinking."`}, // DFC flavour front only
-		{"Kindly Ancestor", `"You look cold, dearie." \\ "Thank you, Grandmother. I love you too."`}, // DFC flavour both sides
+		{"Kindly Ancestor", `"You look cold, dearie." \\ "Thank you, Grandmother. I love you too."`},                         // DFC flavour both sides
 	}
 	for _, table := range tables {
 		fi, err := os.Open(RealCards[table.cardname])
@@ -513,7 +513,7 @@ func TestSearchResultHandling(t *testing.T) {
 		got, err := ParseAndFormatSearchResults(csr)
 		if (err != nil) != table.wanterr {
 			t.Errorf("Unexpected error: %v", err)
-		} 
+		}
 		if table.wanterr && err.Error() != table.output {
 			t.Errorf("Incorrect output -- got %s -- want %s", err, table.output)
 		}
@@ -528,9 +528,9 @@ func TestCoerceRealNamesFromForeignHiccups(t *testing.T) {
 		input  string
 		output string
 	}{
-		{"Uro,", "Uro, Titan of Nature's Wrath" },
-		{"Uro",  "Uro, Titan of Nature's Wrath" },
-		{"uro",  "Uro, Titan of Nature's Wrath" },
+		{"Uro,", "Uro, Titan of Nature's Wrath"},
+		{"Uro", "Uro, Titan of Nature's Wrath"},
+		{"uro", "Uro, Titan of Nature's Wrath"},
 	}
 	for _, table := range tables {
 		got, err := HandleForeignCardOverlapCases(table.input)
@@ -569,7 +569,7 @@ func TestIsDumbCard(t *testing.T) {
 
 		got := IsDumbCard(card)
 		if got != table.output {
-			t.Errorf("Incorrect output for %s -- got %v -- want %v",card.Name, got, table.output)
+			t.Errorf("Incorrect output for %s -- got %v -- want %v", card.Name, got, table.output)
 		}
 	}
 }

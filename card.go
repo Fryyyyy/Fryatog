@@ -28,8 +28,7 @@ const highlanderPointsURL = "http://decklist.mtgpairings.info/js/cards/highlande
 
 const noFlavourText = "Flavour text not found"
 const fullyShownSearchThreshold = 2 // limit for how many search results are fully displayed (inclusive)
-const shownSearchThreshold = 20 // limit for how many search results are listed as names (inclusive)
-
+const shownSearchThreshold = 20     // limit for how many search results are listed as names (inclusive)
 
 // TODO: Also CardFaces
 func (card *Card) getExtraMetadata(inputURL string) {
@@ -716,7 +715,7 @@ func ParseAndFormatSearchResults(csr CardSearchResult) ([]Card, error) {
 			// Sneakily add all these to the Cache
 			if _, ok := nameToCardCache.Peek(cNcn); !ok {
 				go func(cp *Card, cNcn string) {
-					getCachedOrStoreCard(cp, cNcn)
+					_, _ = getCachedOrStoreCard(cp, cNcn)
 				}(&x, cNcn)
 			}
 		}
