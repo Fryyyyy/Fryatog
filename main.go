@@ -345,6 +345,11 @@ func handleCommand(params *fryatogParams, c chan string) {
 		c <- handleHearthstoneQuery(cardTokens[1:])
 		return
 
+	case cardTokens[0] == "snap" && !params.isIRC:
+		log.Debug("Slack-based Marvel Snap Query", "Input", message)
+		c <- handleSnapQuery(cardTokens[1:])
+		return
+
 	case cardTokens[0] == "wowchieve" && !params.isIRC:
 		log.Debug("Slack-based Wow Chievo", "Input", message)
 		switch len(cardTokens) {

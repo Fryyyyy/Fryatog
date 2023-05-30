@@ -1,0 +1,22 @@
+{
+    "card": [
+        {
+            "id": 66,
+            "name": "Jubilee",
+            "type": "Character",
+            "cost": 4,
+            "power": 1,
+            "ability": "On Reveal: Play a card from your deck at this location.",
+            "date_added": "2022-05-20 08:46:03",
+            "status": null,
+            "variants": "66_1444,66_1443,66_1442,66_465",
+            "pretty_url": "jubilee-66",
+            "method": "Collection Level 222-450 (Pool 2)",
+            "slug": "Jubilee"
+        }
+    ],
+    "paging": {
+        "total_items": 1,
+        "total_pages": 1
+    }
+}
