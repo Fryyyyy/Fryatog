@@ -497,7 +497,8 @@ func TestSearchResultHandling(t *testing.T) {
 	}{
 		{"test_data/searchtest-warnings.json", "Invalid expression “is:slick” was ignored. Checking if cards are “slick” is not supported", true},
 		{"test_data/searchtest-oneresult.json", "Gleemax", false},
-		{"test_data/searchtest-toomanyresults.json", "Too many cards returned (7 > 5)", true},
+		{"test_data/searchtest-sevenresults.json", "[Autochthon Wurm], [B.F.M. (Big Furry Monster)], [B.F.M. (Big Furry Monster)], [Draco], [Emrakul, the Aeons Torn], [Gleemax], [Mox Lotus]", true},
+		{"test_data/searchtest-toomanyresults.json", "Too many cards returned (26 > 20)", true},
 	}
 	for _, table := range tables {
 		fi, err := os.Open(table.jsonFile)

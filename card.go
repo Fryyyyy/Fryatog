@@ -27,6 +27,9 @@ const scryfallSearchAPIURL = "https://api.scryfall.com/cards/search"
 const highlanderPointsURL = "http://decklist.mtgpairings.info/js/cards/highlander.txt"
 
 const noFlavourText = "Flavour text not found"
+const fullyShownSearchThreshold = 2 // limit for how many search results are fully displayed (inclusive)
+const shownSearchThreshold = 20 // limit for how many search results are listed as names (inclusive)
+
 
 // TODO: Also CardFaces
 func (card *Card) getExtraMetadata(inputURL string) {
@@ -706,7 +709,7 @@ func searchScryfallCard(cardTokens []string) ([]Card, error) {
 }
 
 func ParseAndFormatSearchResults(csr CardSearchResult) ([]Card, error) {
-	if len(csr.Data) <= 5 {
+	if len(csr.Data) <= shownSearchThreshold {
 		for _, c := range csr.Data {
 			x := c
 			cNcn := normaliseCardName(c.Name)
@@ -724,13 +727,13 @@ func ParseAndFormatSearchResults(csr CardSearchResult) ([]Card, error) {
 	switch {
 	case csr.TotalCards == 0:
 		return []Card{}, fmt.Errorf("No cards found")
-	case csr.TotalCards <= 2:
-		minLen := min(2, len(csr.Data))
+	case csr.TotalCards <= fullyShownSearchThreshold:
+		minLen := min(fullyShownSearchThreshold, len(csr.Data))
 		return csr.Data[0:minLen], nil
-	case csr.TotalCards > 5:
-		return []Card{}, fmt.Errorf("Too many cards returned (%v > 5)", csr.TotalCards)
+	case csr.TotalCards > shownSearchThreshold:
+		return []Card{}, fmt.Errorf("Too many cards returned (%v > %v)", csr.TotalCards, shownSearchThreshold)
 	default:
-		// Between 3 and 5 cards
+		// Between fullyShownSearchThreshold and shownSearchThreshold number of cards
 		var names []string
 		for _, c := range csr.Data {
 			names = append(names, c.Name)
