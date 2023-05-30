@@ -138,7 +138,10 @@ func recovery() {
 		// If desired, actually quit
 		if r == "quitquitquit" {
 			p, _ := os.FindProcess(os.Getpid())
-			p.Signal(syscall.SIGQUIT)
+			err := p.Signal(syscall.SIGQUIT)
+			if err != nil {
+				os.Exit(0)
+			}
 		}
 		// Else recover
 	}
@@ -229,7 +232,10 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 		switch {
 		case input == "!quitquitquit" && isSenderAnOp(fp.m):
 			p, _ := os.FindProcess(os.Getpid())
-			p.Signal(syscall.SIGQUIT)
+			err = p.Signal(syscall.SIGQUIT)
+			if err != nil {
+				os.Exit(0)
+			}
 		case strings.HasPrefix(input, "!cachedelete") && isSenderAnOp(fp.m):
 			if err := deleteItemFromCache(normaliseCardName(input[12:])); err != nil {
 				return []string{err.Error()}
@@ -658,11 +664,14 @@ func getRandomCard(cardTokens []string, randomCardGetFunction RandomCardGetter) 
 }
 
 func main() {
+	var err error
+
 	flag.Parse()
 	conf = readConfig()
-	raven.SetDSN(conf.DSN)
-
-	var err error
+	err = raven.SetDSN(conf.DSN)
+	if err != nil {
+		log.Warn("Unable to set Raven DSN")
+	}
 
 	cardNames, err = importCardNames(true)
 	if err != nil {
@@ -819,12 +828,15 @@ func main() {
 	go dumpCardCacheTimer(&conf, nameToCardCache)
 
 	// Start metrics server
-	go http.ListenAndServe(":8888", nil)
+	go func() {
+		err := http.ListenAndServe(":8888", nil)
+		log.Warn("Error with metrics server: %v", err)
+	}()
 
 	exitChan := getExitChannel()
 	go func() {
 		<-exitChan
-		dumpCardCache(&conf, nameToCardCache)
+		err = dumpCardCache(&conf, nameToCardCache)
 		// close(bot.Incoming) // This has a tendency to panic when messages are received on a closed channel
 		os.Exit(0) // Exit cleanly so we don't get autorestarted by supervisord. Also note https://github.com/golang/go/issues/24284
 	}()

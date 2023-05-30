@@ -194,7 +194,7 @@ func TestPrintCardForIRC(t *testing.T) {
 
 func TestPrintCardForSlack(t *testing.T) {
 	highlanderPoints = make(map[string]int)
-	err := importHighlanderPoints(false)
+	err := importHighlanderPoints(true)
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	}
@@ -204,7 +204,7 @@ func TestPrintCardForSlack(t *testing.T) {
 	}{
 		{"Ponder", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=451051|Ponder>* :mana-U: · Sorcery · Look at the top three cards of your library, then put them back in any order. You may shuffle your library. \\ Draw a card."},
 		{"Shahrazad", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=980|Shahrazad>* :mana-W::mana-W: · Sorcery · Players play a Magic subgame, using their libraries as their decks. Each player who doesn't win the subgame loses half their life, rounded up. · [RL] ·"},
-		{"Jace, the Mind Sculptor", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=442051|Jace, the Mind Sculptor>* :mana-2::mana-U::mana-U: · Legendary Planeswalker — Jace · [3] +2: Look at the top card of target player's library. You may put that card on the bottom of that player's library. \\ 0: Draw three cards, then put two cards from your hand on top of your library in any order. \\ −1: Return target creature to its owner's hand. \\ −12: Exile all cards from target player's library, then that player shuffles their hand into their library. [:point_right: 1 :point_left:]"},
+		{"Jace, the Mind Sculptor", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=442051|Jace, the Mind Sculptor>* :mana-2::mana-U::mana-U: · Legendary Planeswalker — Jace · [3] +2: Look at the top card of target player's library. You may put that card on the bottom of that player's library. \\ 0: Draw three cards, then put two cards from your hand on top of your library in any order. \\ −1: Return target creature to its owner's hand. \\ −12: Exile all cards from target player's library, then that player shuffles their hand into their library."},
 		{"Expansion", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=452974|Expansion>* :mana-UR::mana-UR: · Instant · Copy target instant or sorcery spell with converted mana cost 4 or less. You may choose new targets for the copy.\n*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=452974|Explosion>* :mana-X::mana-U::mana-U::mana-R::mana-R: · Instant · Explosion deals X damage to any target. Target player draws X cards."},
 		{"Bushi Tenderfoot", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=78600|Bushi Tenderfoot>* :mana-W: · Creature — Human Soldier · 1/1 · When a creature dealt damage by Bushi Tenderfoot this turn dies, flip Bushi Tenderfoot.\n*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=78600|Kenzo the Hardhearted>* · Legendary Creature — Human Samurai · 3/4 · Double strike; bushido 2 _(Whenever this creature blocks or becomes blocked, it gets +2/+2 until end of turn.)_"},
 		{"Fleetwheel Cruiser", "*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=417787|Fleetwheel Cruiser>* :mana-4: · Artifact — Vehicle · 5/3 · Trample, haste \\ When Fleetwheel Cruiser enters the battlefield, it becomes an artifact creature until end of turn. \\ Crew 2 _(Tap any number of creatures you control with total power 2 or more: This Vehicle becomes an artifact creature until end of turn.)_"},
@@ -267,10 +267,10 @@ func TestGetFlavour(t *testing.T) {
 	}{
 		{"Ponder", "Tomorrow belongs to those who prepare for it today."},
 		{"Poison-Tip Archer", "Flavour text not found"},
-		{"Cosima, God of the Voyage", "Flavour text not found"}, // DFC no flavour text at all
-		{"Halvar, God of Battle", "It cuts through the Cosmos itself, carving new Omenpaths between the realms."}, // DFC flavour back only
+		{"Cosima, God of the Voyage", "Flavour text not found"},                                                              // DFC no flavour text at all
+		{"Halvar, God of Battle", "It cuts through the Cosmos itself, carving new Omenpaths between the realms."},            // DFC flavour back only
 		{"Jace, Vryn's Prodigy", `"People's thoughts just come to me. Sometimes I don't know if it's them or me thinking."`}, // DFC flavour front only
-		{"Kindly Ancestor", `"You look cold, dearie." \\ "Thank you, Grandmother. I love you too."`}, // DFC flavour both sides
+		{"Kindly Ancestor", `"You look cold, dearie." \\ "Thank you, Grandmother. I love you too."`},                         // DFC flavour both sides
 	}
 	for _, table := range tables {
 		fi, err := os.Open(RealCards[table.cardname])
@@ -513,7 +513,7 @@ func TestSearchResultHandling(t *testing.T) {
 		got, err := ParseAndFormatSearchResults(csr)
 		if (err != nil) != table.wanterr {
 			t.Errorf("Unexpected error: %v", err)
-		} 
+		}
 		if table.wanterr && err.Error() != table.output {
 			t.Errorf("Incorrect output -- got %s -- want %s", err, table.output)
 		}
@@ -528,9 +528,9 @@ func TestCoerceRealNamesFromForeignHiccups(t *testing.T) {
 		input  string
 		output string
 	}{
-		{"Uro,", "Uro, Titan of Nature's Wrath" },
-		{"Uro",  "Uro, Titan of Nature's Wrath" },
-		{"uro",  "Uro, Titan of Nature's Wrath" },
+		{"Uro,", "Uro, Titan of Nature's Wrath"},
+		{"Uro", "Uro, Titan of Nature's Wrath"},
+		{"uro", "Uro, Titan of Nature's Wrath"},
 	}
 	for _, table := range tables {
 		got, err := HandleForeignCardOverlapCases(table.input)
@@ -569,7 +569,7 @@ func TestIsDumbCard(t *testing.T) {
 
 		got := IsDumbCard(card)
 		if got != table.output {
-			t.Errorf("Incorrect output for %s -- got %v -- want %v",card.Name, got, table.output)
+			t.Errorf("Incorrect output for %s -- got %v -- want %v", card.Name, got, table.output)
 		}
 	}
 }
