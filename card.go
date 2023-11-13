@@ -439,10 +439,6 @@ func fetchScryfallCardByFuzzyName(input string, isLang bool) (Card, error) {
 		}
 		if !isLang && card.Lang != "en" {
 			log.Debug("Got back a foreign card when it wasn't requested, let's try again")
-			coercedName, err := HandleForeignCardOverlapCases(input)
-			if err == nil && coercedName != "" {
-				card.Name = coercedName
-			}
 			return fetchScryfallCardByFuzzyName(card.Name, false)
 		}
 		if IsDumbCard(card) {
@@ -452,15 +448,6 @@ func fetchScryfallCardByFuzzyName(input string, isLang bool) (Card, error) {
 	}
 	log.Info("fetchScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
 	return card, fmt.Errorf("Card not found by Scryfall")
-}
-
-func HandleForeignCardOverlapCases(input string) (string, error) {
-	log.Debug("Handling foreign card overlap", "Card", input)
-	if uroRegex.MatchString(input) {
-		log.Debug("\tThey probably wanted Uro, Titan of Nature's Wrath")
-		return "Uro, Titan of Nature's Wrath", nil
-	}
-	return "", nil
 }
 
 func IsDumbCard(card Card) bool {

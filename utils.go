@@ -22,18 +22,18 @@ var (
 
 	//Stuff pared from main.go
 	botCommandRegex      = regexp.MustCompile(`[!&]([^=!&?[)][^!&?[)]+)\.\s|[!&]([^=!&?[)][^!&?[)]+)|\[\[(.*?)\]\]`)
-	singleQuotedWord     = regexp.MustCompile(`^(?:\"|\')\w+(?:\"|\')$`)
-	nonTextRegex         = regexp.MustCompile(`^[^\w]+$`)
-	wordEndingInBang     = regexp.MustCompile(`!(?:"|') |(?:\n)+`)
-	wordStartingWithBang = regexp.MustCompile(`\s+!(?: *)\S+`)
+	singleQuotedWord     = regexp.MustCompile(`^(?:"\w+"|'\w+')$`)
+	nonTextRegex         = regexp.MustCompile(`^\W+$`)
+	wordEndingInBang     = regexp.MustCompile(`!["'] |\n+`)
+	wordStartingWithBang = regexp.MustCompile(`\s+! *\S+`)
 
-	diceRegex = regexp.MustCompile(`(?:roll)?(?:\s*)(.*?)(?:d(\d+)([+-]\d+)?)`)
+	diceRegex = regexp.MustCompile(`^(?:roll )?\s*(.*?)d(\d+)([+-]\d+)?`)
 
-	cardMetadataRegex = regexp.MustCompile(`(?i)^(?:ruling(?:s?)|reminder|flavo(?:u?)r)(?: )`)
+	cardMetadataRegex = regexp.MustCompile(`(?i)^(?:rulings?|reminder|flavou?r) `)
 
 	gathererRulingRegex = regexp.MustCompile(`^(?:(?P<start_number>\d+) ?(?P<name>.+)|(?P<name2>.*?) ?(?P<end_number>\d+).*?|(?P<name3>.+))`)
 
-	seeRuleRegexp = regexp.MustCompile(`rule (\d+\.{0,1}\d*\w?)`)
+	seeRuleRegexp = regexp.MustCompile(`rule (\d+\.?\d*\w?)`)
 
 	noPunctuationRegex = regexp.MustCompile(`\W$`)
 
@@ -42,18 +42,15 @@ var (
 	ruleRegexp        = regexp.MustCompile(ruleRegexpLiteral)
 	ruleExampleRegexp = regexp.MustCompile(`(\d+) ` + ruleRegexpLiteral + `|` + ruleRegexpLiteral + ` (\d+)` + `|` + ruleRegexpLiteral)
 
-	greetingRegexp = regexp.MustCompile(`(?i)^h(ello|i)( *)(\!|\.|\?)*( *)$`)
+	greetingRegexp = regexp.MustCompile(`(?i)^h(ello|i) *[!.?]* *$`)
 
 	//Stuff pared from card.go
 	reminderRegexp = regexp.MustCompile(`\((.*?)\)`)
 	nonAlphaRegex  = regexp.MustCompile(`\W+`)
-	emojiRegex     = regexp.MustCompile(`{\d+}|{[A-Z]}|{\d\/[A-Z]}|{[A-Z]\/[A-Z]}`)
+	emojiRegex     = regexp.MustCompile(`{\d+}|{[A-Z]}|{\d/[A-Z]}|{[A-Z]/[A-Z]}`)
 
 	// Super rudimentary policy regex to parse e.g '4.8' into 4-8 for link generation
 	policyRegex = regexp.MustCompile(`[^0-9]+`)
-
-	// We PROBABLY want Uro, not Aurochs
-	uroRegex = regexp.MustCompile(`^[Uu]ro,?$`)
 
 	// Metrics
 	totalLines             = expvar.NewInt("bot_totalLines")
