@@ -8,7 +8,7 @@ import (
 
 func TestFlipCoin(t *testing.T) {
 	for i := 1; i < 10; i++ {
-		result := flipCoin()
+		result := flipCoin("coin")
 		validOutput := regexp.MustCompile(`(?:Heads|Tails).`)
 		if !(validOutput.MatchString(result)) {
 			t.Errorf(`FAIL: Expected heads or tails in output, but result was \"%s\"`, result)
