@@ -27,8 +27,8 @@ var (
 	wordEndingInBang     = regexp.MustCompile(`!["'] |\n+`)
 	wordStartingWithBang = regexp.MustCompile(`\s+! *\S+`)
 
-	diceRegex = regexp.MustCompile(`^(?:roll )?\s*(.*?)d(\d+)([+-]\d+)?`)
 	coinRegex = regexp.MustCompile(`^coin(?:\s+(\d+))?`)
+	diceRegex = regexp.MustCompile(`^(?:roll\s+)?(\d*)d(\d+)([+-]\d+)?`)
 
 	cardMetadataRegex = regexp.MustCompile(`(?i)^(?:rulings?|reminder|flavou?r) `)
 

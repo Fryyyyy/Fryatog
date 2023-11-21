@@ -20,11 +20,11 @@ type Roll struct {
 
 func (d Roll) calculate() string {
 	if d.sides == 0 {
-		return fmt.Sprintf("1 %d-sided die: %d", d.number, rand.Intn(d.number-1)+1)
+		return fmt.Sprintf("1 %d-sided die: %d", d.number, rand.Intn(d.number)+1)
 	}
 	var result int
 	for i := 1; i <= d.number; i++ {
-		result += rand.Intn(d.sides-1) + 1
+		result += rand.Intn(d.sides) + 1
 	}
 
 	if d.operand != 0 {
