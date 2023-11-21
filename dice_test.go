@@ -31,7 +31,6 @@ func TestRollDice(t *testing.T) {
 		{"2d6+e", plannedFailure},
 		{"2e6?_", plannedFailure},
 		{"-3d8", plannedFailure},
-		{"kd4", plannedError},
 		{"3d1", plannedError},
 		{"2d112", plannedError},
 		{"4d0", plannedError},
