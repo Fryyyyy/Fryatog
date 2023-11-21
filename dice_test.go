@@ -7,12 +7,40 @@ import (
 )
 
 func TestFlipCoin(t *testing.T) {
+	validOutput := regexp.MustCompile(`(?:Heads|Tails).`)
 	for i := 1; i < 10; i++ {
-		result := flipCoin()
-		validOutput := regexp.MustCompile(`(?:Heads|Tails).`)
+		result := flipCoin("coin")
 		if !(validOutput.MatchString(result)) {
 			t.Errorf(`FAIL: Expected heads or tails in output, but result was \"%s\"`, result)
 		}
+	}
+
+	validOutput = regexp.MustCompile(`(?:(?:Heads|Tails), ){2}(?:Heads|Tails)\.`)
+	for i := 1; i < 10; i++ {
+		result := flipCoin("coin 3")
+		if !(validOutput.MatchString(result)) {
+			t.Errorf(`FAIL: Expected list of heads or tails in output, but result was \"%s\"`, result)
+		}
+	}
+
+	validOutput = regexp.MustCompile(`10 coins: [HT]{10}\.`)
+	for i := 1; i < 10; i++ {
+		result := flipCoin("coin 10")
+		if !(validOutput.MatchString(result)) {
+			t.Errorf(`FAIL: Expected list of H or T in output, but result was \"%s\"`, result)
+		}
+	}
+
+	errorMsg := "malformed coin toss (max count is 50)"
+	result := flipCoin("coin 99")
+	if result != errorMsg {
+		t.Errorf(`FAIL: Expected count exceeded error, got "%s"`, result)
+	}
+
+	errorMsg = "malformed coin toss (min count is 1)"
+	result = flipCoin("coin 0")
+	if result != errorMsg {
+		t.Errorf(`FAIL: Expected count subceeded error, got "%s"`, result)
 	}
 }
 
