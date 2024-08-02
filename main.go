@@ -308,7 +308,7 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 		// Last time it bit us, the query '!ruling kozilek the great distortion 1'
 		// was getting chopped off because we had this capped at 35.
 		// Maybe look for some way to make this more robust and Actually Programmatic.
-		if !strings.HasPrefix(message, "search ") && !strings.HasPrefix(message, "wow") && len(message) > 41 {
+		if !strings.HasPrefix(message, "search ") && !strings.HasPrefix(message, "random ") && !strings.HasPrefix(message, "wow") && len(message) > 41 {
 			message = message[0:41]
 		}
 
