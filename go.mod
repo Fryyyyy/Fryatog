@@ -7,7 +7,7 @@ require (
 	github.com/getsentry/raven-go v0.2.0
 	github.com/go-test/deep v1.0.7 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/go-cmp v0.5.5
+	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/inconshreveable/log15 v0.0.0-20201112154412-8562bdadbbac // indirect
 	github.com/kr/text v0.2.0 // indirect
@@ -17,7 +17,7 @@ require (
 	github.com/slack-go/slack v0.9.0
 	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/whyrusleeping/hellabot v0.0.0-20220131094808-3d595078da57
-	golang.org/x/net v0.23.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
