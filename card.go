@@ -708,7 +708,7 @@ func ParseAndFormatSearchResults(csr CardSearchResult) ([]Card, error) {
 		}
 	}
 	if csr.Warnings != nil {
-		return []Card{}, fmt.Errorf(strings.Join(csr.Warnings, " "))
+		return []Card{}, fmt.Errorf("%s", strings.Join(csr.Warnings, " "))
 	}
 	switch {
 	case csr.TotalCards == 0:
@@ -724,7 +724,7 @@ func ParseAndFormatSearchResults(csr CardSearchResult) ([]Card, error) {
 		for _, c := range csr.Data {
 			names = append(names, c.Name)
 		}
-		return []Card{}, fmt.Errorf("[" + strings.Join(names, "], [") + "]")
+		return []Card{}, fmt.Errorf("%s", "[" + strings.Join(names, "], [") + "]")
 	}
 }
 
