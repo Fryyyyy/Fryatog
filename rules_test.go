@@ -11,7 +11,7 @@ func TestBetterGetRule(t *testing.T) {
 		input  string
 		output string
 	}{
-		{"702.54", "<b>702.54a.</b> Bloodthirst is a static ability. “Bloodthirst N” means “If an opponent was dealt damage this turn, this permanent enters the battlefield with N +1/+1 counters on it.”"},
+		{"702.54", "<b>702.54a.</b> Bloodthirst is a static ability. “Bloodthirst N” means “If an opponent was dealt damage this turn, this permanent enters with N +1/+1 counters on it.”"},
 		{"702.23", "<b>702.23a.</b> Rampage is a triggered ability. “Rampage N” means “Whenever this creature becomes blocked, it gets +N/+N until end of turn for each creature blocking it beyond the first.” (See rule 509, “Declare Blockers Step.”)"},
 		{"def Rampage", "<b>Rampage</b>: A keyword ability that can make a creature better in combat. See rule 702.23, “Rampage.”\n<b>702.23a.</b> Rampage is a triggered ability. “Rampage N” means “Whenever this creature becomes blocked, it gets +N/+N until end of turn for each creature blocking it beyond the first.” (See rule 509, “Declare Blockers Step.”)"},
 		{"702.31", "<b>702.31b.</b> A creature with horsemanship can’t be blocked by creatures without horsemanship. A creature with horsemanship can block a creature with or without horsemanship. (See rule 509, “Declare Blockers Step.”)"},
