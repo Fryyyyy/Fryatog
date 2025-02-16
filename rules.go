@@ -78,7 +78,7 @@ func findRule(input string, which string) (Rule, error) {
 		return Rule{}, errors.New("Unknown mode")
 	}
 
-	url := endpoint + input
+	url := endpoint + input + "?find_definition=true"
 	log.Debug("findRule: Attempting to fetch", "URL", url)
 	resp, err := http.Get(url)
 	if err != nil {
