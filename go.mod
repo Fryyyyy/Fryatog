@@ -17,7 +17,7 @@ require (
 	github.com/slack-go/slack v0.9.0
 	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/whyrusleeping/hellabot v0.0.0-20220131094808-3d595078da57
-	golang.org/x/net v0.36.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
