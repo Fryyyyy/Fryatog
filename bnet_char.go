@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
-	"time"
 
 	"github.com/FuzzyStatic/blizzard/v2/wowp"
 	raven "github.com/getsentry/raven-go"
@@ -198,7 +197,6 @@ func statFight(p1, p2 wowDude, statName string) string {
 				commonStats = append(commonStats, s)
 			}
 		}
-		rand.Seed(time.Now().Unix())
 		statName = commonStats[rand.Intn(len(commonStats))]
 		log.Debug("StatFight Randomised", "p1 Stat Len", len(p1stats), "p2 Stat Len ", len(p2stats), "Common len", len(commonStats), "Name", statName)
 	}
@@ -227,7 +225,6 @@ func getDudeStat(player wowDude, statName string) (string, string, float64, erro
 	}
 	if statName == "random" {
 		stats := populateWoWStats(player)
-		rand.Seed(time.Now().Unix())
 		statName = stats[rand.Intn(len(stats))]
 	}
 	for _, cat := range player.cas.Categories {
