@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -26,7 +26,7 @@ func TestGetCard(t *testing.T) {
 		{"Arcanite Reaper", `*<http://www.hearthpwn.com//cards/182-arcanite-reaper|Arcanite Reaper>* · {5} · Weapon · 5/2 · _No… actually you should fear the Reaper._ · CORE-F`},
 	}
 	for _, table := range tables {
-		fi, err := ioutil.ReadFile(HSCards[table.cardname])
+		fi, err := os.ReadFile(HSCards[table.cardname])
 		if err != nil {
 			t.Errorf("Unable to open %v", RealCards[table.cardname])
 		}

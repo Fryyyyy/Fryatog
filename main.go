@@ -6,7 +6,6 @@ import (
 	"expvar"
 	"flag"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
@@ -706,9 +705,6 @@ func main() {
 	}
 
 	ctx = context.Background()
-
-	// Seed random number generator
-	rand.Seed(time.Now().UnixNano())
 
 	hijackSession := func(bot *hbot.Bot) {
 		bot.HijackSession = true

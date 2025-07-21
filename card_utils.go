@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"sort"
 	"strings"
 
@@ -322,7 +322,7 @@ func lookupUniqueNamePrefix(input string) string {
 
 func importShortCardNames() error {
 	log.Debug("In importCardShortNames")
-	content, err := ioutil.ReadFile(cardShortNameFile)
+	content, err := os.ReadFile(cardShortNameFile)
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("Error opening shortNames file", "Error", err)
