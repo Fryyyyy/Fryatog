@@ -202,6 +202,8 @@ func (cc CommonCard) getCardOrFaceAsString(mode string) []string {
 			modifiedOracleText = strings.Replace(modifiedOracleText, "(", "_(", -1)
 			modifiedOracleText = strings.Replace(modifiedOracleText, ")", ")_", -1)
 			modifiedOracleText = strings.Replace(modifiedOracleText, "*", "\xC2\xAD*", -1)
+			// Ticket Emoji
+			modifiedOracleText = strings.Replace(modifiedOracleText, "{TK}", ":ticket:", -1)
 		} else if irc {
 			modifiedOracleText = strings.Replace(nco(cc.PrintedText, cc.OracleText), "\n", " \\ ", -1)
 			// Change the open/closing parens of reminder text to also start and end italics
@@ -218,22 +220,22 @@ func (card *Card) formatCardForSlack() string {
 	if len(card.CardFaces) > 0 {
 		for _, cf := range card.CardFaces {
 			var r []string
-			if len(card.MultiverseIds) == 0 {
-				r = append(r, fmt.Sprintf("*<%s|%s>*", card.ScryfallURI, nco(cf.PrintedName, cf.Name)))
-			} else {
-				r = append(r, fmt.Sprintf("*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=%v|%v>*", card.MultiverseIds[0], nco(cf.PrintedName, cf.Name)))
-			}
+			//if len(card.MultiverseIds) == 0 {
+			r = append(r, fmt.Sprintf("*<%s|%s>*", card.ScryfallURI, nco(cf.PrintedName, cf.Name)))
+			//} else {
+			//	r = append(r, fmt.Sprintf("*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=%v|%v>*", card.MultiverseIds[0], nco(cf.PrintedName, cf.Name)))
+			//}
 			r = append(r, cf.CommonCard.getCardOrFaceAsString("slack")...)
 			s = append(s, strings.Join(r, " "))
 		}
 		return strings.Join(s, "\n")
 	}
 
-	if len(card.MultiverseIds) == 0 {
-		s = append(s, fmt.Sprintf("*<%s|%s>*", card.ScryfallURI, nco(card.PrintedName, card.Name)))
-	} else {
-		s = append(s, fmt.Sprintf("*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=%v|%v>*", card.MultiverseIds[0], nco(card.PrintedName, card.Name)))
-	}
+	//if len(card.MultiverseIds) == 0 {
+	s = append(s, fmt.Sprintf("*<%s|%s>*", card.ScryfallURI, nco(card.PrintedName, card.Name)))
+	//} else {
+	//	s = append(s, fmt.Sprintf("*<http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=%v|%v>*", card.MultiverseIds[0], nco(card.PrintedName, card.Name)))
+	//}
 	s = append(s, card.CommonCard.getCardOrFaceAsString("slack")...)
 	if card.Reserved {
 		s = append(s, "· [RL] ·")
@@ -471,7 +473,7 @@ func fetchDumbScryfallCardByName(input string, isLang bool) (Card, error) {
 	u, _ := url.Parse(scryfallSearchAPIURL)
 	q := u.Query()
 	q.Add("include_extras", "true")
-	queryString := "(border:silver or is:funny or t:scheme or t:vanguard or t:plane or t:phenomenon) " + input
+	queryString := "(border:silver or is:funny or st:funny or t:scheme or t:vanguard or t:plane or t:phenomenon) " + input
 	q.Add("q", queryString)
 	u.RawQuery = q.Encode()
 	log.Debug("searchScryfallCard: Attempting to fetch", "URL", u)
@@ -724,7 +726,7 @@ func ParseAndFormatSearchResults(csr CardSearchResult) ([]Card, error) {
 		for _, c := range csr.Data {
 			names = append(names, c.Name)
 		}
-		return []Card{}, fmt.Errorf("%s", "[" + strings.Join(names, "], [") + "]")
+		return []Card{}, fmt.Errorf("%s", "["+strings.Join(names, "], [")+"]")
 	}
 }
 
