@@ -152,6 +152,7 @@ func TestTokens(t *testing.T) {
 		{"B&R today!", emptyStringSlice},
 		{"!wc WrongPlaceUser", []string{"WrongPlaceUser: Rules questions belong in the rules channel, not in here. Click #magicjudges-rules or type '/join #magicjudges-rules' (without the quotes) to get there"}},
 		{"!wc", []string{"Rules questions belong in the rules channel, not in here. Click #magicjudges-rules or type '/join #magicjudges-rules' (without the quotes) to get there"}},
+		{"Met a retired realtor who suggested doing what he did and buying with a sibling! So I might approach my sisters & brothers-in-law about lending me a hand financially...", emptyStringSlice},
 	}
 	for _, table := range tables {
 		got := tokeniseAndDispatchInput(&fryatogParams{m: &hbot.Message{Content: table.input}}, fakeGetCard, fakeGetCard, fakeGetRandomCard, fakeFindCards)
