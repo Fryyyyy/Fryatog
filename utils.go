@@ -212,11 +212,14 @@ func cappedMin(a, b, c int) int {
 }
 
 func readConfig() configuration {
-	file, _ := os.Open(configFile)
+	file, err := os.Open(configFile)
+	if err != nil {
+		panic(err)
+	}
 	defer file.Close()
 	decoder := json.NewDecoder(file)
 	conf := configuration{}
-	err := decoder.Decode(&conf)
+	err = decoder.Decode(&conf)
 	if err != nil {
 		panic(err)
 	}
