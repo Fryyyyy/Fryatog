@@ -1,8 +1,17 @@
-FROM golang:1
+# Build stage
+FROM golang:1 AS builder
 WORKDIR /go/src/app
 
-COPY . .
+COPY go.mod go.sum ./
+RUN go mod download
 
-RUN go install -v
+COPY *.go ./
+RUN CGO_ENABLED=0 go build -v -o /fryatog
 
-CMD ["fryatog"]
+# Final stage
+FROM alpine:latest
+WORKDIR /go/src/app
+# config.json is expected to be mounted under /go/src/app/config.json
+COPY short_names.json ./ 
+COPY --from=builder /fryatog ./fryatog
+CMD ["./fryatog"]
