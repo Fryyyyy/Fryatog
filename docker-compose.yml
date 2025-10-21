@@ -1,0 +1,9 @@
+services:
+    fryatog:
+        build: .
+        volumes:
+            - type: bind
+              source: ./config.json
+              target: /app/config.json
+              read_only: true
+
