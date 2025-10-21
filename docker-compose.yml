@@ -4,6 +4,6 @@ services:
         volumes:
             - type: bind
               source: ./config.json
-              target: /go/src/app/config.json
+              target: /app/config.json
               read_only: true
 
