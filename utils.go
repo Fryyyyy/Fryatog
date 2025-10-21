@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/gob"
-	"encoding/json"
 	"expvar"
 	"fmt"
 	"os"
@@ -209,22 +208,6 @@ func cappedMin(a, b, c int) int {
 		return b
 	}
 	return max(a, b)
-}
-
-func readConfig() configuration {
-	file, err := os.Open(configFile)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-	decoder := json.NewDecoder(file)
-	conf := configuration{}
-	err = decoder.Decode(&conf)
-	if err != nil {
-		panic(err)
-	}
-	log.Debug("Conf", "Parsed as", conf)
-	return conf
 }
 
 func dumpCardCacheTimer(conf *configuration, cache *lru.ARCCache) {

@@ -24,41 +24,6 @@ import (
 	log "gopkg.in/inconshreveable/log15.v2"
 )
 
-// Configuration lists the configurable parameters, stored in config.json
-type configuration struct {
-	DSN      string `json:"DSN"`
-	Password string `json:"Password"`
-	DevMode  bool   `json:"DevMode"`
-	Server   struct {
-		SSL    string `json:"SSL"`
-		NonSSL string `json:"NonSSL"`
-	}
-	ProdChannels []string `json:"ProdChannels"`
-	DevChannels  []string `json:"DevChannels"`
-	Ops          []string `json:"Ops"`
-	ProdNick     string   `json:"ProdNick"`
-	DevNick      string   `json:"DevNick"`
-	SlackTokens  []string `json:"SlackTokens"`
-	Hearthstone  struct {
-		AppID     string `json:"AppID"`
-		APIToken  string `json:"APIToken"`
-		IndexName string `json:"IndexName"`
-	} `json:"Hearthstone"`
-	BattleNet struct {
-		ClientID         string   `json:"ClientID"`
-		ClientSecret     string   `json:"ClientSecret"`
-		CurrentExpansion string   `json:"CurrentExpansion"`
-		CurrentRaidTier  string   `json:"CurrentRaidTier"`
-		Reputations      []string `json:"Reputations"`
-	} `json:"BattleNet"`
-	PoE struct {
-		League           string   `json:"League"`
-		WantedCurrencies []string `json:"WantedCurrencies"`
-	} `json:"PoE"`
-	IRC   bool `json:"IRC"`
-	Slack bool `json:"Slack"`
-}
-
 var (
 	bot          *hbot.Bot
 	conf         configuration
@@ -97,7 +62,6 @@ var (
 )
 
 const cardCacheGob = "cardcache.gob"
-const configFile = "config.json"
 const cardShortNameFile = "short_names.json"
 
 // CardGetter defines a function that retrieves a card's text.
@@ -672,7 +636,7 @@ func main() {
 
 	flag.Parse()
 	conf = readConfig()
-	err = raven.SetDSN(conf.DSN)
+	err = raven.SetDSN(getDSN(&conf))
 	if err != nil {
 		log.Warn("Unable to set Raven DSN")
 	}
@@ -726,7 +690,7 @@ func main() {
 	}
 	saslOptions := func(bot *hbot.Bot) {
 		bot.SASL = true
-		bot.Password = conf.Password
+		bot.Password = getPassword(&conf)
 	}
 	timeOut := func(bot *hbot.Bot) {
 		bot.ThrottleDelay = 300 * time.Millisecond
@@ -745,7 +709,7 @@ func main() {
 		nick := flag.String("nick", conf.DevNick, "nickname for the bot")
 		bot, err = hbot.NewBot(*nonSSLServ, *nick, hijackSession, devChannels, noSSLOptions, timeOut)
 
-		for _, sc := range conf.SlackTokens {
+		for _, sc := range getSlackTokens(&conf) {
 			slackClients = append(slackClients, slack.New(sc, slack.OptionDebug(true)))
 		}
 	} else {
@@ -755,7 +719,7 @@ func main() {
 		nick := flag.String("nick", conf.ProdNick, "nickname for the bot")
 		bot, err = hbot.NewBot(*sslServ, *nick, noHijackSession, prodChannels, yesSSLOptions, saslOptions, timeOut)
 
-		for _, sc := range conf.SlackTokens {
+		for _, sc := range getSlackTokens(&conf) {
 			slackClients = append(slackClients, slack.New(sc))
 		}
 

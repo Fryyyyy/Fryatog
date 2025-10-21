@@ -171,5 +171,3 @@ func formatFlips(flips []int, count int) string {
 
 	return fmt.Sprintf("%s%s.", prefix, strings.Join(formatted, joiner))
 }
-
-
