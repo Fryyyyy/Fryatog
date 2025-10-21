@@ -125,6 +125,7 @@ func TestTokens(t *testing.T) {
 		{"<+mtgrelay> [Fear12] Hi!! Quick question: Does Sundial of the Infinite bypass/combo with Psychic Vortex?", emptyStringSlice},
 		{"<+mtgrelay> [Fear12] Hi!! Quick question: Does !Sundial of the Infinite bypass/combo with !Psychic Vortex?", []string{testCardExpected, testCardExpected}},
 		{"<MW> !!fract ident &treas nabb", []string{testCardExpected, testCardExpected}},
+		// {"<MW> !!fract ident & treas nabb", []string{testCardExpected, testCardExpected}},
 		{"!cr 100.1a", []string{"\x02100.1a.\x0F A two-player game is a game that begins with only two players."}},
 		{"!100.1a !!hello", []string{"\x02100.1a.\x0F A two-player game is a game that begins with only two players.", testCardExpected}},
 		{`Animate dead ETBing is a trigger. The *entire* trigger resolves like this: "Bring back Karmic guide. Fail to attach to Karmic Guide." State-based actions check and go "that's an aura not attached to anything!" and sends Animate Dead to the graveyard`, emptyStringSlice},
@@ -144,7 +145,7 @@ func TestTokens(t *testing.T) {
 		{"!random color:blue", []string{testRandomCardExpected}},
 		{"!momir 5", []string{testRandomCardExpected}},
 		{"!rule of law", []string{testCardExpected}},
-		// {"Hello! I was wondering if Selvala, Explorer Returned flip triggers work. If I use Selvala and two nonlands are revealed, is that two triggers of life & mana gain", emptyStringSlice}, -- WONTFIX https://github.com/Fryyyyy/Fryatog/issues/42
+		{"Hello! I was wondering if Selvala, Explorer Returned flip triggers work. If I use Selvala and two nonlands are revealed, is that two triggers of life & mana gain", emptyStringSlice},
 		{"!search o:test", []string{testRandomCardExpected + "\n" + testRandomCardExpected}},
 		{"Player != Planeswalker", emptyStringSlice},
 		{"Trying to bring = up a !Planeswalker =card", []string{testCardExpected}},
