@@ -1,6 +1,6 @@
 {
-    "DSN": "https://sentry.io",
-    "Password": "",
+    "DSN": "https://sentry.io (can also be set using the SENTRY_DSN env variable)",
+    "Password": "(can also be set using the IRC_PASSWORD env variable)",
     "DevMode": true,
     "Server": {
         "SSL": "irc.libera.chat:6697",
@@ -18,7 +18,7 @@
     "ProdNick": "Fryatog",
     "DevNick": "Fryatog-Dev",
     "SlackTokens": [
-        ""
+        "(can also be set as a comma-separated list in the SLACK_TOKENS env variable)"
      ],
      "Hearthstone": {
         "AppID": "",

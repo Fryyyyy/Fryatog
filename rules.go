@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
-	"strings"
-	"strconv"
 	raven "github.com/getsentry/raven-go"
 	log "gopkg.in/inconshreveable/log15.v2"
+	"net/http"
+	"strconv"
+	"strings"
 )
 
 const rulesEndpointURL = "https://api.academyruins.com/cr/"
@@ -103,7 +103,7 @@ func handleExampleQuery(input string) string {
 	var (
 		foundRuleNum string
 		exampleIndex int
-		err			 error
+		err          error
 	)
 	exampleRequests.Add(1)
 	fss := ruleExampleRegexp.FindStringSubmatch(input)
