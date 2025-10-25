@@ -227,8 +227,14 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 		}
 	}
 
+	skipNext := false
 	for _, message := range commandList {
 		log.Debug("Processing:", "Command", message)
+		if skipNext {
+			log.Info("Double Iffy NextAmpersand Skip")
+			skipNext = false
+			continue
+		}
 		totalQueries.Add(1)
 		if isIRC {
 			ircQueries.Add(1)
@@ -241,6 +247,11 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 		}
 		if strings.HasPrefix(message, "! ") {
 			log.Info("Double Iffy Skip", "Message", message)
+			whereWereAt := strings.Index(input, message)
+			nextAnd := strings.Index(input[whereWereAt:], "&")
+			if nextAnd > -1 {
+				skipNext = true
+			}
 			continue
 		}
 		if wordEndingInBang.MatchString(message) && !wordStartingWithBang.MatchString(message) {

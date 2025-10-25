@@ -183,20 +183,6 @@ func getExitChannel() chan os.Signal {
 
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
 // A dumb function that returns the minimum of two ints
 // with the restriction that the result will try to be bigger than
 // a third given value.
