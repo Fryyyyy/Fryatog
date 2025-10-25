@@ -163,12 +163,12 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 	}
 
 	// Only start processing from the first ! or [[, not from the first &
-	if strings.Contains(input, "&") {
-		firstCmdIdx := max(cappedMin(strings.Index(input, "!"), strings.Index(input, "[["), -1), -1)
-		if strings.Index(input, "&") < firstCmdIdx {
-			input = input[firstCmdIdx:]
-		}
-	}
+	//if strings.Contains(input, "&") {
+	//	firstCmdIdx := max(cappedMin(strings.Index(input, "!"), strings.Index(input, "[["), -1), -1)
+	//	if strings.Index(input, "&") < firstCmdIdx {
+	//		input = input[firstCmdIdx:]
+	//	}
+	//}
 
 	// Little bit of hackery for PMs
 	if !strings.Contains(input, "!") && !strings.Contains(input, "[[") {
@@ -227,31 +227,23 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 		}
 	}
 
-	skipNext := false
+	previousCommandWasValidBang := false
 	for _, message := range commandList {
 		log.Debug("Processing:", "Command", message)
-		if skipNext {
-			log.Info("Double Iffy NextAmpersand Skip")
-			skipNext = false
-			continue
-		}
+
 		totalQueries.Add(1)
 		if isIRC {
 			ircQueries.Add(1)
 		} else {
 			slackQueries.Add(1)
 		}
-		if nonTextRegex.MatchString(message) || strings.HasPrefix(message, "  ") {
-			log.Info("Iffy skip", "Message", message)
-			continue
-		}
+
 		if strings.HasPrefix(message, "! ") {
 			log.Info("Double Iffy Skip", "Message", message)
-			whereWereAt := strings.Index(input, message)
-			nextAnd := strings.Index(input[whereWereAt:], "&")
-			if nextAnd > -1 {
-				skipNext = true
-			}
+			continue
+		}
+		if strings.HasPrefix(message, "&") && !previousCommandWasValidBang {
+			log.Info("Triple Iffy Skip", "Message", message)
 			continue
 		}
 		if wordEndingInBang.MatchString(message) && !wordStartingWithBang.MatchString(message) {
@@ -261,6 +253,7 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 		message = strings.TrimSpace(message)
 		// Strip the command prefix
 		if strings.HasPrefix(message, "!") || strings.HasPrefix(message, "&") {
+			previousCommandWasValidBang = true
 			message = message[1:]
 		}
 		if strings.HasPrefix(message, "[[") && strings.HasSuffix(message, "]]") {
@@ -271,6 +264,7 @@ func tokeniseAndDispatchInput(fp *fryatogParams, cardGetFunction CardGetter, dum
 			message = message[1 : len(message)-1]
 		}
 		if message == "" {
+			previousCommandWasValidBang = false
 			continue
 		}
 		message = strings.TrimPrefix(message, "card ")

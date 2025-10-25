@@ -109,13 +109,16 @@ func TestPolicy(t *testing.T) {
 
 func TestTokens(t *testing.T) {
 	var emptyStringSlice []string
+	nilStringSlice := []string{}
 	var testCardExpected = "\x02CARD\x0F ·  · · TESTSET-T · "
 	var testRandomCardExpected = "\x02RANDOMCARD\x0F ·  · · RANDOMTESTSET-R · "
+	var tarmogoyfRulesText = "\x02Tarmogoyf\x0f {1}{G} · Creature — Lhurgoyf · */1+* · Tarmogoyf's power is equal to the number of card types among cards in all graveyards and its toughness is equal to that number plus 1. · UMA-M · Vin,Cmr,Leg,Mod"
 	tables := []struct {
 		input  string
 		output []string
 	}{
 		{"Hello! ", emptyStringSlice},
+		{"Hello!  ", emptyStringSlice},
 		{"!  ", emptyStringSlice},
 		{"Test!", emptyStringSlice},
 		{"'Test!'", emptyStringSlice},
@@ -149,11 +152,14 @@ func TestTokens(t *testing.T) {
 		{"!search o:test", []string{testRandomCardExpected + "\n" + testRandomCardExpected}},
 		{"Player != Planeswalker", emptyStringSlice},
 		{"Trying to bring = up a !Planeswalker =card", []string{testCardExpected}},
-		{"https://scryfall.com/search?q=cmc%3D9+f%3Avintage&unique=cards&as=grid&order=name It can go grab any of this fun stuff!", emptyStringSlice},
+		{"https://scryfall.com/search?q=cmc%3D9+f%3Avintage&unique=cards&as=grid&order=name It can go grab any of this fun stuff!", nilStringSlice},
 		{"B&R today!", emptyStringSlice},
 		{"!wc WrongPlaceUser", []string{"WrongPlaceUser: Rules questions belong in the rules channel, not in here. Click #magicjudges-rules or type '/join #magicjudges-rules' (without the quotes) to get there"}},
 		{"!wc", []string{"Rules questions belong in the rules channel, not in here. Click #magicjudges-rules or type '/join #magicjudges-rules' (without the quotes) to get there"}},
 		{"Met a retired realtor who suggested doing what he did and buying with a sibling! So I might approach my sisters & brothers-in-law about lending me a hand financially...", emptyStringSlice},
+		{"Hello! Me & John & Tim are playing a game...", emptyStringSlice},
+		{"Hello! I control !island & swamp ..", []string{testCardExpected, testCardExpected}},
+		{"Hello! I saw [[Tarmogoyf]] & I was wondering...", []string{tarmogoyfRulesText}},
 	}
 	for _, table := range tables {
 		got := tokeniseAndDispatchInput(&fryatogParams{m: &hbot.Message{Content: table.input}}, fakeGetCard, fakeGetCard, fakeGetRandomCard, fakeFindCards)
