@@ -30,6 +30,16 @@ const noFlavourText = "Flavour text not found"
 const fullyShownSearchThreshold = 2 // limit for how many search results are fully displayed (inclusive)
 const shownSearchThreshold = 20     // limit for how many search results are listed as names (inclusive)
 
+func scryfallGet(url string) (*http.Response, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/json;q=0.9,*/*;q=0.8")
+	req.Header.Set("User-Agent", "Fryatog")
+	return http.DefaultClient.Do(req)
+}
+
 // TODO: Also CardFaces
 func (card *Card) getExtraMetadata(inputURL string) {
 	log.Debug("Getting Metadata")
@@ -53,7 +63,7 @@ func (card *Card) getExtraMetadata(inputURL string) {
 	}
 	metadataRequests.Add(1)
 	log.Debug("GetExtraMetadata: Attempting to fetch", "URL", fetchURL)
-	resp, err := http.Get(fetchURL)
+	resp, err := scryfallGet(fetchURL)
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("GetExtraMetadata: The HTTP request failed", "Error", err)
@@ -304,7 +314,7 @@ func (card *Card) getRulings(rulingNumber int) string {
 
 func (card *Card) fetchRulings() error {
 	log.Debug("FetchRulings: Attempting to fetch", "URL", card.RulingsURI)
-	resp, err := http.Get(card.RulingsURI)
+	resp, err := scryfallGet(card.RulingsURI)
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("FetchRulings: The HTTP request failed", "Error", err)
@@ -389,7 +399,7 @@ func (card *Card) cardGetLang(lang string) (Card, error) {
 		return c, fmt.Errorf("No URL")
 	}
 	log.Debug("cardGetLang: Attempting to fetch", "URL", fetchURL)
-	resp, err := http.Get(fetchURL)
+	resp, err := scryfallGet(fetchURL)
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("cardGetLang: The HTTP request failed", "Error", err)
@@ -418,7 +428,7 @@ func fetchScryfallCardByFuzzyName(input string, isLang bool) (Card, error) {
 	var emptyCard Card
 	url := fmt.Sprintf(scryfallFuzzyAPIURL, url.QueryEscape(input))
 	log.Debug("fetchScryfallCard: Attempting to fetch", "URL", url)
-	resp, err := http.Get(url)
+	resp, err := scryfallGet(url)
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("fetchScryfallCard: The HTTP request failed", "Error", err)
@@ -469,7 +479,7 @@ func fetchDumbScryfallCardByName(input string, isLang bool) (Card, error) {
 	q.Add("q", queryString)
 	u.RawQuery = q.Encode()
 	log.Debug("searchScryfallCard: Attempting to fetch", "URL", u)
-	resp, err := http.Get(u.String())
+	resp, err := scryfallGet(u.String())
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("searchDumbScryfallCard: The HTTP request failed", "Error", err)
@@ -629,7 +639,7 @@ func getRandomScryfallCard(cardTokens []string) (Card, error) {
 	}
 
 	log.Debug("GetRandomScryfallCard: Attempting to fetch", "URL", u.String())
-	resp, err := http.Get(u.String())
+	resp, err := scryfallGet(u.String())
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Error("getRandomScryfallCard: The HTTP request failed", "Error", err)
@@ -657,7 +667,7 @@ func searchScryfallCard(cardTokens []string) ([]Card, error) {
 	q.Add("q", strings.Join(cardTokens, " "))
 	u.RawQuery = q.Encode()
 	log.Debug("searchScryfallCard: Attempting to fetch", "URL", u)
-	resp, err := http.Get(u.String())
+	resp, err := scryfallGet(u.String())
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("searchScryfallCard: The HTTP request failed", "Error", err)
@@ -730,7 +740,7 @@ func fetchCardNames() error {
 		return err
 	}
 	log.Debug("FetchCardNames: Attempting to fetch", "URL", scryfallNamesAPIURL)
-	resp, err := http.Get(scryfallNamesAPIURL)
+	resp, err := scryfallGet(scryfallNamesAPIURL)
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("FetchCardNames: The HTTP request failed", "Error", err)
