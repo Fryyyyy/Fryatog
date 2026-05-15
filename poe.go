@@ -20,13 +20,13 @@ func formatCurrencyForSlack(pnc PoeNinjaCurrency) string {
 	var currencyString string
 	for _, l := range pnc.Lines {
 		if stringSliceContains(conf.PoE.WantedCurrencies, l.CurrencyTypeName) {
-			curName := strings.ToLower(strings.Replace(strings.Replace(l.CurrencyTypeName, " Orb", "", -1), " ", "", -1))
+			curName := strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(l.CurrencyTypeName, " Orb", ""), " ", ""))
 			currencies[curName] = l.ChaosEquivalent
 		}
 	}
 	for _, c := range conf.PoE.WantedCurrencies {
 		var extra string
-		curName := strings.ToLower(strings.Replace(strings.Replace(c, " Orb", "", -1), " ", "", -1))
+		curName := strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(c, " Orb", ""), " ", ""))
 		if curName == "mirrorofkalandra" {
 			mirrorInDiv := currencies[curName] / currencies["divine"]
 			extra = fmt.Sprintf(" %.3f :divine:", mirrorInDiv)
