@@ -392,7 +392,7 @@ func TestCardCache(t *testing.T) {
 	if err == nil {
 		t.Errorf("Unexpected non-error: %v", err)
 	}
-	if err.Error() != "Card not found in cache" {
+	if err.Error() != "card not found in cache" {
 		t.Errorf("Unexpected error: %v", err)
 	}
 	if !reflect.DeepEqual(c, emptyCard) {

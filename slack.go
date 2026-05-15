@@ -45,7 +45,7 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 			}
 			totalLines.Add(1)
 			slackLines.Add(1)
-			user, err := api.GetUserInfo(ev.Msg.User)
+			user, err := api.GetUserInfo(ev.User)
 			if err != nil {
 				log.Warn("New SlackMessage", "Error getting user info", err)
 				continue
@@ -57,7 +57,7 @@ func runSlack(rtm *slack.RTM, api *slack.Client) {
 			toPrint := tokeniseAndDispatchInput(&fryatogParams{slackm: text}, getScryfallCard, getDumbScryfallCard, getRandomScryfallCard, searchScryfallCard)
 			for _, s := range sliceUniqMap(toPrint) {
 				if s != "" {
-					rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("<@%v>: %v", user.ID, s), ev.Msg.Channel, options...))
+					rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("<@%v>: %v", user.ID, s), ev.Channel, options...))
 				}
 			}
 

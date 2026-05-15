@@ -78,7 +78,10 @@ func searchSnapCard(input string) (string, error) {
 		log.Warn("searchSnapCard: The HTTP request failed", "Error", err)
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err = resp.Body.Close()
+		raven.CaptureError(err, nil)
+	}()
 
 	var sc SnapResponse
 	if resp.StatusCode == 200 {

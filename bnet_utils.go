@@ -23,7 +23,7 @@ func distinguishRealmFromPlayer(input1, input2 string) (string, string, error) {
 			return r.Slug, input1, nil
 		}
 	}
-	return "", "", fmt.Errorf("Realm not found")
+	return "", "", fmt.Errorf("realm not found")
 }
 
 // Given a WowDude with stats, give back all the available stat names.

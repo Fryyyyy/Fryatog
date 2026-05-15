@@ -69,7 +69,10 @@ func (card *Card) getExtraMetadata(inputURL string) {
 		log.Warn("GetExtraMetadata: The HTTP request failed", "Error", err)
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err = resp.Body.Close()
+		raven.CaptureError(err, nil)
+	}()
 	var list CardList
 	if resp.StatusCode == 200 {
 		if err := json.NewDecoder(resp.Body).Decode(&list); err != nil {
@@ -191,7 +194,7 @@ func (cc CommonCard) getCardOrFaceAsString(mode string) []string {
 	// P/T
 	if cc.Power != "" {
 		if slack {
-			r = append(r, fmt.Sprintf("%s/%s ·", strings.Replace(cc.Power, "*", "\xC2\xAD*", -1), strings.Replace(cc.Toughness, "*", "\xC2\xAD*", -1)))
+			r = append(r, fmt.Sprintf("%s/%s ·", strings.ReplaceAll(cc.Power, "*", "\xC2\xAD*"), strings.ReplaceAll(cc.Toughness, "*", "\xC2\xAD*")))
 		} else if irc {
 			r = append(r, fmt.Sprintf("%s/%s ·", cc.Power, cc.Toughness))
 		}
@@ -208,17 +211,17 @@ func (cc CommonCard) getCardOrFaceAsString(mode string) []string {
 	if cc.OracleText != "" {
 		var modifiedOracleText string
 		if slack {
-			modifiedOracleText = strings.Replace(replaceManaCostForSlack(nco(cc.PrintedText, cc.OracleText)), "\n", " \\ ", -1)
-			modifiedOracleText = strings.Replace(modifiedOracleText, "(", "_(", -1)
-			modifiedOracleText = strings.Replace(modifiedOracleText, ")", ")_", -1)
-			modifiedOracleText = strings.Replace(modifiedOracleText, "*", "\xC2\xAD*", -1)
+			modifiedOracleText = strings.ReplaceAll(replaceManaCostForSlack(nco(cc.PrintedText, cc.OracleText)), "\n", " \\ ")
+			modifiedOracleText = strings.ReplaceAll(modifiedOracleText, "(", "_(")
+			modifiedOracleText = strings.ReplaceAll(modifiedOracleText, ")", ")_")
+			modifiedOracleText = strings.ReplaceAll(modifiedOracleText, "*", "\xC2\xAD*")
 			// Ticket Emoji
-			modifiedOracleText = strings.Replace(modifiedOracleText, "{TK}", ":ticket:", -1)
+			modifiedOracleText = strings.ReplaceAll(modifiedOracleText, "{TK}", ":ticket:")
 		} else if irc {
-			modifiedOracleText = strings.Replace(nco(cc.PrintedText, cc.OracleText), "\n", " \\ ", -1)
+			modifiedOracleText = strings.ReplaceAll(nco(cc.PrintedText, cc.OracleText), "\n", " \\ ")
 			// Change the open/closing parens of reminder text to also start and end italics
-			modifiedOracleText = strings.Replace(modifiedOracleText, "(", "\x1D(", -1)
-			modifiedOracleText = strings.Replace(modifiedOracleText, ")", ")\x0F", -1)
+			modifiedOracleText = strings.ReplaceAll(modifiedOracleText, "(", "\x1D(")
+			modifiedOracleText = strings.ReplaceAll(modifiedOracleText, ")", ")\x0F")
 		}
 		r = append(r, modifiedOracleText)
 	}
@@ -231,14 +234,14 @@ func (card *Card) formatCardForSlack() string {
 		for _, cf := range card.CardFaces {
 			var r []string
 			r = append(r, fmt.Sprintf("*<%s|%s>*", card.ScryfallURI, nco(cf.PrintedName, cf.Name)))
-			r = append(r, cf.CommonCard.getCardOrFaceAsString("slack")...)
+			r = append(r, cf.getCardOrFaceAsString("slack")...)
 			s = append(s, strings.Join(r, " "))
 		}
 		return strings.Join(s, "\n")
 	}
 
 	s = append(s, fmt.Sprintf("*<%s|%s>*", card.ScryfallURI, nco(card.PrintedName, card.Name)))
-	s = append(s, card.CommonCard.getCardOrFaceAsString("slack")...)
+	s = append(s, card.getCardOrFaceAsString("slack")...)
 	if card.Reserved {
 		s = append(s, "· [RL] ·")
 	}
@@ -256,7 +259,7 @@ func (card *Card) formatCardForIRC() string {
 			var r []string
 			// Bold card name
 			r = append(r, fmt.Sprintf("\x02%s\x0F", nco(cf.PrintedName, cf.Name)))
-			r = append(r, cf.CommonCard.getCardOrFaceAsString("irc")...)
+			r = append(r, cf.getCardOrFaceAsString("irc")...)
 			if cf.ManaCost != "" {
 				r = append(r, fmt.Sprintf("· %s ·", card.formatExpansions()))
 				r = append(r, card.formatLegalities())
@@ -268,7 +271,7 @@ func (card *Card) formatCardForIRC() string {
 
 	// Normal card
 	s = append(s, fmt.Sprintf("\x02%s\x0F", nco(card.PrintedName, card.Name)))
-	s = append(s, card.CommonCard.getCardOrFaceAsString("irc")...)
+	s = append(s, card.getCardOrFaceAsString("irc")...)
 	s = append(s, fmt.Sprintf("· %s ·", card.formatExpansions()))
 	if card.Reserved {
 		s = append(s, "[RL] ·")
@@ -318,26 +321,29 @@ func (card *Card) fetchRulings() error {
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("FetchRulings: The HTTP request failed", "Error", err)
-		return fmt.Errorf("Something went wrong fetching the rulings")
+		return fmt.Errorf("something went wrong fetching the rulings")
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err = resp.Body.Close()
+		raven.CaptureError(err, nil)
+	}()
 	if resp.StatusCode == 200 {
 		var crr CardRulingResult
 		if err := json.NewDecoder(resp.Body).Decode(&crr); err != nil {
 			raven.CaptureError(err, nil)
-			return fmt.Errorf("Something went wrong parsing the rulings")
+			return fmt.Errorf("something went wrong parsing the rulings")
 		}
 
 		card.Rulings = crr.Data
 		err = card.sortRulings()
 		if err != nil {
-			return fmt.Errorf("Error sorting rules")
+			return fmt.Errorf("error sorting rules")
 		}
 		return nil
 	}
 
 	log.Info("FetchRulings: Scryfall returned a non-200", "Status Code", resp.StatusCode)
-	return fmt.Errorf("Unable to fetch rulings from Scryfall")
+	return fmt.Errorf("fetchRulings: unable to fetch rulings from Scryfall")
 }
 
 func (card *Card) sortRulings() error {
@@ -349,7 +355,7 @@ func (card *Card) sortRulings() error {
 
 	currentGroupedDate, err := time.Parse("2006-01-02", card.Rulings[0].PublishedAt)
 	if err != nil {
-		log.Error("Failed to parse date")
+		log.Error("sortRulings: failed to parse date")
 		return err
 	}
 
@@ -370,7 +376,7 @@ func (card *Card) sortRulings() error {
 	for _, ruling := range card.Rulings {
 		rulingDate, err := time.Parse("2006-01-02", ruling.PublishedAt)
 		if err != nil {
-			log.Error("Failed to parse date")
+			log.Error("sortRulings: failed to parse date")
 			return err
 		}
 		if rulingDate.Before(currentGroupedDate) {
@@ -391,29 +397,32 @@ func (card *Card) cardGetLang(lang string) (Card, error) {
 	var c Card
 	// This is called even for empty Card objects, do don't do anything in that case
 	if card.ID == "" {
-		return c, fmt.Errorf("Empty card")
+		return c, fmt.Errorf("empty card")
 	}
 	fetchURL := card.PrintsSearchURI + "&include_multilingual=true"
 	// Have a url?
 	if fetchURL == "" {
-		return c, fmt.Errorf("No URL")
+		return c, fmt.Errorf("no URL")
 	}
 	log.Debug("cardGetLang: Attempting to fetch", "URL", fetchURL)
 	resp, err := scryfallGet(fetchURL)
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("cardGetLang: The HTTP request failed", "Error", err)
-		return c, fmt.Errorf("Error fetching results")
+		return c, fmt.Errorf("error fetching results")
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err = resp.Body.Close()
+		raven.CaptureError(err, nil)
+	}()
 	var list CardList
 	if resp.StatusCode == 200 {
 		if err := json.NewDecoder(resp.Body).Decode(&list); err != nil {
 			raven.CaptureError(err, nil)
-			return c, fmt.Errorf("Error decoding results")
+			return c, fmt.Errorf("error decoding results")
 		}
 		if len(list.Warnings) > 0 {
-			return c, fmt.Errorf("Warnings in response")
+			return c, fmt.Errorf("warnings in response")
 		}
 		for _, cs := range list.Data {
 			if cs.Lang == lang {
@@ -421,7 +430,7 @@ func (card *Card) cardGetLang(lang string) (Card, error) {
 			}
 		}
 	}
-	return c, fmt.Errorf("Language not found")
+	return c, fmt.Errorf("language not found")
 }
 
 func fetchScryfallCardByFuzzyName(input string, isLang bool) (Card, error) {
@@ -432,26 +441,29 @@ func fetchScryfallCardByFuzzyName(input string, isLang bool) (Card, error) {
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("fetchScryfallCard: The HTTP request failed", "Error", err)
-		return emptyCard, fmt.Errorf("Something went wrong fetching the card")
+		return emptyCard, fmt.Errorf("fetchScryfallCardByFuzzyName: something went wrong fetching the card")
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err = resp.Body.Close()
+		raven.CaptureError(err, nil)
+	}()
 	var card Card
 	if resp.StatusCode == 200 {
 		if err := json.NewDecoder(resp.Body).Decode(&card); err != nil {
 			raven.CaptureError(err, nil)
-			return card, fmt.Errorf("Something went wrong parsing the card")
+			return card, fmt.Errorf("something went wrong parsing the card")
 		}
 		if !isLang && card.Lang != "en" {
 			log.Debug("Got back a foreign card when it wasn't requested, let's try again")
 			return fetchScryfallCardByFuzzyName(card.Name, false)
 		}
 		if IsDumbCard(card) {
-			return emptyCard, fmt.Errorf("Dumb card returned, keep trying")
+			return emptyCard, fmt.Errorf("dumb card returned, keep trying")
 		}
 		return card, nil
 	}
 	log.Info("fetchScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
-	return card, fmt.Errorf("Card not found by Scryfall")
+	return card, fmt.Errorf("card not found by Scryfall")
 }
 
 func IsDumbCard(card Card) bool {
@@ -483,23 +495,26 @@ func fetchDumbScryfallCardByName(input string, isLang bool) (Card, error) {
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("searchDumbScryfallCard: The HTTP request failed", "Error", err)
-		return emptyCard, fmt.Errorf("Something went wrong fetching card search results")
+		return emptyCard, fmt.Errorf("something went wrong fetching card search results")
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err = resp.Body.Close()
+		raven.CaptureError(err, nil)
+	}()
 	var csr CardSearchResult
 	if resp.StatusCode == 200 {
 		if err := json.NewDecoder(resp.Body).Decode(&csr); err != nil {
 			raven.CaptureError(err, nil)
-			return emptyCard, fmt.Errorf("Something went wrong parsing the card search results")
+			return emptyCard, fmt.Errorf("something went wrong parsing the card search results")
 		}
 		log.Debug("searchDumbScryfallCard", "Total cards found", csr.TotalCards)
 		if csr.TotalCards != 1 {
-			return emptyCard, fmt.Errorf("Too many cards returned (%v > 5)", csr.TotalCards)
+			return emptyCard, fmt.Errorf("too many cards returned (%v > 5)", csr.TotalCards)
 		}
 		return csr.Data[0], nil
 	}
 	log.Error("searchDumbScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
-	return emptyCard, fmt.Errorf("No cards found")
+	return emptyCard, fmt.Errorf("no cards found")
 }
 
 func checkCacheForCard(ncn string) (Card, error) {
@@ -512,7 +527,7 @@ func checkCacheForCard(ncn string) (Card, error) {
 		cardCacheHitPercentage.Set(int64(math.Round((float64(cardCacheHits.Value()) / float64(cardCacheQueries.Value())) * 100)))
 		if cacheCard == nil || reflect.DeepEqual(cacheCard, emptyCard) {
 			log.Debug("But cached as nothing")
-			return emptyCard, fmt.Errorf("Card not found")
+			return emptyCard, fmt.Errorf("card not found")
 		}
 		// Check to see we're returning the canonical card object
 		c := cacheCard.(Card)
@@ -533,7 +548,7 @@ func checkCacheForCard(ncn string) (Card, error) {
 	}
 	cardCacheHitPercentage.Set((cardCacheHits.Value() / cardCacheQueries.Value()) * 100)
 	log.Debug("Not in cache")
-	return emptyCard, fmt.Errorf("Card not found in cache")
+	return emptyCard, fmt.Errorf("card not found in cache")
 }
 
 func getCachedOrStoreCard(card *Card, ncn string) (Card, error) {
@@ -643,20 +658,23 @@ func getRandomScryfallCard(cardTokens []string) (Card, error) {
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Error("getRandomScryfallCard: The HTTP request failed", "Error", err)
-		return card, fmt.Errorf("Something went wrong fetching a random card")
+		return card, fmt.Errorf("something went wrong fetching a random card")
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err = resp.Body.Close()
+		raven.CaptureError(err, nil)
+	}()
 	if resp.StatusCode == 200 {
 		if err := json.NewDecoder(resp.Body).Decode(&card); err != nil {
 			raven.CaptureError(err, nil)
-			return card, fmt.Errorf("Something went wrong parsing the card")
+			return card, fmt.Errorf("something went wrong parsing the card")
 		}
 		card.getExtraMetadata("")
 		nameToCardCache.Add(normaliseCardName(card.Name), card)
 		return card, nil
 	}
 	log.Error("fetchRandomScryfallCard: Scryfall returned a non-200", "Status Code", resp.StatusCode)
-	return card, fmt.Errorf("Error retrieving card")
+	return card, fmt.Errorf("error retrieving card")
 }
 
 func searchScryfallCard(cardTokens []string) ([]Card, error) {
@@ -671,15 +689,18 @@ func searchScryfallCard(cardTokens []string) ([]Card, error) {
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("searchScryfallCard: The HTTP request failed", "Error", err)
-		return []Card{}, fmt.Errorf("Something went wrong fetching card search results")
+		return []Card{}, fmt.Errorf("something went wrong fetching card search results")
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err = resp.Body.Close()
+		raven.CaptureError(err, nil)
+	}()
 
 	var csr CardSearchResult
 	if resp.StatusCode == 200 {
 		if err := json.NewDecoder(resp.Body).Decode(&csr); err != nil {
 			raven.CaptureError(err, nil)
-			return []Card{}, fmt.Errorf("Something went wrong parsing the card search results")
+			return []Card{}, fmt.Errorf("something went wrong parsing the card search results")
 		}
 		log.Debug("searchScryfallCard", "Total cards found", csr.TotalCards)
 		return ParseAndFormatSearchResults(csr)
@@ -688,7 +709,7 @@ func searchScryfallCard(cardTokens []string) ([]Card, error) {
 	if resp.StatusCode == 400 {
 		if err := json.NewDecoder(resp.Body).Decode(&csr); err != nil {
 			raven.CaptureError(err, nil)
-			return []Card{}, fmt.Errorf("Something went wrong parsing the card search results")
+			return []Card{}, fmt.Errorf("something went wrong parsing the card search results")
 		}
 		log.Error("searchScryfallCard: Scryfall returned 400, handling")
 		return []Card{}, fmt.Errorf("%v (%v)", csr.Details, strings.Join(csr.Warnings, " "))
@@ -744,20 +765,26 @@ func fetchCardNames() error {
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("FetchCardNames: The HTTP request failed", "Error", err)
-		return fmt.Errorf("Something went wrong fetching the cardname catalog")
+		return fmt.Errorf("something went wrong fetching the cardname catalog")
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err = resp.Body.Close()
+		raven.CaptureError(err, nil)
+	}()
 	if resp.StatusCode == 200 {
 		_, err = io.Copy(out, resp.Body)
 		if err != nil {
 			log.Warn("FetchCardNames: Error writing to cardNames file", "Error", err)
 			return err
 		}
-		out.Close()
+		err = out.Close()
+		if err != nil {
+			log.Warn("error closing", "Error", err)
+		}
 		return nil
 	}
 	log.Warn("FetchCardNames: Scryfall returned a non-200", "Status Code", resp.StatusCode)
-	return fmt.Errorf("Scryfall returned a non-200")
+	return fmt.Errorf("scryfall returned a non-200")
 }
 
 func importCardNames(forceFetch bool) ([]string, error) {
@@ -781,7 +808,10 @@ func importCardNames(forceFetch bool) ([]string, error) {
 		log.Warn("Error opening cardNames file", "Error", err)
 		return []string{}, err
 	}
-	defer f.Close()
+	defer func() {
+		err = f.Close()
+		raven.CaptureError(err, nil)
+	}()
 	var catalog CardCatalog
 	if err := json.NewDecoder(f).Decode(&catalog); err != nil {
 		raven.CaptureError(err, nil)
@@ -804,7 +834,10 @@ func fetchHighlanderPoints() error {
 		log.Warn("FetchHighlanderPoints: The HTTP request failed", "Error", err)
 		return fmt.Errorf("Something went wrong fetching the points")
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err = resp.Body.Close()
+		raven.CaptureError(err, nil)
+	}()
 	if resp.StatusCode == 200 {
 		_, err = io.Copy(out, resp.Body)
 		if err != nil {
@@ -812,7 +845,10 @@ func fetchHighlanderPoints() error {
 			log.Warn("FetchHighlanderPoints: Error writing to points file", "Error", err)
 			return err
 		}
-		out.Close()
+		err = out.Close()
+		if err != nil {
+			log.Warn("error closing", "Error", err)
+		}
 		return nil
 	}
 	log.Warn("FetchHighlanderPoints: The site returned a non-200", "Status Code", resp.StatusCode)
@@ -842,7 +878,10 @@ func importHighlanderPoints(forceFetch bool) error {
 		log.Warn("Error opening points file", "Error", err)
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		err = f.Close()
+		raven.CaptureError(err, nil)
+	}()
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		lineFields := strings.Fields(scanner.Text())
