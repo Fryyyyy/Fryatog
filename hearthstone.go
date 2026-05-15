@@ -37,11 +37,11 @@ func formatHSCard(i map[string]interface{}) string {
 	if i["text"] != nil {
 		text, ok := i["text"].(string)
 		if ok {
-			modifiedRuleText := strings.Replace(text, "<b>", "*", -1)
-			modifiedRuleText = strings.Replace(modifiedRuleText, "</b>", "*", -1)
-			modifiedRuleText = strings.Replace(modifiedRuleText, "<i>", "_", -1)
-			modifiedRuleText = strings.Replace(modifiedRuleText, "</i>", "_", -1)
-			modifiedRuleText = strings.Replace(modifiedRuleText, "\n", " ", -1)
+			modifiedRuleText := strings.ReplaceAll(text, "<b>", "*")
+			modifiedRuleText = strings.ReplaceAll(modifiedRuleText, "</b>", "*")
+			modifiedRuleText = strings.ReplaceAll(modifiedRuleText, "<i>", "_")
+			modifiedRuleText = strings.ReplaceAll(modifiedRuleText, "</i>", "_")
+			modifiedRuleText = strings.ReplaceAll(modifiedRuleText, "\n", " ")
 			r = append(r, fmt.Sprintf("%v ·", modifiedRuleText))
 		}
 	}
