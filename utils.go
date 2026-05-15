@@ -134,6 +134,9 @@ func writeGob(filePath string, object interface{}) error {
 	if err == nil {
 		encoder := gob.NewEncoder(file)
 		err = encoder.Encode(object)
+		if err != nil {
+			log.Warn("error encoding file", "Error", err)
+		}
 	} else {
 		log.Warn("Error creating GOB file", "Error", err)
 	}
@@ -149,6 +152,9 @@ func readGob(filePath string, object interface{}) error {
 	if err == nil {
 		decoder := gob.NewDecoder(file)
 		err = decoder.Decode(object)
+		if err != nil {
+			log.Warn("error encoding file", "Error", err)
+		}
 		// log.Debug("readGOB", "Object", object)
 	}
 	err = file.Close()

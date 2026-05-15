@@ -343,7 +343,7 @@ func (card *Card) fetchRulings() error {
 	}
 
 	log.Info("FetchRulings: Scryfall returned a non-200", "Status Code", resp.StatusCode)
-	return fmt.Errorf("Unable to fetch rulings from Scryfall")
+	return fmt.Errorf("fetchRulings: unable to fetch rulings from Scryfall")
 }
 
 func (card *Card) sortRulings() error {
@@ -441,7 +441,7 @@ func fetchScryfallCardByFuzzyName(input string, isLang bool) (Card, error) {
 	if err != nil {
 		raven.CaptureError(err, nil)
 		log.Warn("fetchScryfallCard: The HTTP request failed", "Error", err)
-		return emptyCard, fmt.Errorf("Something went wrong fetching the card")
+		return emptyCard, fmt.Errorf("fetchScryfallCardByFuzzyName: something went wrong fetching the card")
 	}
 	defer func() {
 		err = resp.Body.Close()
@@ -777,7 +777,10 @@ func fetchCardNames() error {
 			log.Warn("FetchCardNames: Error writing to cardNames file", "Error", err)
 			return err
 		}
-		out.Close()
+		err = out.Close()
+		if err != nil {
+			log.Warn("error closing", "Error", err)
+		}
 		return nil
 	}
 	log.Warn("FetchCardNames: Scryfall returned a non-200", "Status Code", resp.StatusCode)
@@ -842,7 +845,10 @@ func fetchHighlanderPoints() error {
 			log.Warn("FetchHighlanderPoints: Error writing to points file", "Error", err)
 			return err
 		}
-		out.Close()
+		err = out.Close()
+		if err != nil {
+			log.Warn("error closing", "Error", err)
+		}
 		return nil
 	}
 	log.Warn("FetchHighlanderPoints: The site returned a non-200", "Status Code", resp.StatusCode)

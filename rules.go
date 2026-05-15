@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	raven "github.com/getsentry/raven-go"
-	log "gopkg.in/inconshreveable/log15.v2"
 	"net/http"
 	"strconv"
 	"strings"
+
+	raven "github.com/getsentry/raven-go"
+	log "gopkg.in/inconshreveable/log15.v2"
 )
 
 const rulesEndpointURL = "https://api.academyruins.com/cr/"
@@ -86,7 +87,10 @@ func findRule(input string, which string) (Rule, error) {
 		log.Debug("HTTP request to Rules Endpoint failed", "Error", err)
 		return Rule{}, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err = resp.Body.Close()
+		raven.CaptureError(err, nil)
+	}()
 	var foundRule Rule
 	if resp.StatusCode == 200 {
 		if err := json.NewDecoder(resp.Body).Decode(&foundRule); err != nil {
@@ -157,7 +161,10 @@ func handleGlossaryQuery(input string) string {
 		log.Debug("HTTP request to Glossary Endpoint failed", "Error", err)
 		return ""
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err = resp.Body.Close()
+		raven.CaptureError(err, nil)
+	}()
 	var foundGlossaryTerm GlossaryTerm
 	if resp.StatusCode == 200 {
 		if err := json.NewDecoder(resp.Body).Decode(&foundGlossaryTerm); err != nil {

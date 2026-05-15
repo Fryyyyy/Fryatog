@@ -229,11 +229,11 @@ func formatManaCost(input string) string {
 }
 
 func replaceManaCostForSlack(input string) string {
-	manaString := strings.Replace(input, "{1000000}", ":mana-1000000-1::mana-1000000-2::mana-1000000-3::mana-1000000-4:", -1)
+	manaString := strings.ReplaceAll(input, "{1000000}", ":mana-1000000-1::mana-1000000-2::mana-1000000-3::mana-1000000-4:")
 	for _, match := range emojiRegex.FindAllString(manaString, -1) {
-		replacement := strings.Replace(match, "{", ":mana-", -1)
-		replacement = strings.Replace(replacement, "}", ":", -1)
-		replacement = strings.Replace(replacement, "/", "", -1)
+		replacement := strings.ReplaceAll(match, "{", ":mana-")
+		replacement = strings.ReplaceAll(replacement, "}", ":")
+		replacement = strings.ReplaceAll(replacement, "/", "")
 		manaString = strings.Replace(manaString, match, replacement, 1)
 	}
 	return manaString

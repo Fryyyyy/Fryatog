@@ -46,7 +46,10 @@ func handlePoeCurrencyQuery() string {
 		log.Debug("HTTP request to Poe Currency Endpoint failed", "Error", err)
 		return ""
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err = resp.Body.Close()
+		raven.CaptureError(err, nil)
+	}()
 	var pnc PoeNinjaCurrency
 	if resp.StatusCode == 200 {
 		if err := json.NewDecoder(resp.Body).Decode(&pnc); err != nil {
