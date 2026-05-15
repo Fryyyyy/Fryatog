@@ -28,9 +28,10 @@ func formatHSCard(i map[string]interface{}) string {
 	}
 	r = append(r, fmt.Sprintf("· {%v} ·", i["cost"]))
 	r = append(r, fmt.Sprintf("%v ·", i["type"]))
-	if i["type"] == "Minion" {
+	switch i["type"] {
+	case "Minion":
 		r = append(r, fmt.Sprintf("%v/%v ·", i["attack"], i["health"]))
-	} else if i["type"] == "Weapon" {
+	case "Weapon":
 		r = append(r, fmt.Sprintf("%v/%v ·", i["attack"], i["durability"]))
 	}
 	if i["text"] != nil {

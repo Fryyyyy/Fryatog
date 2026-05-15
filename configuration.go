@@ -56,7 +56,12 @@ func readConfig() configuration {
 	if err != nil {
 		panic(err)
 	}
-	defer file.Close()
+	defer func() {
+		err = file.Close()
+		if err != nil {
+			panic(err)
+		}
+	}()
 	decoder := json.NewDecoder(file)
 	conf := configuration{}
 	err = decoder.Decode(&conf)

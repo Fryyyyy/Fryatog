@@ -360,11 +360,12 @@ func handleCommand(params *fryatogParams, c chan string) {
 		case 3:
 			c <- printWoWDude(cardTokens[1], cardTokens[2])
 		case 4:
-			if cardTokens[1] == "raid" {
+			switch cardTokens[1] {
+			case "raid":
 				c <- getDudeRaid(cardTokens[2], cardTokens[3], conf.BattleNet.CurrentExpansion, conf.BattleNet.CurrentRaidTier)
-			} else if cardTokens[1] == "rep" {
+			case "rep":
 				c <- getDudeReps(cardTokens[2], cardTokens[3])
-			} else {
+			default:
 				c <- ""
 			}
 		default:
@@ -793,7 +794,7 @@ func main() {
 	bot.AddTrigger(endOfWhoTrigger)
 	bot.AddTrigger(greetingTrigger)
 	bot.AddTrigger(joinTrigger)
-	bot.Logger.SetHandler(log.StdoutHandler)
+	bot.SetHandler(log.StdoutHandler)
 
 	go dumpCardCacheTimer(&conf, nameToCardCache)
 

@@ -109,7 +109,7 @@ func printWoWDude(input1, input2 string) string {
 	var ret []string
 	var name = wd.cps.Name
 	if len(wd.cps.ActiveTitle.DisplayString) > 0 {
-		name = strings.Replace(wd.cps.ActiveTitle.DisplayString, "{name}", wd.cps.Name, -1)
+		name = strings.ReplaceAll(wd.cps.ActiveTitle.DisplayString, "{name}", wd.cps.Name)
 	}
 	ret = append(ret, fmt.Sprintf("%s - Level %d %s %s", name, wd.cps.Level, wd.cps.ActiveSpec.Name, wd.cps.CharacterClass.Name))
 	ret = append(ret, fmt.Sprintf("iLvl %d -- :trophy: %d", wd.cps.AverageItemLevel, wd.cps.AchievementPoints))
@@ -241,7 +241,7 @@ func getDudeStat(player wowDude, statName string) (string, string, float64, erro
 			}
 		}
 	}
-	return "", "", 0, fmt.Errorf("Stat not found")
+	return "", "", 0, fmt.Errorf("stat not found")
 }
 
 func getDudeReps(input1, input2 string) string {

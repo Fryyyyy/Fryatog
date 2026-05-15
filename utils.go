@@ -137,7 +137,10 @@ func writeGob(filePath string, object interface{}) error {
 	} else {
 		log.Warn("Error creating GOB file", "Error", err)
 	}
-	file.Close()
+	err = file.Close()
+	if err != nil {
+		log.Warn("Error closing GOB file", "Error", err)
+	}
 	return err
 }
 
@@ -148,7 +151,10 @@ func readGob(filePath string, object interface{}) error {
 		err = decoder.Decode(object)
 		// log.Debug("readGOB", "Object", object)
 	}
-	file.Close()
+	err = file.Close()
+	if err != nil {
+		log.Warn("Error closing GOB file", "Error", err)
+	}
 	return err
 }
 
@@ -181,19 +187,6 @@ func getExitChannel() chan os.Signal {
 	return c
 
 }
-
-// A dumb function that returns the minimum of two ints
-// with the restriction that the result will try to be bigger than
-// a third given value.
-/* func cappedMin(a, b, c int) int {
-	if a < b && a > c {
-		return a
-	}
-	if b < a && b > c {
-		return b
-	}
-	return max(a, b)
-} */
 
 func dumpCardCacheTimer(conf *configuration, cache *lru.ARCCache) {
 	for {
